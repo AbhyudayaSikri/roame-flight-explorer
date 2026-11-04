@@ -54,6 +54,6 @@ Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/Abhyuday
 | P1 | screenshots: the same row typography in the list, the destination sheet and Saved; 16 pt margins throughout | pass |
 | P2 | Buttons use system styles with pressed states. The store ignores Save/Remove while one is in flight (shared tests). The card's progress state wasn't caught on screen, because local writes finish within a frame. | partly checked |
 
-## Open polish notes
-- "Premium Economy" truncates to "Premium E…" in the segmented cabin picker.
-- At world zoom, markers in Europe overlap; zooming in separates them. HND and NRT overlap until you zoom in, or until the search narrows to Tokyo.
+## Polish notes
+- Fixed 2026-11-04: "Premium Economy" no longer truncates, because the cabin filter is a list of rows instead of a segmented control.
+- Fixed 2026-11-04: pills no longer overlap at world zoom; nearby airports merge into one pill until you zoom in. Test: `MapSelectionTests.testTappingAMergedPillZoomsInUntilItsAirportsSeparate`, with screenshots "Map, merged pills at world zoom" and "Map, zoomed into a merged pill".

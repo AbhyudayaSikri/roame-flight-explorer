@@ -91,17 +91,32 @@ Your order: (a) Android camera fit, (b) `--mode=slow`, (c) polish (iOS cabin tru
 
 | Item | PR | State |
 |---|---|---|
-| (a) Android camera fits the selected route | `feat/android-camera-fit` | in review |
-| (b) `--mode=slow` | — | pending |
-| (c) Polish | — | pending |
-| F1 XCUITest | — | pending |
-| (d) README, NOTES §3/§4 | — | pending |
+| (a) Android camera fits the selected route | [#2](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/2) | merged 11:15 (iOS evidence from a dispatched run, see below) |
+| (b) `--mode=slow` | [#3](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/3) | waiting for its own iOS run |
+| (c) Polish | [#4](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/4) | merged 11:16 (same evidence) |
+| F1 XCUITest | — (branch `test/ios-date-range-f1`) | dropped at the 45-minute timebox |
+| (d) README, NOTES §3/§4 | docs PR | after (b) |
 
 - **(a) Android camera fit.**
   - New shared `fitCamera(points, viewWidth, viewHeight, bottomInset, padding)`: Web Mercator math on the route's unwrapped longitudes, so trans-Pacific routes are framed over the Pacific. It returns a centre and a zoom for the area above the card.
   - 6 new tests, written first. One checks that every one of the 192 fixture routes lands inside the padding above a 300 dp card on a 400 × 800 dp map.
   - Android measures the card and calls `fitCamera` when the route changes, then animates over 600 ms. iOS keeps MapKit's own fit.
   - Not checked visually on Android: the local API stays off, per your call. Your QA pass covers it (QA M9).
+- **(b) `--mode=slow`.**
+  - The server serves the normal fixture 3 s late on `/flights` only. 3 new tests, written first: the module takes a `pause` function, so tests record the pause instead of sleeping.
+  - iOS: a new test checks the loading state against the slow API (QA O6 and the "loading first" part of L1), and the recorded demo now starts with a 3 s load.
+- **(c) Polish.**
+  - Shared `clusterMarkers` merges destination pills that would overlap at the current zoom. 9 tests, written first; one checks that no two pills overlap at 21 zoom levels.
+  - Both maps draw merged pills, for example "6 airports  280 · 13k". Tapping one zooms in until its airports separate; on Android that zoom uses `fitCamera` from (a). A new XCUITest taps a merged pill and checks that one of its airports gets its own pill.
+  - iOS cabin filter: a list of rows with a checkmark instead of the segmented control that truncated "Premium Economy".
+- **F1 XCUITest: dropped.**
+  - The test opened the "To" calendar, went back to February and tapped the 1st.
+  - The sheet then read "Show 10 flights" instead of 17. No single day has 10 flights, so the "tap outside to close the calendar" fallback most likely changed another filter too.
+  - A fix would need another 30-minute iOS run, past the timebox. F1 and F2 are documented as covered by the shared tests only (NOTES §4).
+- **macOS runner outage (10:00–11:15).**
+  - GitHub dropped every PR iOS job after about 15 minutes in the queue: "The job was not acquired by Runner of type hosted even after multiple attempts" (macOS arm64 capacity). That happened 3 times for #2, and twice each for #3 and #4. No incident was posted on githubstatus.com.
+  - One manually dispatched run did get a runner: [41852391748](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41852391748), on `test/ios-date-range-f1`, which contains (a), (c) and the F1 test. It passed 24 of 25 UI tests (the one failure was F1), plus the demo walkthrough and the offline relaunch.
+  - At your call, #2 and #4 were merged on that run's evidence plus their green Linux checks. Each PR has a comment linking it. #3 waits for its own iOS run.
 
 ## Decisions
 
@@ -109,7 +124,7 @@ Your order: (a) Android camera fit, (b) `--mode=slow`, (c) polish (iOS cabin tru
 - **First push carries three commits:** setup, version catalog and server. The mandated pre-push check (`:server:test :shared:testAndroidHostTest :androidApp:assembleDebug`) can't pass until `:server` and the shared host-test task exist.
 - **Version catalog in step 4, not 5.0:** `gradle/libs.versions.toml` now holds every §3.1 version, and all build files use it. The server was the first module to need new versions.
 - **Host tests enabled in step 4:** `withHostTest {}` went in early so `:shared:testAndroidHostTest` exists for the pre-push check. With no test sources it reports NO-SOURCE.
-- **Tier skips (`:server`):** `--mode=slow` (SHOULD) and the Python fallback server (COULD) aren't built. `CLAUDE.md` still lists `slow`, but the server rejects it.
+- **Tier skips (`:server`):** the Python fallback server (COULD) isn't built. `--mode=slow` (SHOULD) was built on Nov 4 as item (b).
 - **Server bytecode targets JVM 17**, so it also runs on Android Studio's bundled JDK on Windows. `slf4j-simple` is there only so Ktor's startup lines print instead of an SLF4J warning.
 - **Working ahead:** while a step's CI runs, I draft the next step in the working tree. It's only committed and pushed once the current step is green.
 - **Android tier skips:**

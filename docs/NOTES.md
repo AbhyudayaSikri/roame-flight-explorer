@@ -48,6 +48,7 @@ Alternatives considered:
   - Tests switch the server's mode with a raw TCP request (Network framework). That avoids App Transport Security in the test runner, which a plain-HTTP `URLSession` call would hit.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
+- **`--mode=slow` (2026-11-04)** serves the normal fixture after 3 s, on `/flights` only; `/health` still answers at once. That's long enough to see the loading state, and well inside the apps' 10 s request timeout.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).
 - **Saved-tab selection** is independent of the discovery filters.

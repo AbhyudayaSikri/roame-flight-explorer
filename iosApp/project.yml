@@ -1,0 +1,87 @@
+# Source of truth for iosApp/RoameStarter.xcodeproj. After editing this file, or adding/removing
+# files under iosApp/, run:  xcodegen generate --spec iosApp/project.yml   (XcodeGen 2.46.0)
+# and commit both. CI regenerates the project and fails if it differs from the committed one.
+name: RoameStarter
+
+options:
+  deploymentTarget:
+    iOS: "17.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+
+targets:
+  RoameStarter:
+    type: application
+    platform: iOS
+    sources:
+      - path: RoameStarter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: travel.roame.takehome.ios
+        INFOPLIST_FILE: RoameStarter/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        # The Kotlin build phase below runs Gradle, which needs to write outside the sandbox.
+        ENABLE_USER_SCRIPT_SANDBOXING: "NO"
+        FRAMEWORK_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+        # Shared is a static framework, so SQLDelight's system SQLite must be linked here.
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "-framework"
+          - "Shared"
+          - "-lsqlite3"
+        LD_RUNPATH_SEARCH_PATHS:
+          - "$(inherited)"
+          - "@executable_path/Frameworks"
+        SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    preBuildScripts:
+      - name: Build shared Kotlin framework
+        basedOnDependencyAnalysis: false
+        shell: /bin/sh
+        script: |
+          set -e
+          if [ "$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED" = "YES" ]; then exit 0; fi
+          if [ -z "$JAVA_HOME" ]; then export JAVA_HOME=$(/usr/libexec/java_home 2>/dev/null || echo "/Applications/Android Studio.app/Contents/jbr/Contents/Home"); fi
+          cd "$SRCROOT/.."
+          ./gradlew :shared:embedAndSignAppleFrameworkForXcode
+
+  RoameStarterUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: RoameStarterUITests
+    dependencies:
+      - target: RoameStarter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: travel.roame.takehome.ios.uitests
+        GENERATE_INFOPLIST_FILE: "YES"
+        TEST_TARGET_NAME: RoameStarter
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+schemes:
+  RoameStarter:
+    build:
+      targets:
+        RoameStarter: all
+        RoameStarterUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - RoameStarterUITests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

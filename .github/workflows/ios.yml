@@ -34,10 +34,12 @@ permissions:
 env:
   # Top of Kotlin 2.4.21's tested range; the image's default Xcode (26.6) is newer than that.
   XCODE_APP: /Applications/Xcode_26.4.1.app
+  # Must match the version used to generate the committed project (see iosApp/project.yml).
+  XCODEGEN_VERSION: 2.46.0
 
 jobs:
   ios:
-    name: iOS build (macOS)
+    name: iOS build and UI tests (macOS)
     runs-on: macos-26
     timeout-minutes: 60
     steps:
@@ -47,6 +49,24 @@ jobs:
         run: |
           sudo xcode-select -s "$XCODE_APP"
           xcodebuild -version
+
+      - name: Install XcodeGen
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/xcodegen.zip" \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
+
+      - name: Check the committed Xcode project matches project.yml
+        run: |
+          xcodegen --version
+          xcodegen generate --spec iosApp/project.yml
+          if [ -n "$(git status --porcelain -- iosApp)" ]; then
+            echo "::error::iosApp/RoameStarter.xcodeproj is out of date. Run 'xcodegen generate --spec iosApp/project.yml' and commit the result."
+            git status --porcelain -- iosApp
+            git diff -- iosApp | head -200
+            exit 1
+          fi
 
       # The Xcode build phase runs Gradle; JDK 25 matches gradle/gradle-daemon-jvm.properties.
       - uses: actions/setup-java@v6
@@ -62,7 +82,7 @@ jobs:
           path: ~/.konan
           key: konan-${{ runner.os }}-${{ runner.arch }}-kotlin-2.4.21
 
-      - name: Create the simulator (iPhone 17, iOS 26.4)
+      - name: Create and boot the simulator (iPhone 17, iOS 26.4)
         id: sim
         run: |
           RUNTIME=$(xcrun simctl list runtimes -j | jq -r '[.runtimes[] | select(.platform == "iOS" and .isAvailable and (.version | startswith("26.4")))][0].identifier')
@@ -73,34 +93,47 @@ jobs:
           fi
           UDID=$(xcrun simctl create ci-iphone "iPhone 17" "$RUNTIME")
           echo "runtime=$RUNTIME udid=$UDID"
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-      # The starter's scheme file is named RoameStarter.xcscheme.xml, which Xcode ignores,
-      # so this records whether xcodebuild auto-creates a scheme for the target.
-      - name: Build the starter as provided
+      - name: Build for testing
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           set -o pipefail
           mkdir -p build/ci
-          xcodebuild -list -json -project iosApp/RoameStarter.xcodeproj | tee build/ci/xcodebuild-list.json
-          if jq -e '.project.schemes | index("RoameStarter")' build/ci/xcodebuild-list.json > /dev/null; then
-            echo "- Scheme \`RoameStarter\`: listed by \`xcodebuild -list\` (auto-created)" >> "$GITHUB_STEP_SUMMARY"
-            xcodebuild build -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter -configuration Debug \
-              -destination "id=$UDID" -derivedDataPath build/dd \
-              | tee build/ci/xcodebuild-build.log | xcbeautify --renderer github-actions
-          else
-            echo "- Scheme \`RoameStarter\`: missing; built with \`-target\`" >> "$GITHUB_STEP_SUMMARY"
-            xcodebuild build -project iosApp/RoameStarter.xcodeproj -target RoameStarter -configuration Debug \
-              -sdk iphonesimulator \
-              | tee build/ci/xcodebuild-build.log | xcbeautify --renderer github-actions
-          fi
-          echo "- $(xcodebuild -version | head -1): starter app built for the iOS simulator" >> "$GITHUB_STEP_SUMMARY"
+          xcodebuild build-for-testing -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
+            -configuration Debug -destination "id=$UDID" -derivedDataPath build/dd \
+            | tee build/ci/build-for-testing.log | xcbeautify --renderer github-actions
 
-      - name: Upload logs
-        if: failure()
+      - name: UI tests
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
+            -destination "id=$UDID" -derivedDataPath build/dd \
+            -resultBundlePath build/ci/ui-tests.xcresult \
+            | tee build/ci/ui-tests.log | xcbeautify --renderer github-actions
+
+      - name: Export screenshots
+        if: always()
+        run: |
+          if [ -d build/ci/ui-tests.xcresult ]; then
+            mkdir -p build/ci/screenshots
+            xcrun xcresulttool export attachments --path build/ci/ui-tests.xcresult \
+              --output-path build/ci/screenshots
+          fi
+
+      - name: Upload test results
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: ios-logs
-          path: build/ci/
+          name: ios-ui-tests
+          path: |
+            build/ci/*.log
+            build/ci/*.xcresult
+            build/ci/screenshots
           if-no-files-found: ignore
+          retention-days: 14

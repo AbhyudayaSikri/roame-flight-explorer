@@ -40,6 +40,8 @@ Alternatives considered:
   - A slider at the data maximum means "no limit" and shows no chip.
 - **Reset** clears both search fields and every filter. QA F8 expects 1,000 results afterwards.
 - **Results sort** by departure date, then points, then id.
+- **Filter options order (2026-11-04):** cabins run from cheapest to most premium (Economy, Premium Economy, Business, then First if it ever appears), with any unknown cabin names after them alphabetically. Programs are alphabetical.
+- **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).

@@ -1,0 +1,106 @@
+name: ios
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'iosApp/**'
+      - 'shared/**'
+      - 'server/**'
+      - 'fixtures/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'iosApp/**'
+      - 'shared/**'
+      - 'server/**'
+      - 'fixtures/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/ios.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Top of Kotlin 2.4.21's tested range; the image's default Xcode (26.6) is newer than that.
+  XCODE_APP: /Applications/Xcode_26.4.1.app
+
+jobs:
+  ios:
+    name: iOS build (macOS)
+    runs-on: macos-26
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "$XCODE_APP"
+          xcodebuild -version
+
+      # The Xcode build phase runs Gradle; JDK 25 matches gradle/gradle-daemon-jvm.properties.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache the Kotlin/Native toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-kotlin-2.4.21
+
+      - name: Create the simulator (iPhone 17, iOS 26.4)
+        id: sim
+        run: |
+          RUNTIME=$(xcrun simctl list runtimes -j | jq -r '[.runtimes[] | select(.platform == "iOS" and .isAvailable and (.version | startswith("26.4")))][0].identifier')
+          if [ -z "$RUNTIME" ] || [ "$RUNTIME" = "null" ]; then
+            echo "::error::No iOS 26.4 simulator runtime on this image"
+            xcrun simctl list runtimes
+            exit 1
+          fi
+          UDID=$(xcrun simctl create ci-iphone "iPhone 17" "$RUNTIME")
+          echo "runtime=$RUNTIME udid=$UDID"
+          echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+
+      # The starter's scheme file is named RoameStarter.xcscheme.xml, which Xcode ignores,
+      # so this records whether xcodebuild auto-creates a scheme for the target.
+      - name: Build the starter as provided
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          set -o pipefail
+          mkdir -p build/ci
+          xcodebuild -list -json -project iosApp/RoameStarter.xcodeproj | tee build/ci/xcodebuild-list.json
+          if jq -e '.project.schemes | index("RoameStarter")' build/ci/xcodebuild-list.json > /dev/null; then
+            echo "- Scheme \`RoameStarter\`: listed by \`xcodebuild -list\` (auto-created)" >> "$GITHUB_STEP_SUMMARY"
+            xcodebuild build -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter -configuration Debug \
+              -destination "id=$UDID" -derivedDataPath build/dd \
+              | tee build/ci/xcodebuild-build.log | xcbeautify --renderer github-actions
+          else
+            echo "- Scheme \`RoameStarter\`: missing; built with \`-target\`" >> "$GITHUB_STEP_SUMMARY"
+            xcodebuild build -project iosApp/RoameStarter.xcodeproj -target RoameStarter -configuration Debug \
+              -sdk iphonesimulator \
+              | tee build/ci/xcodebuild-build.log | xcbeautify --renderer github-actions
+          fi
+          echo "- $(xcodebuild -version | head -1): starter app built for the iOS simulator" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-logs
+          path: build/ci/
+          if-no-files-found: ignore

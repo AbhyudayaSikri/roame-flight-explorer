@@ -10,7 +10,7 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
 | 5. Shared domain | done 01:10 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41782370174) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41782370193) |
 | 6. Data layer + store | done 01:34 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41784197206) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41784197457) |
 | 7. Android UI | done 01:43 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41786516273) (Android-only change, so `ios.yml` didn't run) |
-| 8. iOS UI | in progress | — |
+| 8. iOS UI | done 03:26 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168131) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168173) (demo video and screenshots in the `ios-ui-tests` artifact) |
 
 ## Log
 
@@ -70,6 +70,11 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
     - Tokyo shows HND and NRT as separate markers.
     - Fixed: a single-airport result zoomed to street level. Markers within 2° now get a regional view.
     - Left as is: "Premium Economy" truncates in the segmented cabin picker.
+- **03:26 Step 8 green** ([ios 41796168173](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168173)).
+  - 23/23 UI tests passed, plus the demo walkthrough and the offline relaunch.
+  - The screenshots confirm the regional zoom for one airport and HND/NRT apart for Tokyo.
+  - Per-item iOS QA results are in `docs/QA_IOS.md`.
+  - Cleanup: stopped the local `roame-smoke` emulator. The AVD itself is still there.
 
 ## Decisions
 

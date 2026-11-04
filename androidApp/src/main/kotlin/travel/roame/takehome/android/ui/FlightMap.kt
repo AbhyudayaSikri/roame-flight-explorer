@@ -16,13 +16,17 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
+import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
@@ -37,6 +41,7 @@ import org.maplibre.geojson.LineString
 import org.maplibre.geojson.Point
 import travel.roame.takehome.DestinationMarker
 import travel.roame.takehome.GeoPoint
+import travel.roame.takehome.fitCamera
 
 private const val STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
 private const val MARKER_SOURCE = "destination-markers"
@@ -47,7 +52,8 @@ private const val ROUTE_LAYER = "selected-route-layer"
 /**
  * MapLibre in an AndroidView. Markers are bitmaps with overlap allowed, so HND and NRT are both
  * always shown and the labels need no font download. The view follows the screen's lifecycle and
- * is destroyed when it leaves the composition.
+ * is destroyed when it leaves the composition. A newly selected route is framed above the card
+ * covering the bottom [bottomInset] of the map.
  */
 @Composable
 fun FlightMap(
@@ -55,6 +61,7 @@ fun FlightMap(
     route: List<GeoPoint>,
     onMarkerTap: (String) -> Unit,
     modifier: Modifier = Modifier,
+    bottomInset: Dp = 0.dp,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -63,6 +70,7 @@ fun FlightMap(
         MapLibre.getInstance(context)
         MapView(context).also { it.onCreate(null) }
     }
+    var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var style by remember { mutableStateOf<Style?>(null) }
     val markerImages = remember { mutableSetOf<String>() }
 
@@ -86,10 +94,11 @@ fun FlightMap(
     }
 
     DisposableEffect(mapView) {
-        mapView.getMapAsync { map ->
-            map.cameraPosition = CameraPosition.Builder().target(LatLng(25.0, 15.0)).zoom(0.6).build()
-            map.uiSettings.isRotateGesturesEnabled = false
-            map.setStyle(Style.Builder().fromUri(STYLE_URL)) { loaded ->
+        mapView.getMapAsync { loadedMap ->
+            map = loadedMap
+            loadedMap.cameraPosition = CameraPosition.Builder().target(LatLng(25.0, 15.0)).zoom(0.6).build()
+            loadedMap.uiSettings.isRotateGesturesEnabled = false
+            loadedMap.setStyle(Style.Builder().fromUri(STYLE_URL)) { loaded ->
                 loaded.addSource(GeoJsonSource(ROUTE_SOURCE))
                 loaded.addLayer(
                     LineLayer(ROUTE_LAYER, ROUTE_SOURCE).withProperties(
@@ -108,14 +117,17 @@ fun FlightMap(
                 )
                 style = loaded
             }
-            map.addOnMapClickListener { point ->
-                val screen = map.projection.toScreenLocation(point)
-                val airport = map.queryRenderedFeatures(screen, MARKER_LAYER).firstOrNull()?.getStringProperty("airport")
+            loadedMap.addOnMapClickListener { point ->
+                val screen = loadedMap.projection.toScreenLocation(point)
+                val airport = loadedMap.queryRenderedFeatures(screen, MARKER_LAYER).firstOrNull()?.getStringProperty("airport")
                 if (airport != null) currentOnMarkerTap(airport)
                 airport != null
             }
         }
-        onDispose { style = null }
+        onDispose {
+            style = null
+            map = null
+        }
     }
 
     LaunchedEffect(style, markers) {
@@ -124,8 +136,25 @@ fun FlightMap(
     LaunchedEffect(style, route) {
         style?.let { showRoute(it, route) }
     }
+    LaunchedEffect(style, route, bottomInset) {
+        val loadedMap = map
+        if (style != null && loadedMap != null) frameRoute(loadedMap, mapView, route, bottomInset)
+    }
 
     AndroidView(factory = { mapView }, modifier = modifier)
+}
+
+/** Animates to the shared [fitCamera] for [route]; nothing to frame until a flight is selected. */
+private fun frameRoute(map: MapLibreMap, view: MapView, route: List<GeoPoint>, bottomInset: Dp) {
+    if (route.size < 2 || view.width == 0 || view.height == 0) return
+    val density = view.resources.displayMetrics.density.toDouble()
+    val fit = fitCamera(
+        points = route,
+        viewWidth = view.width / density,
+        viewHeight = view.height / density,
+        bottomInset = bottomInset.value.toDouble(),
+    ) ?: return
+    map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(fit.center.latitude, fit.center.longitude), fit.zoom), 600)
 }
 
 private fun showMarkers(context: Context, style: Style, markers: List<DestinationMarker>, images: MutableSet<String>) {

@@ -85,6 +85,24 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
   - The push runs ([ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803655191), [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803655158)) and the PR runs ([ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803662023), [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803662017)) all passed.
   - Both iOS runs passed all 23 UI tests, the demo and the offline relaunch.
 
+## Daytime: SHOULD items brought forward (from 09:31)
+
+Your order: (a) Android camera fit, (b) `--mode=slow`, (c) polish (iOS cabin truncation, marker overlap on both apps), (d) README and NOTES §3/§4. There's also one iOS XCUITest for F1, timeboxed to 45 minutes. One branch and one PR per item, each merged into `main` once it's green. Everything else in §13 waits for the Android QA pass 1 fixes.
+
+| Item | PR | State |
+|---|---|---|
+| (a) Android camera fits the selected route | `feat/android-camera-fit` | in review |
+| (b) `--mode=slow` | — | pending |
+| (c) Polish | — | pending |
+| F1 XCUITest | — | pending |
+| (d) README, NOTES §3/§4 | — | pending |
+
+- **(a) Android camera fit.**
+  - New shared `fitCamera(points, viewWidth, viewHeight, bottomInset, padding)`: Web Mercator math on the route's unwrapped longitudes, so trans-Pacific routes are framed over the Pacific. It returns a centre and a zoom for the area above the card.
+  - 6 new tests, written first. One checks that every one of the 192 fixture routes lands inside the padding above a 300 dp card on a 400 × 800 dp map.
+  - Android measures the card and calls `fitCamera` when the route changes, then animates over 600 ms. iOS keeps MapKit's own fit.
+  - Not checked visually on Android: the local API stays off, per your call. Your QA pass covers it (QA M9).
+
 ## Decisions
 
 - **CI triggers:** added `overnight` to the `push` branches of `ci.yml` and `ios.yml` instead of opening the PR early, so every push gets CI. Reverted before merging (Nov 4, 08:00); PRs and pushes to `main` still run both workflows.

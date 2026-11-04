@@ -46,6 +46,9 @@ Alternatives considered:
 - **iOS UI-test plumbing (2026-11-04):**
   - The test target compiles in Swift 5 mode, and its test methods and helpers are `@MainActor`, matching `XCUIApplication`'s isolation.
   - Tests switch the server's mode with a raw TCP request (Network framework). That avoids App Transport Security in the test runner, which a plain-HTTP `URLSession` call would hit.
+- **Camera fit on a selected route (2026-11-04):**
+  - Android frames the route with the shared `fitCamera`, which uses Web Mercator and MapLibre's 512-dp world at zoom 0. It leaves out the card covering the bottom of the map. iOS gets the same result from MapKit (`MKGeodesicPolyline.boundingMapRect` plus a bottom safe-area inset).
+  - Android re-frames only when the selected flight changes. iOS also re-frames the markers when the filters change and nothing is selected.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.

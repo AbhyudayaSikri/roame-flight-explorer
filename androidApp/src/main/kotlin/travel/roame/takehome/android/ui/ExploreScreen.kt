@@ -35,10 +35,13 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.ExplorerState
@@ -89,6 +92,8 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
         (state.sync as? SyncState.Stale)?.let { StaleBanner(it) }
 
         Box(Modifier.weight(1f).fillMaxWidth()) {
+            val density = LocalDensity.current
+            var cardHeight by remember { mutableStateOf(280.dp) }
             val sync = state.sync
             when {
                 sync is SyncState.Loading && state.totalCount == 0 -> LoadingView()
@@ -119,6 +124,7 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
                     markers = state.markers,
                     route = state.selectedRoute,
                     onMarkerTap = store::focusDestination,
+                    bottomInset = if (state.selected != null) cardHeight else 0.dp,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -129,7 +135,9 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
                     onSave = { store.save(flight.id) },
                     onRemove = { store.remove(flight.id) },
                     onClose = { store.select(null) },
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .onSizeChanged { cardHeight = with(density) { it.height.toDp() } },
                 )
             }
         }

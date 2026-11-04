@@ -10,8 +10,10 @@ struct FlightMapView: View {
     /// Height covered by the flight card, so the framed route stays above it.
     let bottomInset: CGFloat
     @State private var position: MapCameraPosition = .automatic
-    /// The whole world's width in points at the current zoom; 0 (merge nothing) until the camera settles.
+    /// The whole world's width in points at the current zoom; 0 (merge nothing) until it's known.
+    /// Set straight away when this view moves the camera, and after every gesture.
     @State private var worldWidth: Double = 0
+    @State private var viewSize: CGSize = .zero
 
     var body: some View {
         let state = model.state
@@ -47,6 +49,9 @@ struct FlightMapView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 worldWidth = geometry.size.width * MKMapSize.world.width / context.rect.size.width
             }
+            .onChange(of: geometry.size, initial: true) { _, size in
+                viewSize = size
+            }
             .onChange(of: state.selected?.id, initial: true) {
                 frame(model.state.selected)
             }
@@ -66,7 +71,20 @@ struct FlightMapView: View {
             .map { MKMapRect(origin: MKMapPoint($0.point.coordinate), size: MKMapSize(width: 0, height: 0)) }
             .reduce(MKMapRect.null) { $0.union($1) }
         let margin = max(max(rect.width, rect.height) * 0.4, 100_000)
-        withAnimation { position = .rect(rect.insetBy(dx: -margin, dy: -margin)) }
+        show(rect.insetBy(dx: -margin, dy: -margin), animated: true)
+    }
+
+    /// Moves the camera and re-clusters for the new zoom at once. MapKit shows at least [rect],
+    /// widened to the view's shape.
+    private func show(_ rect: MKMapRect, animated: Bool = false) {
+        if animated {
+            withAnimation { position = .rect(rect) }
+        } else {
+            position = .rect(rect)
+        }
+        guard viewSize.width > 0, viewSize.height > 0, rect.size.width > 0 else { return }
+        let visibleWidth = max(rect.size.width, rect.size.height * viewSize.width / viewSize.height)
+        worldWidth = viewSize.width * MKMapSize.world.width / visibleWidth
     }
 
     /// Fits the selected route, or every marker when nothing is selected.
@@ -80,7 +98,7 @@ struct FlightMapView: View {
             count: 2
         )
         let rect = route.boundingMapRect
-        position = .rect(rect.insetBy(dx: -rect.width * 0.2, dy: -rect.height * 0.2))
+        show(rect.insetBy(dx: -rect.width * 0.2, dy: -rect.height * 0.2))
     }
 
     /// `.automatic` zooms to street level around a single airport, so markers that all sit within
@@ -93,10 +111,13 @@ struct FlightMapView: View {
             position = .automatic
             return
         }
+        let span = 2.5
         position = .region(MKCoordinateRegion(
             center: CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLon + maxLon) / 2),
-            span: MKCoordinateSpan(latitudeDelta: 2.5, longitudeDelta: 2.5)
+            span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
         ))
+        // A portrait view fits the region by its width, so the visible span is 2.5° of longitude.
+        if viewSize.width > 0 { worldWidth = viewSize.width * 360 / span }
     }
 }
 

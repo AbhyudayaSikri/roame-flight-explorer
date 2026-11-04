@@ -1,7 +1,22 @@
 import XCTest
 
-/// QA L1, L2, O7.
+/// QA L1, L2, O6, O7. The slow-API case switches the server's mode, so `tearDown` resets it.
 final class LaunchTests: UITestCase {
+    override func tearDownWithError() throws {
+        _ = ServerControl.setMode("normal")
+        try super.tearDownWithError()
+    }
+
+    @MainActor
+    func testASlowAPIShowsTheLoadingStateUntilTheFlightsArrive() {
+        XCTAssertTrue(ServerControl.setMode("slow"))
+        launch()
+        XCTAssertTrue(element(ID.loading).waitForExistence(timeout: 5), "Loading state while the API takes 3 s")
+        screenshot("O6 loading")
+        waitForAllFlights()
+        XCTAssertFalse(element(ID.loading).exists)
+    }
+
     @MainActor
     func testFreshInstallLoadsEveryFlightWithNoFiltersActive() {
         launchWithAllFlights()

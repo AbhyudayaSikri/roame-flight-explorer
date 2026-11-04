@@ -18,6 +18,7 @@ enum ID {
     static let errorRetry = "error.retry"
     static let emptyState = "state.empty"
     static let noMatches = "state.noMatches"
+    static let loading = "state.loading"
     static let message = "message"
     static let savedEmpty = "saved.empty"
     static func clear(_ field: String) -> String { "\(field).clear" }

@@ -27,6 +27,11 @@ class ServerConfigTest {
     }
 
     @Test
+    fun parsesSlowMode() {
+        assertEquals(Mode.SLOW, ServerConfig.parse(arrayOf("--mode=slow")).mode)
+    }
+
+    @Test
     fun rejectsBadInput() {
         assertFailsWith<IllegalArgumentException> { ServerConfig.parse(arrayOf("--port=abc")) }
         assertFailsWith<IllegalArgumentException> { ServerConfig.parse(arrayOf("--port=70000")) }

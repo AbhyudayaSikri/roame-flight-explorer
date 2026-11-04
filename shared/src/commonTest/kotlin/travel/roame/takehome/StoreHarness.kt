@@ -1,0 +1,94 @@
+package travel.roame.takehome
+
+import app.cash.sqldelight.db.SqlDriver
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.job
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestScope
+
+/** A FlightsSource that answers with whatever the test sets, optionally held open by [gate]. */
+internal class FakeFlightsSource : FlightsSource {
+    private var response: () -> List<Flight> = { fixtureFlights }
+    var gate: CompletableDeferred<Unit>? = null
+    var calls = 0
+        private set
+
+    fun serve(flights: List<Flight>) {
+        response = { flights }
+    }
+
+    fun fail(error: RefreshError) {
+        response = { throw RefreshFailure(error) }
+    }
+
+    override suspend fun fetchFlights(): List<Flight> {
+        calls += 1
+        gate?.await()
+        return response()
+    }
+}
+
+/** Real repository and in-memory SQLite, with every dispatcher on the test scheduler. */
+internal class StoreHarness(
+    private val test: TestScope,
+    val source: FakeFlightsSource = FakeFlightsSource(),
+    val driver: SqlDriver = createTestDriver(),
+) {
+    var clock = 1_000L
+    val dispatcher = StandardTestDispatcher(test.testScheduler)
+    val database = FlightDatabaseStore(driver, dispatcher)
+    val faults = FaultInjection(failSaves = false, failRemoves = false)
+    var closed = false
+        private set
+
+    fun newStore(resetData: Boolean = false, repository: FlightRepository = defaultRepository()): FlightExplorerStore {
+        // Parented to backgroundScope so it's cancelled when the test ends, but without its context:
+        // advanceUntilIdle() skips work marked as background, and the store's work must run.
+        val scope = CoroutineScope(SupervisorJob(test.backgroundScope.coroutineContext.job) + dispatcher)
+        return FlightExplorerStore(
+            repository = repository,
+            scope = scope,
+            computeDispatcher = dispatcher,
+            faults = faults,
+            now = { clock },
+            resetData = resetData,
+            onClose = { closed = true },
+        )
+    }
+
+    fun defaultRepository(): FlightRepository =
+        FaultInjectingRepository(DefaultFlightRepository(source, database) { clock }, faults)
+}
+
+/** Holds saves and removes open until the test completes [writeGate], so in-flight states are observable. */
+internal class GatedRepository(private val delegate: FlightRepository) : FlightRepository by delegate {
+    var writeGate: CompletableDeferred<Unit>? = null
+
+    override suspend fun save(flight: Flight): Result<Unit> {
+        writeGate?.await()
+        return delegate.save(flight)
+    }
+
+    override suspend fun remove(flightId: String): Result<Unit> {
+        writeGate?.await()
+        return delegate.remove(flightId)
+    }
+}
+
+/** Delegates to [delegate], except that the first collection of cachedFlights fails. */
+internal class FlakyCacheRepository(private val delegate: FlightRepository) : FlightRepository by delegate {
+    private var failed = false
+
+    override val cachedFlights: Flow<List<Flight>> = flow {
+        if (!failed) {
+            failed = true
+            throw IllegalStateException("disk I/O error")
+        }
+        emitAll(delegate.cachedFlights)
+    }
+}

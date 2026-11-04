@@ -7,8 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		393D984AFE76111A4E70B15F /* PersistenceProbeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0888BDD98CDF06A4DF7FE69 /* PersistenceProbeTests.swift */; };
 		7661B701A8450BA2595B3867 /* LaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95BD3273438D6E8450EE7E5C /* LaunchTests.swift */; };
 		B6B90FCC796C49981688AF53 /* RoameStarterApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8742FB9261150A120F58AE8F /* RoameStarterApp.swift */; };
+		CD47A80559E5C3C63BB2B324 /* PersistenceProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19594E61B6D877E8A7127004 /* PersistenceProbe.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -23,9 +25,11 @@
 
 /* Begin PBXFileReference section */
 		14FC8E3EBFC91F0E91D4287F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		19594E61B6D877E8A7127004 /* PersistenceProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceProbe.swift; sourceTree = "<group>"; };
 		6AA6D1D31A4B3B4CBB84757C /* RoameStarter.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = RoameStarter.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8742FB9261150A120F58AE8F /* RoameStarterApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoameStarterApp.swift; sourceTree = "<group>"; };
 		95BD3273438D6E8450EE7E5C /* LaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchTests.swift; sourceTree = "<group>"; };
+		A0888BDD98CDF06A4DF7FE69 /* PersistenceProbeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceProbeTests.swift; sourceTree = "<group>"; };
 		E3F58F3A3E6BF83F63A84F0B /* RoameStarterUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = RoameStarterUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -34,6 +38,7 @@
 			isa = PBXGroup;
 			children = (
 				14FC8E3EBFC91F0E91D4287F /* Info.plist */,
+				19594E61B6D877E8A7127004 /* PersistenceProbe.swift */,
 				8742FB9261150A120F58AE8F /* RoameStarterApp.swift */,
 			);
 			path = RoameStarter;
@@ -61,6 +66,7 @@
 			isa = PBXGroup;
 			children = (
 				95BD3273438D6E8450EE7E5C /* LaunchTests.swift */,
+				A0888BDD98CDF06A4DF7FE69 /* PersistenceProbeTests.swift */,
 			);
 			path = RoameStarterUITests;
 			sourceTree = "<group>";
@@ -170,6 +176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7661B701A8450BA2595B3867 /* LaunchTests.swift in Sources */,
+				393D984AFE76111A4E70B15F /* PersistenceProbeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -177,6 +184,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CD47A80559E5C3C63BB2B324 /* PersistenceProbe.swift in Sources */,
 				B6B90FCC796C49981688AF53 /* RoameStarterApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

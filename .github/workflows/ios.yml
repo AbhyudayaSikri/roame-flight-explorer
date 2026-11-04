@@ -114,17 +114,56 @@ jobs:
           set -o pipefail
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
+            -skip-testing:RoameStarterUITests/PersistenceProbeTests \
             -resultBundlePath build/ci/ui-tests.xcresult \
             | tee build/ci/ui-tests.log | xcbeautify --renderer github-actions
+
+      # Does the app's data container survive separate test-without-building runs on one simulator?
+      - name: Persistence probe, run 1 (reset, record one launch)
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
+            -destination "id=$UDID" -derivedDataPath build/dd \
+            -only-testing:RoameStarterUITests/PersistenceProbeTests/testFirstLaunch \
+            -resultBundlePath build/ci/probe-run-1.xcresult \
+            | tee build/ci/probe-run-1.log | xcbeautify --renderer github-actions
+
+      - name: Persistence probe, run 2 (read the count in a new xcodebuild run)
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
+            -destination "id=$UDID" -derivedDataPath build/dd \
+            -only-testing:RoameStarterUITests/PersistenceProbeTests/testSecondLaunch \
+            -resultBundlePath build/ci/probe-run-2.xcresult \
+            | tee build/ci/probe-run-2.log | xcbeautify --renderer github-actions
+          COUNT=$(grep -o 'PERSISTENCE_PROBE launchCount=[0-9a-z]*' build/ci/probe-run-2.log | tail -1 | cut -d= -f2 || true)
+          if [ -z "$COUNT" ]; then
+            mkdir -p build/ci/probe-attachments
+            xcrun xcresulttool export attachments --path build/ci/probe-run-2.xcresult \
+              --output-path build/ci/probe-attachments > /dev/null
+            COUNT=$(grep -rho 'PERSISTENCE_PROBE launchCount=[0-9a-z]*' build/ci/probe-attachments | tail -1 | cut -d= -f2 || true)
+          fi
+          case "$COUNT" in
+            2) RESULT="yes, the data written in run 1 was still there in run 2" ;;
+            1) RESULT="no, run 2 started with an empty data container" ;;
+            *) echo "::error::The persistence probe didn't report a launch count (got '$COUNT')"; exit 1 ;;
+          esac
+          echo "::notice title=Persistence probe::App data survives separate test-without-building runs: $RESULT (launchCount=$COUNT)"
+          echo "- App data survives separate \`xcodebuild test-without-building\` runs: $RESULT (launchCount=$COUNT)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Export screenshots
         if: always()
         run: |
-          if [ -d build/ci/ui-tests.xcresult ]; then
-            mkdir -p build/ci/screenshots
-            xcrun xcresulttool export attachments --path build/ci/ui-tests.xcresult \
-              --output-path build/ci/screenshots
-          fi
+          for result in build/ci/*.xcresult; do
+            [ -d "$result" ] || continue
+            name=$(basename "$result" .xcresult)
+            mkdir -p "build/ci/screenshots/$name"
+            xcrun xcresulttool export attachments --path "$result" --output-path "build/ci/screenshots/$name"
+          done
 
       - name: Upload test results
         if: always()

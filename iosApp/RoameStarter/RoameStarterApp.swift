@@ -4,16 +4,18 @@ import SwiftUI
 @main
 struct RoameStarterApp: App {
     private let spike = SkieSpike()
+    private let probeLaunchCount = PersistenceProbe.launchCount()
 
     var body: some Scene {
         WindowGroup {
-            SpikeView(spike: spike)
+            SpikeView(spike: spike, probeLaunchCount: probeLaunchCount)
         }
     }
 }
 
 struct SpikeView: View {
     let spike: SkieSpike
+    let probeLaunchCount: Int?
     @State private var message = ""
     @State private var status = ""
 
@@ -25,6 +27,10 @@ struct SpikeView: View {
                 .accessibilityIdentifier("spike.status")
             Button("Tick") { spike.tick() }
                 .accessibilityIdentifier("spike.tick")
+            if let probeLaunchCount {
+                Text("launches: \(probeLaunchCount)")
+                    .accessibilityIdentifier("probe.launchCount")
+            }
         }
         .task {
             for await value in spike.message {

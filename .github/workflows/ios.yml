@@ -97,6 +97,18 @@ jobs:
           xcrun simctl bootstatus "$UDID" -b
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
+      - name: Shared tests on the simulator
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          ./gradlew --console=plain :shared:iosSimulatorArm64Test --device "$UDID"
+          RESULTS=$(find shared/build/test-results/iosSimulatorArm64Test -name '*.xml' 2>/dev/null | wc -l | tr -d ' ')
+          if [ "$RESULTS" = "0" ]; then
+            echo "::error::iosSimulatorArm64Test wrote no test results, so the tests didn't run."
+            exit 1
+          fi
+          echo "- Shared Kotlin tests ran on the simulator ($RESULTS result files)" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Build for testing
         env:
           UDID: ${{ steps.sim.outputs.udid }}
@@ -174,5 +186,6 @@ jobs:
             build/ci/*.log
             build/ci/*.xcresult
             build/ci/screenshots
+            shared/build/reports/tests/iosSimulatorArm64Test/
           if-no-files-found: ignore
           retention-days: 14

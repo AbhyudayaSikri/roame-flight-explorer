@@ -1,35 +1,36 @@
 import XCTest
 
-final class LaunchTests: XCTestCase {
+/// QA L1, L2, O7.
+final class LaunchTests: UITestCase {
     @MainActor
-    func testSharedStateFlowsDriveTheView() {
-        let app = XCUIApplication()
-        app.launch()
+    func testFreshInstallLoadsEveryFlightWithNoFiltersActive() {
+        launchWithAllFlights()
+        XCTAssertFalse(app.buttons[ID.filtersReset].exists)
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'filters.chip.'")).count, 0)
+        screenshot("L1 launch")
 
-        XCTAssertTrue(text(in: app, "spike.message", equals: "Hello world!"))
-        XCTAssertTrue(text(in: app, "spike.status", equals: "idle"))
-        attachScreenshot(of: app, named: "skie-initial")
-
-        app.buttons["spike.tick"].tap()
-
-        XCTAssertTrue(text(in: app, "spike.message", equals: "Hello world! (ticks: 1)"))
-        XCTAssertTrue(text(in: app, "spike.status", equals: "ticked 1"))
-        attachScreenshot(of: app, named: "skie-after-tick")
+        openFilters()
+        expectDone("Show 1,000 flights")
+        screenshot("L2 default filters")
+        closeFilters()
     }
 
     @MainActor
-    private func text(in app: XCUIApplication, _ identifier: String, equals label: String) -> Bool {
-        app.staticTexts
-            .matching(NSPredicate(format: "identifier == %@ AND label == %@", identifier, label))
-            .firstMatch
-            .waitForExistence(timeout: 30)
-    }
+    func testRotatingAndBackgroundingKeepsSearchAndSelection() {
+        launchWithAllFlights()
+        search(ID.origin, "jfk")
+        expectCount("113 flights")
+        selectFirstRow()
 
-    @MainActor
-    private func attachScreenshot(of app: XCUIApplication, named name: String) {
-        let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = name
-        screenshot.lifetime = .keepAlways
-        add(screenshot)
+        XCUIDevice.shared.orientation = .landscapeLeft
+        expectCount("113 flights")
+        XCTAssertTrue(element(ID.card).exists)
+        screenshot("O7 landscape")
+        XCUIDevice.shared.orientation = .portrait
+
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        expectCount("113 flights")
+        XCTAssertTrue(element(ID.card).waitForExistence(timeout: 10))
     }
 }

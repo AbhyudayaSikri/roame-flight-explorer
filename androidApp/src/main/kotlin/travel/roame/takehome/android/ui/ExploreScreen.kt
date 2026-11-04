@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import travel.roame.takehome.ExplorerState
 import travel.roame.takehome.FlightExplorerStore
 import travel.roame.takehome.SyncState
+import travel.roame.takehome.formatFlightCount
 
 private enum class ViewMode { LIST, MAP }
 
@@ -185,7 +186,7 @@ private fun SummaryRow(state: ExplorerState, onOpenFilters: () -> Unit, onReset:
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = if (state.resultCount == 1) "1 flight" else "${state.resultCount} flights",
+            text = formatFlightCount(state.resultCount),
             style = MaterialTheme.typography.titleSmall,
         )
         LazyRow(

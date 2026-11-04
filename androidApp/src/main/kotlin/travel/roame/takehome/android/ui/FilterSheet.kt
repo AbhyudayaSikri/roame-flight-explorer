@@ -44,6 +44,7 @@ import travel.roame.takehome.DateRange
 import travel.roame.takehome.FiltersUi
 import travel.roame.takehome.FlightExplorerStore
 import travel.roame.takehome.formatDateRange
+import travel.roame.takehome.formatFlightCount
 import travel.roame.takehome.formatPoints
 import kotlin.math.roundToInt
 
@@ -104,7 +105,7 @@ fun FilterSheet(
             Row(Modifier.fillMaxWidth()) {
                 TextButton(onClick = onReset) { Text("Reset all") }
                 Spacer(Modifier.weight(1f))
-                Button(onClick = onDismiss) { Text(if (resultCount == 1) "Show 1 flight" else "Show $resultCount flights") }
+                Button(onClick = onDismiss) { Text("Show ${formatFlightCount(resultCount)}") }
             }
         }
     }

@@ -64,6 +64,8 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: travel.roame.takehome.ios.uitests
         GENERATE_INFOPLIST_FILE: "YES"
         TEST_TARGET_NAME: RoameStarter
+        # XCUIApplication is main-actor isolated; Swift 5 mode keeps synchronous XCTest methods simple.
+        SWIFT_VERSION: "5.0"
         CODE_SIGN_STYLE: Automatic
         TARGETED_DEVICE_FAMILY: "1,2"
 

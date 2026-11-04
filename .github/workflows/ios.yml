@@ -109,16 +109,32 @@ jobs:
           fi
           echo "- Shared Kotlin tests ran on the simulator ($RESULTS result files)" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Start the local API (control endpoint on)
+        run: |
+          mkdir -p build/ci
+          ./gradlew --console=plain :server:installDist
+          nohup server/build/install/server/bin/server --mode=normal --port=8080 --allow-control \
+            > build/ci/server.log 2>&1 &
+          echo $! > build/ci/server.pid
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1; then echo "API is up"; exit 0; fi
+            sleep 1
+          done
+          echo "::error::The local API didn't answer /health within 60 s"
+          cat build/ci/server.log
+          exit 1
+
       - name: Build for testing
+        id: build
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           set -o pipefail
-          mkdir -p build/ci
           xcodebuild build-for-testing -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -configuration Debug -destination "id=$UDID" -derivedDataPath build/dd \
             | tee build/ci/build-for-testing.log | xcbeautify --renderer github-actions
 
+      # Server-mode cases switch the mode themselves through POST /control/mode.
       - name: UI tests
         env:
           UDID: ${{ steps.sim.outputs.udid }}
@@ -126,46 +142,48 @@ jobs:
           set -o pipefail
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
-            -skip-testing:RoameStarterUITests/PersistenceProbeTests \
+            -skip-testing:RoameStarterUITests/OfflineSeedTests \
+            -skip-testing:RoameStarterUITests/OfflineRelaunchTests \
             -resultBundlePath build/ci/ui-tests.xcresult \
             | tee build/ci/ui-tests.log | xcbeautify --renderer github-actions
 
-      # Does the app's data container survive separate test-without-building runs on one simulator?
-      - name: Persistence probe, run 1 (reset, record one launch)
+      # App data survives separate test-without-building runs (docs/NOTES.md, persistence probe),
+      # so the offline case reuses what this run leaves behind.
+      - name: Seed a cache and a saved flight for the offline run
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           set -o pipefail
+          curl -fsS -X POST "http://127.0.0.1:8080/control/mode?value=normal" > /dev/null
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
-            -only-testing:RoameStarterUITests/PersistenceProbeTests/testFirstLaunch \
-            -resultBundlePath build/ci/probe-run-1.xcresult \
-            | tee build/ci/probe-run-1.log | xcbeautify --renderer github-actions
+            -only-testing:RoameStarterUITests/OfflineSeedTests \
+            -resultBundlePath build/ci/offline-seed.xcresult \
+            | tee build/ci/offline-seed.log | xcbeautify --renderer github-actions
 
-      - name: Persistence probe, run 2 (read the count in a new xcodebuild run)
+      - name: Stop the local API
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: |
+          kill "$(cat build/ci/server.pid)"
+          for _ in $(seq 1 30); do
+            if ! curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1; then echo "API stopped"; exit 0; fi
+            sleep 1
+          done
+          echo "::error::The local API was still answering 30 s after kill"
+          exit 1
+
+      - name: Offline relaunch tests (API stopped)
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
           set -o pipefail
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
-            -only-testing:RoameStarterUITests/PersistenceProbeTests/testSecondLaunch \
-            -resultBundlePath build/ci/probe-run-2.xcresult \
-            | tee build/ci/probe-run-2.log | xcbeautify --renderer github-actions
-          COUNT=$(grep -o 'PERSISTENCE_PROBE launchCount=[0-9a-z]*' build/ci/probe-run-2.log | tail -1 | cut -d= -f2 || true)
-          if [ -z "$COUNT" ]; then
-            mkdir -p build/ci/probe-attachments
-            xcrun xcresulttool export attachments --path build/ci/probe-run-2.xcresult \
-              --output-path build/ci/probe-attachments > /dev/null
-            COUNT=$(grep -rho 'PERSISTENCE_PROBE launchCount=[0-9a-z]*' build/ci/probe-attachments | tail -1 | cut -d= -f2 || true)
-          fi
-          case "$COUNT" in
-            2) RESULT="yes, the data written in run 1 was still there in run 2" ;;
-            1) RESULT="no, run 2 started with an empty data container" ;;
-            *) echo "::error::The persistence probe didn't report a launch count (got '$COUNT')"; exit 1 ;;
-          esac
-          echo "::notice title=Persistence probe::App data survives separate test-without-building runs: $RESULT (launchCount=$COUNT)"
-          echo "- App data survives separate \`xcodebuild test-without-building\` runs: $RESULT (launchCount=$COUNT)" >> "$GITHUB_STEP_SUMMARY"
+            -only-testing:RoameStarterUITests/OfflineRelaunchTests \
+            -resultBundlePath build/ci/offline-relaunch.xcresult \
+            | tee build/ci/offline-relaunch.log | xcbeautify --renderer github-actions
 
       - name: Export screenshots
         if: always()

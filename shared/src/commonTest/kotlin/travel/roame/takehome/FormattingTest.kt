@@ -31,6 +31,14 @@ class FormattingTest {
     }
 
     @Test
+    fun flightCountsAreSingularOrGroupedPlurals() {
+        assertEquals("0 flights", formatFlightCount(0))
+        assertEquals("1 flight", formatFlightCount(1))
+        assertEquals("113 flights", formatFlightCount(113))
+        assertEquals("1,000 flights", formatFlightCount(1000))
+    }
+
+    @Test
     fun flightsCarryTheirLabels() {
         val flight = fixtureFlights.first { it.id == "fx-LAX-MEX-20270218" }
 

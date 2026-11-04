@@ -16,6 +16,9 @@ internal fun formatThousands(value: Int): String {
 /** 16500 -> "16,500 pts" */
 fun formatPoints(points: Int): String = "${formatThousands(points)} pts"
 
+/** 1 -> "1 flight", 1000 -> "1,000 flights" */
+fun formatFlightCount(count: Int): String = if (count == 1) "1 flight" else "${formatThousands(count)} flights"
+
 /** Marker-sized points, rounded to one decimal: 16500 -> "16.5k", 9000 -> "9k", 950 -> "950". */
 fun formatPointsCompact(points: Int): String {
     if (points < 1000) return points.toString()

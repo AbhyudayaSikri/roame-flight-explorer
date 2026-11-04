@@ -18,6 +18,26 @@ final class MapSelectionTests: UITestCase {
     }
 
     @MainActor
+    func testTappingAMergedPillZoomsInUntilItsAirportsSeparate() {
+        launchWithAllFlights()
+        showMap()
+        let merged = clusters.firstMatch
+        XCTAssertTrue(merged.waitForExistence(timeout: 15), "At world zoom, nearby airports share a pill")
+        let airports = (merged.value as? String ?? "").split(separator: " ").map(String.init)
+        XCTAssertGreaterThan(airports.count, 1, merged.debugDescription)
+        screenshot("Map, merged pills at world zoom")
+
+        merged.tap()
+        let separated = airports.map { app.buttons[ID.marker($0)] }
+        let deadline = Date().addingTimeInterval(15)
+        while !separated.contains(where: { $0.exists }) && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.5)
+        }
+        XCTAssertTrue(separated.contains { $0.exists }, "None of \(airports) got its own pill after zooming in")
+        screenshot("Map, zoomed into a merged pill")
+    }
+
+    @MainActor
     func testMarkerSheetPicksAFlightAndShowsTheCard() {
         launchWithAllFlights()
         search(ID.destination, "hnd")

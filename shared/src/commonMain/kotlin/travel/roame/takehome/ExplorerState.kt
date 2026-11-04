@@ -125,6 +125,7 @@ object TestIds {
     fun programOption(program: String) = "filters.program.$program"
     fun flightRow(flightId: String) = "flight.row.$flightId"
     fun marker(airport: String) = "marker.$airport"
+    fun markerCluster(id: String) = "cluster.$id"
     fun savedRow(flightId: String) = "saved.row.$flightId"
     fun savedRemove(flightId: String) = "saved.remove.$flightId"
 }

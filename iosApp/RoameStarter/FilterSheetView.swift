@@ -21,15 +21,23 @@ struct FilterSheetView: View {
                         DatePicker("To", selection: dateBinding(start: false, range: range), in: allowed, displayedComponents: .date)
                             .accessibilityIdentifier(TestIds.shared.filterDateEnd)
                     }
+                    // A row per cabin rather than a segmented control, which cut "Premium Economy" short.
                     Section("Cabin") {
-                        Picker("Cabin", selection: cabinBinding) {
-                            Text("Any").tag(String?.none)
-                            ForEach(bounds.cabins, id: \.self) { cabin in
-                                Text(cabin).tag(String?.some(cabin))
+                        ForEach([String?.none] + bounds.cabins.map { String?.some($0) }, id: \.self) { cabin in
+                            let selected = filters.cabin == cabin
+                            Button { store.setCabin(cabin: cabin) } label: {
+                                HStack {
+                                    Text(cabin ?? "Any").foregroundStyle(.primary)
+                                    Spacer()
+                                    if selected {
+                                        Image(systemName: "checkmark").foregroundStyle(Color.accentColor)
+                                    }
+                                }
+                                .contentShape(Rectangle())
                             }
+                            .accessibilityAddTraits(selected ? .isSelected : [])
+                            .accessibilityIdentifier(TestIds.shared.cabinOption(cabin: cabin))
                         }
-                        .pickerStyle(.segmented)
-                        .accessibilityIdentifier("filters.cabin")
                     }
                     Section("Maximum points") {
                         let points = Int(filters.maxPoints)
@@ -82,10 +90,6 @@ struct FilterSheetView: View {
                 }
             }
         )
-    }
-
-    private var cabinBinding: Binding<String?> {
-        Binding(get: { model.state.filters.cabin }, set: { store.setCabin(cabin: $0) })
     }
 
     private var pointsBinding: Binding<Double> {

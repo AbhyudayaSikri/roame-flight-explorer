@@ -2,44 +2,71 @@ import MapKit
 import SwiftUI
 @preconcurrency import Shared
 
-/// One annotation per destination airport (HND and NRT are separate); the selected flight is a
+/// One pill per destination airport (HND and NRT are separate), merged by the shared
+/// `clusterMarkers` where pills would overlap at the current zoom. The selected flight is a
 /// geodesic polyline, which MapKit draws correctly across the antimeridian.
 struct FlightMapView: View {
     let model: ExplorerModel
     /// Height covered by the flight card, so the framed route stays above it.
     let bottomInset: CGFloat
     @State private var position: MapCameraPosition = .automatic
+    /// The whole world's width in points at the current zoom; 0 (merge nothing) until the camera settles.
+    @State private var worldWidth: Double = 0
 
     var body: some View {
         let state = model.state
-        Map(position: $position) {
-            ForEach(state.markers, id: \.airport) { marker in
-                Annotation(marker.city, coordinate: marker.point.coordinate) {
-                    Button { model.store.focusDestination(airportCode: marker.airport) } label: {
-                        MarkerPill(marker: marker)
+        let pills = MarkerClusteringKt.clusterMarkers(
+            markers: state.markers, worldWidth: worldWidth, pillWidth: 104, pillHeight: 24
+        )
+        GeometryReader { geometry in
+            Map(position: $position) {
+                ForEach(pills, id: \.id) { pill in
+                    Annotation(pill.title, coordinate: pill.center.coordinate) {
+                        Button { tap(pill) } label: {
+                            MarkerPill(pill: pill)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(pill.title) \(pill.label)")
+                        .accessibilityValue(pill.isSingle ? "" : pill.markers.map(\.airport).joined(separator: " "))
+                        .accessibilityIdentifier(
+                            pill.isSingle ? TestIds.shared.marker(airport: pill.id) : TestIds.shared.markerCluster(id: pill.id)
+                        )
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(marker.airport) \(marker.label)")
-                    .accessibilityIdentifier(TestIds.shared.marker(airport: marker.airport))
+                    .annotationTitles(.hidden)
                 }
-                .annotationTitles(.hidden)
+                if let flight = state.selected {
+                    MapPolyline(
+                        coordinates: [flight.originPoint.coordinate, flight.destinationPoint.coordinate],
+                        contourStyle: .geodesic
+                    )
+                    .stroke(Color.red, lineWidth: 3)
+                }
             }
-            if let flight = state.selected {
-                MapPolyline(
-                    coordinates: [flight.originPoint.coordinate, flight.destinationPoint.coordinate],
-                    contourStyle: .geodesic
-                )
-                .stroke(Color.red, lineWidth: 3)
+            .mapStyle(.standard(pointsOfInterest: .excludingAll))
+            .safeAreaPadding(.bottom, bottomInset)
+            .onMapCameraChange(frequency: .onEnd) { context in
+                worldWidth = geometry.size.width * MKMapSize.world.width / context.rect.size.width
+            }
+            .onChange(of: state.selected?.id, initial: true) {
+                frame(model.state.selected)
+            }
+            .onChange(of: state.markers.map(\.airport)) {
+                if model.state.selected == nil { frameMarkers() }
             }
         }
-        .mapStyle(.standard(pointsOfInterest: .excludingAll))
-        .safeAreaPadding(.bottom, bottomInset)
-        .onChange(of: state.selected?.id, initial: true) {
-            frame(model.state.selected)
+    }
+
+    /// A destination opens its flights; a cluster zooms in until its airports separate.
+    private func tap(_ pill: MarkerCluster) {
+        if pill.isSingle {
+            model.store.focusDestination(airportCode: pill.id)
+            return
         }
-        .onChange(of: state.markers.map(\.airport)) {
-            if model.state.selected == nil { frameMarkers() }
-        }
+        let rect = pill.markers
+            .map { MKMapRect(origin: MKMapPoint($0.point.coordinate), size: MKMapSize(width: 0, height: 0)) }
+            .reduce(MKMapRect.null) { $0.union($1) }
+        let margin = max(max(rect.width, rect.height) * 0.4, 100_000)
+        withAnimation { position = .rect(rect.insetBy(dx: -margin, dy: -margin)) }
     }
 
     /// Fits the selected route, or every marker when nothing is selected.
@@ -74,17 +101,17 @@ struct FlightMapView: View {
 }
 
 private struct MarkerPill: View {
-    let marker: DestinationMarker
+    let pill: MarkerCluster
 
     var body: some View {
         HStack(spacing: 4) {
-            Text(marker.airport).font(.caption2.weight(.bold))
-            Text(marker.label).font(.caption2)
+            Text(pill.title).font(.caption2.weight(.bold))
+            Text(pill.label).font(.caption2)
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
-        .background(Capsule().fill(marker.hasSaved ? Color.orange : Color.blue))
+        .background(Capsule().fill(pill.hasSaved ? Color.orange : (pill.isSingle ? Color.blue : Color.indigo)))
         .shadow(radius: 1, y: 1)
     }
 }

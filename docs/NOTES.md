@@ -42,10 +42,17 @@ Alternatives considered:
 - **Results sort** by departure date, then points, then id.
 - **Filter options order (2026-11-04):** cabins run from cheapest to most premium (Economy, Premium Economy, Business, then First if it ever appears), with any unknown cabin names after them alphabetically. Programs are alphabetical.
 - **Result count wording (2026-11-04):** "1 flight", otherwise a grouped plural such as "1,000 flights". Both apps use the shared `formatFlightCount`.
-- **HND and NRT markers overlap at world zoom (2026-11-04).** The airports are 0.6° apart, so at the initial zoom their markers sit on top of each other. They stay separate markers with their own labels, and zooming in separates them.
+- **Pills that would overlap are merged (2026-11-04).** At world zoom, nearby destinations such as LHR and CDG, or HND and NRT (0.6° apart), would sit on top of each other.
+  - The shared `clusterMarkers` merges any pills that would overlap at the current zoom into one, such as "6 airports  280 · 13k" (airports, then flights · lowest points). Tapping a merged pill zooms in until its airports separate.
+  - The busiest destination in a group names it, so the pills are the same each time at a given zoom.
+  - Each airport, HND and NRT included, still has its own marker once the map is zoomed in, as QA M1 and R15 require.
+  - Pill sizes are fixed estimates: 104 × 24 pt on iOS and 130 × 28 dp on Android.
 - **iOS UI-test plumbing (2026-11-04):**
   - The test target compiles in Swift 5 mode, and its test methods and helpers are `@MainActor`, matching `XCUIApplication`'s isolation.
   - Tests switch the server's mode with a raw TCP request (Network framework). That avoids App Transport Security in the test runner, which a plain-HTTP `URLSession` call would hit.
+- **Camera fit on a selected route (2026-11-04):**
+  - Android frames the route with the shared `fitCamera`, which uses Web Mercator and MapLibre's 512-dp world at zoom 0. It leaves out the card covering the bottom of the map. iOS gets the same result from MapKit (`MKGeodesicPolyline.boundingMapRect` plus a bottom safe-area inset).
+  - Android re-frames only when the selected flight changes. iOS also re-frames the markers when the filters change and nothing is selected.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.

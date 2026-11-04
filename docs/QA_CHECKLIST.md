@@ -1,52 +1,85 @@
 # QA checklist
 
-Run on Android (Windows emulator, by hand) and iOS (CI XCUITest + screenshots).
+Run on Android (Windows emulator, by hand) and iOS (CI XCUITest plus screenshots; PLAN §8.3 maps test classes to IDs).
 Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | commit | note`.
 
+**Tiers.** Every MUST item has to pass on both apps before any SHOULD or COULD work starts (PLAN §0). SHOULD and COULD items are checked only if they were built.
+
+**Expected numbers** come from `fixtures/flights.json` with the server in `--mode=normal` and default filters, unless an item says otherwise. On iOS, the smoothness items (L3, M2, F9) are judged from the demo recording.
+
+## API
+- A1 [MUST] `curl -i http://localhost:8080/flights` → `200`, `Content-Type: application/json`, 1,000 flights. `/health` → `ok`.
+- A2 [MUST] The single documented command starts the API on each machine: `./gradlew :server:run` (Mac/CI) and `gradlew.bat :server:run` (Windows).
+
 ## Launch and loading
-- L1 Fresh install, server running → loading state, then all 1,000 flights, count shows 1,000.
-- L2 Default filters show the full date range (Feb 1 – Apr 1 2027); no other filters are active.
+- L1 [MUST] Fresh install, server running → loading state, then all 1,000 flights; the count shows 1,000.
+- L2 [MUST] Default filters cover the full date range (Feb 1 – Apr 1, 2027); no filter chips are shown.
+- L3 [MUST] Fling the full 1,000-row list from top to bottom and back → smooth, no blank rows, no stutter.
 
 ## Search
-- S1 Origin `  jfk ` → only JFK departures (trim + case-insensitive).
-- S2 Origin `new york` → JFK flights (city match).
-- S3 Destination `TOKYO` → both HND and NRT flights.
-- S4 Origin + destination together → AND of both.
-- S5 Search with no matches → "no results for these filters" empty state (not an error).
+- S1 [MUST] Origin `  jfk ` → 113 flights, all departing JFK (trim + case-insensitive).
+- S2 [MUST] Origin `new york` → the same 113 JFK flights (city match).
+- S3 [MUST] Destination `TOKYO` → 110 flights, to both HND and NRT.
+- S4 [MUST] Origin `jfk` + destination `tokyo` → 7 flights (AND of both).
+- S5 [MUST] Origin `xyz` → a "no matching flights" empty state with Reset, not an error.
+- S6 [SHOULD] Search rule:
+  - Destination `dub` → 29 (Dublin only, not Dubai); `du` → 69 (Dublin + Dubai).
+  - Origin `fra` → no matches; `fran` → 123 (San Francisco).
 
 ## Filters
-- F1 Date range Feb 1 → Feb 1 → only Feb 1 flights (start and end inclusive).
-- F2 Date range ending Apr 1 → Apr 1 flights included.
-- F3 Max points set exactly to a known flight's price → that flight included.
-- F4 Cabin = Business → only Business.
-- F5 Programs Avios + Aeroplan → flights from either program (OR).
-- F6 Cabin + program + points together → AND across all three.
-- F7 Active filters visible as chips/summary; result count updates.
-- F8 Reset → back to defaults, count 1,000.
-- F9 Typing fast or changing filters quickly → final results match the last input; no jank.
+- F1 [MUST] Date range Feb 1 → Feb 1 → 17 flights, all on Feb 1 (start and end inclusive).
+- F2 [MUST] Date range Apr 1 → Apr 1 → 21 flights (the end date is included).
+- F3 [MUST] Max points 9,000 → exactly 1 flight (LAX → MEX, Feb 18, 9,000 pts). Max 8,500 → no matches.
+- F4 [MUST] Cabin Business → 344 flights. Cabin Economy → 467, with no Premium Economy flights included.
+- F5 [MUST] Programs Avios + Aeroplan → 386 flights, each from one of the two (OR).
+- F6 [MUST] Cabin Business + program Avios + max 60,000 → 32 flights (AND across all three).
+- F7 [MUST] Active filters are visible as chips/summary; the result count updates with every change.
+- F8 [MUST] Reset → search fields and every filter back to defaults; count 1,000.
+- F9 [MUST] Typing fast or changing filters quickly → the final results match the last input; no jank.
+- F10 [MUST] Select a program, then deselect it → all programs are included again (1,000). "Mileage Plan" (203) and "MileagePlus" (199) are separate options.
 
 ## List / map / selection
-- M1 Map shows one marker per destination airport with count + lowest points that match the current filters.
-- M2 Pan and zoom are smooth.
-- M3 Tap a marker → browse that destination's flights → pick one → route line + flight card.
-- M4 Card shows origin, destination, date, cabin, points, program, Save/Remove.
-- M5 Select on list → switch to map → same flight still selected, and the reverse.
-- M6 Change filters so the selected flight is excluded → selection cleared on both views.
-- M7 List and map always agree on the result set.
+- M1 [MUST] The map shows one marker per destination airport with count + lowest points, matching the current filters.
+  - 24 markers at defaults.
+  - Tokyo shows two markers: HND "55 · 16.5k" and NRT "55 · 19.5k".
+- M2 [MUST] Pan and zoom are smooth.
+- M3 [MUST] Tap a marker → browse that destination's flights → pick one → route line + flight card.
+- M4 [MUST] The card shows origin, destination, date, cabin, points, program and Save/Remove.
+- M5 [MUST] Select on the list → switch to the map → the same flight is still selected, and the reverse.
+- M6 [MUST] Change filters so the selected flight is excluded → the selection is cleared on both views.
+- M7 [MUST] The list and the map always agree on the result set (marker counts add up to the result count).
+- M8 [MUST] Select a trans-Pacific flight (e.g. SFO → NRT or JFK → SYD) → one continuous arc over the Pacific, never a line across the whole map.
+- M9 [SHOULD] After selecting, the camera frames the whole route, including M8's routes.
 
 ## Saved
-- V1 Save from card → appears in Saved tab; saved state shown on list and map.
-- V2 Save the same flight again → no duplicate; details updated.
-- V3 Saved tab unaffected by current discovery filters.
-- V4 Remove from Saved tab and from card.
-- V5 Saved flight absent from latest API response (`--mode=empty`, then refresh) → still in Saved.
-- V6 Simulated save/remove failure (debug toggle) → error shown, state rolled back.
+- V1 [MUST] Save from the card → it appears in the Saved tab; the saved state shows on list rows and on the map.
+- V2 [MUST] Saving again updates without duplicates:
+  1. Save a flight.
+  2. Restart the server with `--mode=updated`, then pull to refresh.
+  3. The card shows "Update saved". Tap it.
+  4. The Saved tab shows the new points (+500) and still exactly one entry.
+- V3 [MUST] The Saved tab is unaffected by the current discovery filters.
+- V4 [MUST] Remove works from the Saved tab and from the card.
+- V5 [MUST] A saved flight absent from the latest API response (`--mode=empty`, then refresh) → still in Saved.
+- V6 [MUST] Simulated save failure and remove failure (Android debug menu; iOS `-failSaves` / `-failRemoves`) → an error is shown and the state rolls back.
 
 ## Offline / errors
-- O1 Stop server → pull to refresh → existing data kept + stale/offline indicator.
-- O2 Stop server → force-quit app → reopen → cached results + saved flights + stale indicator.
-- O3 Offline: search and filter cached results; view saved; remove a saved flight.
-- O4 Uninstall/clear data → launch with server stopped → understandable error + Retry; start server → Retry works.
-- O5 `--mode=empty` on fresh install → "no flights available" state, distinct from the O4 error.
-- O6 `--mode=slow` → loading indicator visible; UI stays responsive.
-- O7 Rotate the device / background and foreground the app → no crash, state preserved.
+- O1 [MUST] Stop the server → pull to refresh → existing data kept + stale/offline indicator.
+- O2 [MUST] Stop the server → force-quit the app → reopen → cached results + saved flights + stale indicator.
+- O3 [MUST] Offline: search and filter cached results; view saved flights; remove a saved flight.
+- O4 [MUST] Clear app data (Android "Clear storage"; iOS `-resetData`) → launch with the server stopped → understandable error + Retry. Start the server → Retry works. (iOS CI uses `--mode=error`, then `normal`, through the control endpoint.)
+- O5 [MUST] `--mode=empty` on a fresh install → "No flights available", visibly different from the O4 error.
+- O6 [SHOULD] `--mode=slow` → the loading indicator shows for ~3 s; the UI stays responsive.
+- O7 [MUST] Rotate the device / background and foreground the app → no crash, state preserved.
+- O8 [SHOULD] Offline, Map tab → markers and the selected route still render. A blank background is fine; tiles aren't required.
+
+## Polish
+- P1 [MUST] Spacing, typography and hierarchy are consistent across list rows, the card, sheets and the Saved tab.
+- P2 [MUST] Every tap gives visible feedback. Save/Remove show progress and can't be double-submitted.
+- P3 [COULD] Dark mode: everything is legible, including the map and markers.
+- P4 [COULD] Largest system font size: rows and the card don't truncate the route, date or points.
+- P5 [COULD] TalkBack / VoiceOver read the route, date, points and saved state.
+
+## Tooling (Android debug build)
+- T1 [SHOULD] StrictMode: no disk/network-on-main-thread violations in logcat during a full pass.
+- T2 [COULD] LeakCanary: no leaks after rotating, switching tabs and opening/closing the map.

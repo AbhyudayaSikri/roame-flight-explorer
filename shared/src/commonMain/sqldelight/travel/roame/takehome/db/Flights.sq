@@ -1,0 +1,78 @@
+-- The latest successful GET /flights response. Replaced as a whole in one transaction.
+CREATE TABLE cached_flight (
+  id TEXT NOT NULL PRIMARY KEY,
+  origin TEXT NOT NULL,
+  destination TEXT NOT NULL,
+  origin_city TEXT NOT NULL,
+  destination_city TEXT NOT NULL,
+  departure_date TEXT NOT NULL,
+  program TEXT NOT NULL,
+  points INTEGER NOT NULL,
+  cabin TEXT NOT NULL,
+  origin_latitude REAL NOT NULL,
+  origin_longitude REAL NOT NULL,
+  destination_latitude REAL NOT NULL,
+  destination_longitude REAL NOT NULL
+);
+
+-- Full snapshots taken when the user saves; a refresh never touches this table.
+CREATE TABLE saved_flight (
+  id TEXT NOT NULL PRIMARY KEY,
+  origin TEXT NOT NULL,
+  destination TEXT NOT NULL,
+  origin_city TEXT NOT NULL,
+  destination_city TEXT NOT NULL,
+  departure_date TEXT NOT NULL,
+  program TEXT NOT NULL,
+  points INTEGER NOT NULL,
+  cabin TEXT NOT NULL,
+  origin_latitude REAL NOT NULL,
+  origin_longitude REAL NOT NULL,
+  destination_latitude REAL NOT NULL,
+  destination_longitude REAL NOT NULL,
+  saved_at INTEGER NOT NULL
+);
+
+CREATE TABLE sync_meta (
+  key TEXT NOT NULL PRIMARY KEY,
+  value TEXT NOT NULL
+);
+
+selectCachedFlights:
+SELECT id, origin, destination, origin_city, destination_city, departure_date, program, points, cabin,
+       origin_latitude, origin_longitude, destination_latitude, destination_longitude
+FROM cached_flight;
+
+insertCachedFlight:
+INSERT INTO cached_flight(id, origin, destination, origin_city, destination_city, departure_date, program, points, cabin,
+                          origin_latitude, origin_longitude, destination_latitude, destination_longitude)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteCachedFlights:
+DELETE FROM cached_flight;
+
+selectSavedFlights:
+SELECT id, origin, destination, origin_city, destination_city, departure_date, program, points, cabin,
+       origin_latitude, origin_longitude, destination_latitude, destination_longitude, saved_at
+FROM saved_flight
+ORDER BY saved_at DESC, id;
+
+upsertSavedFlight:
+INSERT OR REPLACE INTO saved_flight(id, origin, destination, origin_city, destination_city, departure_date, program, points,
+                                    cabin, origin_latitude, origin_longitude, destination_latitude, destination_longitude, saved_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+deleteSavedFlight:
+DELETE FROM saved_flight WHERE id = ?;
+
+deleteSavedFlights:
+DELETE FROM saved_flight;
+
+selectMeta:
+SELECT value FROM sync_meta WHERE key = ?;
+
+upsertMeta:
+INSERT OR REPLACE INTO sync_meta(key, value) VALUES (?, ?);
+
+deleteMeta:
+DELETE FROM sync_meta;

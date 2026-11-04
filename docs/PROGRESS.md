@@ -64,6 +64,12 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
   - From the screenshots (PLAN 8.4):
     - The search placeholder was truncated, so it now reads "From" / "To".
     - "0 flights" showed above the error screen, so the count is now hidden while there's no data.
+- **02:58 Second iOS run green** ([41792526988](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41792526988)): 23/23 UI tests, the demo walkthrough, and the offline relaunch with the API stopped. The demo video is 27 MB.
+  - Screenshot review (PLAN 8.4):
+    - SFO → NRT draws as one arc over the North Pacific, framed above the card (M8).
+    - Tokyo shows HND and NRT as separate markers.
+    - Fixed: a single-airport result zoomed to street level. Markers within 2° now get a regional view.
+    - Left as is: "Premium Economy" truncates in the segmented cabin picker.
 
 ## Decisions
 

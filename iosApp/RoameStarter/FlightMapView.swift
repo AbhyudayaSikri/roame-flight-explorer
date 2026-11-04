@@ -38,14 +38,14 @@ struct FlightMapView: View {
             frame(model.state.selected)
         }
         .onChange(of: state.markers.map(\.airport)) {
-            if model.state.selected == nil { position = .automatic }
+            if model.state.selected == nil { frameMarkers() }
         }
     }
 
     /// Fits the selected route, or every marker when nothing is selected.
     private func frame(_ flight: Flight?) {
         guard let flight else {
-            position = .automatic
+            frameMarkers()
             return
         }
         let route = MKGeodesicPolyline(
@@ -54,6 +54,22 @@ struct FlightMapView: View {
         )
         let rect = route.boundingMapRect
         position = .rect(rect.insetBy(dx: -rect.width * 0.2, dy: -rect.height * 0.2))
+    }
+
+    /// `.automatic` zooms to street level around a single airport, so markers that all sit within
+    /// a couple of degrees (one airport, or HND + NRT) get a regional view instead.
+    private func frameMarkers() {
+        let points = model.state.markers.map(\.point)
+        guard let minLat = points.map(\.latitude).min(), let maxLat = points.map(\.latitude).max(),
+              let minLon = points.map(\.longitude).min(), let maxLon = points.map(\.longitude).max(),
+              maxLat - minLat < 2, maxLon - minLon < 2 else {
+            position = .automatic
+            return
+        }
+        position = .region(MKCoordinateRegion(
+            center: CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLon + maxLon) / 2),
+            span: MKCoordinateSpan(latitudeDelta: 2.5, longitudeDelta: 2.5)
+        ))
     }
 }
 

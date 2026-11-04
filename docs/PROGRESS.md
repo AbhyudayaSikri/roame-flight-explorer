@@ -10,7 +10,7 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
 | 5. Shared domain | done 01:10 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41782370174) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41782370193) |
 | 6. Data layer + store | done 01:34 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41784197206) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41784197457) |
 | 7. Android UI | done 01:43 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41786516273) (Android-only change, so `ios.yml` didn't run) |
-| 8. iOS UI | done 03:26 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168131) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168173) (demo video and screenshots in the `ios-ui-tests` artifact) |
+| 8. iOS UI | done 03:26; flaky-test fix green 04:30 | [ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803655191) · [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803655158) (demo video and screenshots in the `ios-ui-tests` artifact) |
 
 ## Log
 
@@ -81,6 +81,9 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
     - The list already showed the 3 JFK → HND flights at the updated prices, but nothing was selected.
     - The test had tapped the first row right after typing "hnd". The store filters asynchronously, and here the price refresh was landing at the same moment, so the tap hit a row from the JFK-only results. The store then correctly cleared a selection that was no longer in the results.
   - Fix (test synchronization, no assertion loosened): every select after a search now waits for that search's count first.
+- **04:30 Green on `e3e9c4b`, twice.**
+  - The push runs ([ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803655191), [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803655158)) and the PR runs ([ci](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803662023), [ios](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41803662017)) all passed.
+  - Both iOS runs passed all 23 UI tests, the demo and the offline relaunch.
 
 ## Decisions
 

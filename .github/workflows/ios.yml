@@ -2,7 +2,7 @@ name: ios
 
 on:
   push:
-    branches: [main, overnight]
+    branches: [main]
     paths:
       - 'iosApp/**'
       - 'shared/**'

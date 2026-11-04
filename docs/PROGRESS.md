@@ -87,7 +87,7 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4โ
 
 ## Decisions
 
-- **CI triggers:** added `overnight` to the `push` branches of `ci.yml` and `ios.yml` instead of opening the PR early, so every push gets CI. Generalize or revert this at merge time.
+- **CI triggers:** added `overnight` to the `push` branches of `ci.yml` and `ios.yml` instead of opening the PR early, so every push gets CI. Reverted before merging (Nov 4, 08:00); PRs and pushes to `main` still run both workflows.
 - **First push carries three commits:** setup, version catalog and server. The mandated pre-push check (`:server:test :shared:testAndroidHostTest :androidApp:assembleDebug`) can't pass until `:server` and the shared host-test task exist.
 - **Version catalog in step 4, not 5.0:** `gradle/libs.versions.toml` now holds every ยง3.1 version, and all build files use it. The server was the first module to need new versions.
 - **Host tests enabled in step 4:** `withHostTest {}` went in early so `:shared:testAndroidHostTest` exists for the pre-push check. With no test sources it reports NO-SOURCE.

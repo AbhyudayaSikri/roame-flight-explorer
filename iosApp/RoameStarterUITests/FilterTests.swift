@@ -21,8 +21,8 @@ final class FilterTests: UITestCase {
     func testProgramsCombineWithOrAndDeselectingRestoresAll() {
         launchWithAllFlights()
         openFilters()
-        XCTAssertTrue(app.switches[ID.program("Mileage Plan")].waitForExistence(timeout: 10))
-        XCTAssertTrue(app.switches[ID.program("MileagePlus")].exists)
+        reveal(app.switches[ID.program("MileagePlus")])
+        XCTAssertTrue(app.switches[ID.program("Mileage Plan")].exists)
         toggleProgram("Avios")
         toggleProgram("Aeroplan")
         expectDone("Show 386 flights")

@@ -22,8 +22,10 @@ enum ID {
     static let savedEmpty = "saved.empty"
     static func clear(_ field: String) -> String { "\(field).clear" }
     static func chip(_ kind: String) -> String { "filters.chip.\(kind)" }
+    static func cabin(_ name: String?) -> String { "filters.cabin.\(name ?? "any")" }
     static func program(_ name: String) -> String { "filters.program.\(name)" }
     static func marker(_ airport: String) -> String { "marker.\(airport)" }
+    static func cluster(_ id: String) -> String { "cluster.\(id)" }
 }
 
 /// Switches the local API's mode (server started with `--allow-control`). Uses a raw TCP
@@ -155,6 +157,11 @@ class UITestCase: XCTestCase {
         app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'marker.'"))
     }
 
+    @MainActor
+    var clusters: XCUIElementQuery {
+        app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cluster.'"))
+    }
+
     /// Taps the first result row and waits for the flight card. Call it only after `expectCount`
     /// confirms the latest search: the store filters asynchronously, so rows from the previous
     /// query can still be on screen right after typing.
@@ -194,20 +201,29 @@ class UITestCase: XCTestCase {
         XCTAssertTrue(app.buttons[ID.filtersDone].waitForNonExistence(timeout: 10))
     }
 
+    /// Scrolls the filter sheet until [element] is on screen; rows below the fold may not exist yet.
+    @MainActor
+    func reveal(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
+        var swipes = 0
+        while !(element.exists && element.isHittable) && swipes < 6 {
+            app.swipeUp()
+            swipes += 1
+        }
+        XCTAssertTrue(element.exists && element.isHittable, "Couldn't scroll to \(element)", file: file, line: line)
+    }
+
+    /// "Any", "Economy", "Premium Economy" or "Business".
     @MainActor
     func selectCabin(_ cabin: String) {
-        app.segmentedControls.buttons[cabin].tap()
+        let option = app.buttons[ID.cabin(cabin == "Any" ? nil : cabin)]
+        reveal(option)
+        option.tap()
     }
 
     @MainActor
     func toggleProgram(_ name: String) {
         let toggle = app.switches[ID.program(name)]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 10))
-        var swipes = 0
-        while !toggle.isHittable && swipes < 6 {
-            app.swipeUp()
-            swipes += 1
-        }
+        reveal(toggle)
         let before = toggle.value as? String ?? ""
         toggle.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5)).tap()
         let flipped = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value != %@", before), object: toggle)

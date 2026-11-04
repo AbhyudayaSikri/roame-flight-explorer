@@ -57,6 +57,7 @@ final class FilterTests: UITestCase {
     func testResetClearsSearchAndEveryFilter() {
         launchWithAllFlights()
         search(ID.origin, "jfk")
+        expectCount("113 flights")
         openFilters()
         selectCabin("Business")
         closeFilters()

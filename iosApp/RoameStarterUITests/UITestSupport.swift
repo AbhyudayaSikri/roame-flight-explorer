@@ -155,7 +155,9 @@ class UITestCase: XCTestCase {
         app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'marker.'"))
     }
 
-    /// Taps the first result row and waits for the flight card.
+    /// Taps the first result row and waits for the flight card. Call it only after `expectCount`
+    /// confirms the latest search: the store filters asynchronously, so rows from the previous
+    /// query can still be on screen right after typing.
     @MainActor
     func selectFirstRow(file: StaticString = #filePath, line: UInt = #line) {
         let row = flightRows.firstMatch
@@ -169,6 +171,7 @@ class UITestCase: XCTestCase {
     func saveFirstJfkToHaneda() {
         search(ID.origin, "jfk")
         search(ID.destination, "hnd")
+        expectCount("3 flights")
         selectFirstRow()
         app.buttons[ID.cardSave].tap()
         XCTAssertTrue(app.buttons[ID.cardRemove].waitForExistence(timeout: 10))

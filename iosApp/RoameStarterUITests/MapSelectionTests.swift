@@ -21,6 +21,7 @@ final class MapSelectionTests: UITestCase {
     func testMarkerSheetPicksAFlightAndShowsTheCard() {
         launchWithAllFlights()
         search(ID.destination, "hnd")
+        expectCount("55 flights")
         showMap()
         let haneda = app.buttons[ID.marker("HND")]
         XCTAssertTrue(haneda.waitForExistence(timeout: 15))
@@ -45,6 +46,7 @@ final class MapSelectionTests: UITestCase {
         launchWithAllFlights()
         search(ID.origin, "sfo")
         search(ID.destination, "nrt")
+        expectCount("6 flights")
         selectFirstRow()
         showMap()
         XCTAssertTrue(element(ID.card).waitForExistence(timeout: 5))
@@ -58,6 +60,7 @@ final class MapSelectionTests: UITestCase {
         launchWithAllFlights()
         search(ID.origin, "jfk")
         search(ID.destination, "hnd")
+        expectCount("3 flights")
         selectFirstRow()
         search(ID.destination, "paris")
         XCTAssertTrue(element(ID.card).waitForNonExistence(timeout: 10))

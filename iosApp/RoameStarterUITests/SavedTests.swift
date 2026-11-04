@@ -21,6 +21,7 @@ final class SavedTests: UITestCase {
 
         openExplore()
         search(ID.destination, "hnd")
+        expectCount("3 flights")
         selectFirstRow()
         app.buttons[ID.cardRemove].tap()
         XCTAssertTrue(app.buttons[ID.cardSave].waitForExistence(timeout: 10))
@@ -44,6 +45,7 @@ final class SavedTests: UITestCase {
         launch(extra: ["-failSaves"])
         waitForAllFlights()
         search(ID.origin, "jfk")
+        expectCount("113 flights")
         selectFirstRow()
         app.buttons[ID.cardSave].tap()
         XCTAssertTrue(element(ID.message).waitForExistence(timeout: 10))
@@ -76,6 +78,7 @@ final class SavedTests: UITestCase {
         waitForAllFlights()
         search(ID.origin, "jfk")
         search(ID.destination, "hnd")
+        expectCount("3 flights")
         selectFirstRow()
         let update = app.buttons[ID.cardUpdate]
         XCTAssertTrue(update.waitForExistence(timeout: 30))

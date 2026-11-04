@@ -75,6 +75,12 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4â
   - The screenshots confirm the regional zoom for one airport and HND/NRT apart for Tokyo.
   - Per-item iOS QA results are in `docs/QA_IOS.md`.
   - Cleanup: stopped the local `roame-smoke` emulator. The AVD itself is still there.
+- **03:56 Draft PR [#1](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/1) opened.**
+  - Its iOS check ([41799697121](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41799697121)) failed 1 of 23 on unchanged code: V2's "No flight card".
+  - Diagnosis from the failure's UI hierarchy:
+    - The list already showed the 3 JFK â†’ HND flights at the updated prices, but nothing was selected.
+    - The test had tapped the first row right after typing "hnd". The store filters asynchronously, and here the price refresh was landing at the same moment, so the tap hit a row from the JFK-only results. The store then correctly cleared a selection that was no longer in the results.
+  - Fix (test synchronization, no assertion loosened): every select after a search now waits for that search's count first.
 
 ## Decisions
 

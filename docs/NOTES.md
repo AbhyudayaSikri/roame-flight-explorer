@@ -94,7 +94,10 @@ Alternatives considered:
 - **iOS has never run on a device or interactively.** It's checked only on the CI simulator (iPhone 17, iOS 26.4) by XCUITest, screenshots and the demo video.
 - **Android was never run against the real API on the Mac.** It's checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
 - **Map tiles need the network**, which the brief allows. The Android offline fallback style (SHOULD) isn't built.
-- **Some QA items aren't covered by iOS UI tests:** F2 (an end-date boundary) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers both rules.
+- **Some QA items aren't covered by iOS UI tests:** F1 and F2 (single-day date ranges) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers all three rules, and the iOS store uses it unchanged.
+  - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox.
+  - The calendar opened and February 1 was tapped, but the sheet then read "Show 10 flights" instead of 17. No single day has 10 flights, so the "tap outside to close the calendar" step most likely also changed another filter.
+  - Finding the cause needs another 30-minute iOS CI run. The test is on the unmerged branch `test/ios-date-range-f1`.
 - **Memory leaks aren't checked** on either platform. LeakCanary is a COULD.
 - **Clustering uses one pill size**, so a merged pill, which is wider than a single airport's, can still touch a neighbour.
 - **In portrait, the world map can't show every destination at once.** iOS frames the markers it can fit; Android starts at a fixed world view.

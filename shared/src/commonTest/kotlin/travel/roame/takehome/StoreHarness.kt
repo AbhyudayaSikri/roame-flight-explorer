@@ -3,7 +3,9 @@ package travel.roame.takehome
 import app.cash.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -69,14 +71,39 @@ internal class StoreHarness(
 internal class GatedRepository(private val delegate: FlightRepository) : FlightRepository by delegate {
     var writeGate: CompletableDeferred<Unit>? = null
 
+    /** Like a blocking database write: cancelling the store doesn't interrupt it. */
+    var ignoreCancellation = false
+
     override suspend fun save(flight: Flight): Result<Unit> {
-        writeGate?.await()
+        awaitGate()
         return delegate.save(flight)
     }
 
     override suspend fun remove(flightId: String): Result<Unit> {
-        writeGate?.await()
+        awaitGate()
         return delegate.remove(flightId)
+    }
+
+    private suspend fun awaitGate() {
+        val gate = writeGate ?: return
+        if (ignoreCancellation) withContext(NonCancellable) { gate.await() } else gate.await()
+    }
+}
+
+/** Fails, recovers with one value, fails again, then works: two separate streaks of errors. */
+internal class TwoFailureStreaksRepository(private val delegate: FlightRepository) : FlightRepository by delegate {
+    private var collections = 0
+
+    override val cachedFlights: Flow<List<Flight>> = flow {
+        collections += 1
+        when (collections) {
+            1 -> throw IllegalStateException("disk I/O error")
+            2 -> {
+                emit(fixtureFlights)
+                throw IllegalStateException("disk I/O error again")
+            }
+            else -> emitAll(delegate.cachedFlights)
+        }
     }
 }
 

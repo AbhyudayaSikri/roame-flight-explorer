@@ -3,6 +3,7 @@ package travel.roame.takehome
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -65,7 +66,7 @@ class FlightExplorerStore internal constructor(
 
     init {
         scope.launch {
-            if (resetData) repository.clearAll()
+            if (resetData && repository.clearAll().isFailure) postMessage("Couldn't reset local data.")
             refresh()
         }
     }
@@ -166,9 +167,8 @@ class FlightExplorerStore internal constructor(
         }
     }
 
-    fun messageShown() {
-        message.value = null
-    }
+    /** Clears [messageId] only, so a newer message that arrived meanwhile isn't lost. */
+    fun messageShown(messageId: Long) = message.update { if (it?.id == messageId) null else it }
 
     /** Debug builds only: makes the next saves and/or removes fail (QA V6). */
     fun setFaultInjection(failSaves: Boolean, failRemoves: Boolean) {
@@ -176,9 +176,11 @@ class FlightExplorerStore internal constructor(
         faults.failRemoves = failRemoves
     }
 
+    /** Stops the store. The database and HTTP client close once work already running has finished. */
     fun close() {
+        val job = scope.coroutineContext[Job]
         scope.cancel()
-        onClose()
+        if (job == null) onClose() else job.invokeOnCompletion { onClose() }
     }
 
     private fun markDone(flightId: String) = pending.update { current ->
@@ -197,11 +199,16 @@ class FlightExplorerStore internal constructor(
         return values.onStart { emit(null) }
     }
 
-    private fun <T> Flow<T>.retryOnError(text: String): Flow<T> = retryWhen { cause, attempt ->
-        if (cause is CancellationException) return@retryWhen false
-        if (attempt == 0L) postMessage("$text. Retrying…")
-        delay((1_000L shl attempt.coerceAtMost(5L).toInt()).coerceAtMost(30_000L))
-        true
+    /** Retries with backoff and posts one message per streak of failures; a value ends the streak. */
+    private fun <T> Flow<T>.retryOnError(text: String): Flow<T> {
+        var failures = 0
+        return onEach { failures = 0 }.retryWhen { cause, _ ->
+            if (cause is CancellationException) return@retryWhen false
+            if (failures == 0) postMessage("$text. Retrying…")
+            failures += 1
+            delay((1_000L shl (failures - 1).coerceAtMost(5)).coerceAtMost(30_000L))
+            true
+        }
     }
 
     /** Pure: everything the UIs show, computed off the main thread. */

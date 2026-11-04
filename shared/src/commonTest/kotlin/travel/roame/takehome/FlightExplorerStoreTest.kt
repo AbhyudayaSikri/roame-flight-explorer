@@ -3,6 +3,7 @@ package travel.roame.takehome
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -120,6 +121,7 @@ class FlightExplorerStoreTest {
         first.save(jfkToHaneda.id)
         advanceUntilIdle()
         first.close()
+        advanceUntilIdle()
         assertTrue(harness.closed)
 
         harness.source.fail(RefreshError.Offline)
@@ -188,9 +190,27 @@ class FlightExplorerStoreTest {
         assertEquals(SaveStatus.NOT_SAVED, store.state.value.selectedSaveStatus)
         assertTrue(store.state.value.message!!.text.startsWith("Couldn't save JFK → HND"))
 
-        store.messageShown()
+        store.messageShown(store.state.value.message!!.id)
         advanceUntilIdle()
         assertNull(store.state.value.message)
+    }
+
+    @Test
+    fun dismissingAnOlderMessageKeepsANewerOne() = runTest {
+        val (harness, store) = loadedStore()
+        harness.faults.failSaves = true
+        val (a, b) = fixtureFlights.take(2)
+
+        store.save(a.id)
+        advanceUntilIdle()
+        val first = store.state.value.message!!
+        store.save(b.id)
+        advanceUntilIdle()
+        val second = store.state.value.message!!
+
+        store.messageShown(first.id)
+        advanceUntilIdle()
+        assertEquals(second, store.state.value.message)
     }
 
     @Test
@@ -369,6 +389,42 @@ class FlightExplorerStoreTest {
 
         advanceUntilIdle()
         assertEquals(1000, store.state.value.resultCount)
+    }
+
+    @Test
+    fun eachNewStreakOfStorageErrorsPostsAMessage() = runTest {
+        val harness = StoreHarness(this)
+        val store = harness.newStore(repository = TwoFailureStreaksRepository(harness.defaultRepository()))
+        runCurrent()
+        val first = store.state.value.message!!
+
+        advanceTimeBy(1_001)
+        runCurrent()
+        val second = store.state.value.message!!
+        assertTrue(second.id > first.id)
+        assertEquals("Couldn't read cached flights. Retrying…", second.text)
+
+        advanceUntilIdle()
+        assertEquals(1000, store.state.value.resultCount)
+    }
+
+    @Test
+    fun closeReleasesResourcesOnlyAfterWorkInFlightFinishes() = runTest {
+        val harness = StoreHarness(this)
+        val repository = GatedRepository(harness.defaultRepository()).apply { ignoreCancellation = true }
+        val store = harness.newStore(repository = repository)
+        advanceUntilIdle()
+        val gate = CompletableDeferred<Unit>().also { repository.writeGate = it }
+        store.save(jfkToHaneda.id)
+        runCurrent()
+
+        store.close()
+        runCurrent()
+        assertFalse(harness.closed, "the database must stay open while a write is running")
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(harness.closed)
     }
 
     @Test

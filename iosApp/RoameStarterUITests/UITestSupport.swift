@@ -10,6 +10,7 @@ enum ID {
     static let filtersReset = "filters.reset"
     static let filtersDone = "filters.done"
     static let points = "filters.points"
+    static let dateEnd = "filters.dateEnd"
     static let card = "card"
     static let cardSave = "card.save"
     static let cardRemove = "card.remove"

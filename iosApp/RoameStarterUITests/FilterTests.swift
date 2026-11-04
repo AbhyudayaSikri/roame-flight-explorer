@@ -1,8 +1,46 @@
 import XCTest
 
-/// QA F3, F4, F5, F7, F8, F10. Date ranges (F1, F2) and the combined F6 case are covered by the
-/// shared `FilterTest`, which the store uses unchanged.
+/// QA F1, F3, F4, F5, F7, F8, F10. F2 and the combined F6 case are covered by the shared
+/// `FilterTest`, which the store uses unchanged.
 final class FilterTests: UITestCase {
+    @MainActor
+    func testASingleDayRangeIncludesThatDay() {
+        launchWithAllFlights()
+        openFilters()
+
+        // The compact "To" picker opens a calendar on April 2027, the last date in the data.
+        let end = element(ID.dateEnd)
+        XCTAssertTrue(end.waitForExistence(timeout: 10))
+        let dateButton = end.buttons.firstMatch
+        if dateButton.exists {
+            dateButton.tap()
+        } else {
+            end.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        }
+        let previousMonth = app.buttons["Previous Month"]
+        XCTAssertTrue(previousMonth.waitForExistence(timeout: 10), "Calendar didn't open")
+        previousMonth.tap()
+        previousMonth.tap()
+
+        // Day buttons read like "Monday, February 1"; the pattern skips February 10–19.
+        let firstOfFebruary = app.buttons.matching(NSPredicate(format: "label MATCHES %@", ".*February 1(,.*)?")).firstMatch
+        XCTAssertTrue(firstOfFebruary.waitForExistence(timeout: 10), "No February 1 in the calendar")
+        firstOfFebruary.tap()
+
+        // A tap outside the calendar closes it; the calendar floats near the top of the sheet.
+        let dismiss = app.buttons["PopoverDismissRegion"]
+        if dismiss.exists {
+            dismiss.tap()
+        } else {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.95)).tap()
+        }
+        expectDone("Show 17 flights")
+        screenshot("F1 Feb 1 to Feb 1")
+        closeFilters()
+        expectCount("17 flights")
+        XCTAssertTrue(app.buttons[ID.chip("dates")].exists)
+    }
+
     @MainActor
     func testCabinCountsUpdateLiveAndShowAChip() {
         launchWithAllFlights()

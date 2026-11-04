@@ -71,9 +71,32 @@ To be completed. So far:
 Every item cut under PLAN §0 gets listed here.
 
 ## 5. Checks actually performed
-- 2026-11-03, Mac: `./gradlew :shared:tasks --all` on the starter. Verification tasks: `allTests`, `check`, `iosSimulatorArm64Test`, `iosX64Test` (disabled on Apple Silicon), `androidConnectedCheck`, `androidDeviceCheck`. There's no host-test task until `withHostTest {}` is added.
-- 2026-11-03, Mac: `./gradlew projects` succeeds. `./gradlew :androidApp:assembleDebug` hasn't been run yet, because `platforms;android-37.0` and `build-tools;37.0.0` aren't installed (PLAN §1b).
-- Pending: the Android starter on the Windows emulator (PLAN §1a), and the iOS starter build in CI (PLAN §2b).
+Dates are local (UTC-5).
+
+### Starter builds before implementation
+- **2026-11-03, Mac: task list.** `./gradlew :shared:tasks --all` on the starter. Verification tasks: `allTests`, `check`, `iosSimulatorArm64Test`, `iosX64Test` (disabled on Apple Silicon), `androidConnectedCheck`, `androidDeviceCheck`. There's no host-test task until `withHostTest {}` is added.
+- **2026-11-03, Mac: Android build.** After installing `platforms;android-37.0` and `build-tools;37.0.0`, `DEVELOPER_DIR=/var/empty ./gradlew :androidApp:assembleDebug` built the unmodified Android starter in 52 s. An empty `DEVELOPER_DIR` makes any Xcode tool call fail, so this also shows that the local Android build never uses Xcode.
+- **2026-11-03, Linux CI** (`ubuntu-24.04`): `:androidApp:assembleDebug` on the unmodified starter succeeded. https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41774805083
+- **2026-11-03, iOS CI** (`macos-26` image 20261026.0455, Xcode 26.4.1 build 17E202): `xcodebuild build` of the unmodified starter for an iPhone 17 simulator (iOS 26.4.1) succeeded. https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41774805004
+  - Xcode ignores the starter's `RoameStarter.xcscheme.xml`, but `xcodebuild -list` auto-created a `RoameStarter` scheme, so `-scheme RoameStarter` worked.
+- **Pending:** the Android starter on the Windows emulator (PLAN §1a).
+
+### CI setup (PLAN §2b, 2026-11-03)
+- **XcodeGen migration.** CI regenerated the project with XcodeGen 2.46.0 and found no drift, and the first UI test (`LaunchTests`) passed on the simulator.
+  - ios: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41776284367
+  - ci: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41776284332
+- **SKIE spike: green on the first attempt, so no fallback was needed.** Stack: SKIE 0.10.16, Kotlin 2.4.21, Xcode 26.4.1, Swift 6.
+  - `SkieSpike` exposes a `StateFlow<String>` and a `StateFlow` of the sealed `SpikeStatus`. SwiftUI consumes them with `for await` and `onEnum(of:)`.
+  - The UI test checked the rendered values before and after a tap: "Hello world!" / "idle", then "Hello world! (ticks: 1)" / "ticked 1".
+  - The build log has no SKIE errors and no Swift 6 concurrency warnings.
+  - ios: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41777187615
+  - ci: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41777187418
+- **Does app data survive separate `xcodebuild test-without-building` runs on the same simulator? Yes.**
+  - Run 1 reset a counter file in the app's Application Support directory and launched the app once.
+  - Run 2, a separate xcodebuild invocation, read `launchCount=2`.
+  - So the offline-relaunch tests run as their own invocation after CI stops the server (PLAN §8.1).
+  - ios: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604099
+  - ci: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604081
 
 ## 6. How AI was used and verified
 To be completed. So far:
@@ -83,6 +106,9 @@ To be completed. So far:
   - Analysed the fixture with scripts (Appendix A).
   - Proposed plan changes.
 - **Decisions taken after reviewing that output:** MUST/SHOULD/COULD tiers with a MUST gate; XcodeGen; a public repo during development; the search rule in 2.1.
+- **CI setup (2026-11-03):** the same agent wrote the two workflows, the XcodeGen spec, the SKIE spike and the persistence probe.
+  - Each was accepted only after a green CI run.
+  - The UI-test screenshots were reviewed before moving on (section 5).
 
 ## Appendix A. Fixture facts (`fixtures/flights.json`, analysed 2026-11-03)
 - **Shape:**
@@ -147,9 +173,9 @@ To be completed. So far:
   - GitHub billing docs: macOS runners cost $0.062/min against a $12–18 monthly allowance on private repos, and are free on public repos.
 
 ## Appendix C. Known risks
-- **SKIE 0.10.16 is days old**, with no changelog page. The §2b spike proves it early; the fallback is a hand-written bridge.
+- **SKIE 0.10.16 is days old**, with no changelog page. Resolved 2026-11-03: the §2b spike works at runtime in CI (section 5). The hand-written bridge remains the fallback if a later SKIE problem appears.
 - **SKIE #208:** stale macro-expansion files under `shared/build/skie` can break iOS links until that directory is deleted.
-- **Unverified iOS test assumption:** the app's data may not survive between separate `xcodebuild test-without-building` runs. Check it on the first CI run; the fallback is a relaunch inside one test plus the control endpoint.
+- **App data across `xcodebuild test-without-building` runs.** Resolved 2026-11-03: the data container survives between runs on the same simulator (section 5).
 - **MapLibre `LatLngBounds`** may not frame antimeridian-crossing routes. Fallback: centre on the path midpoint and pick the zoom from the distance.
 - **Turbine 1.2.1** was built against coroutines 1.10.2. Fallback: `first { }` + `withTimeout`.
 - **The toolchain is at the top of Kotlin's tested range.** A runner-image update could move Xcode 26.4.1, so CI selects it by path and prints `xcodebuild -version`.

@@ -10,6 +10,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - **GitHub Actions** — the only iOS build/test machine: `macos-26`, Xcode 26.4.1, simulator "iPhone 17" on iOS 26.4. Also Linux CI for the server, shared module and Android build.
 
 ## Commands (verified 2026-11-03, PLAN §3.2)
+- Run local Gradle as `DEVELOPER_DIR=/var/empty ./gradlew …`. An accidental Xcode-tool call then fails instead of running. Android builds, with SKIE applied, need no Xcode tools.
 - Pre-push check: `./gradlew :server:test :shared:testAndroidHostTest :androidApp:assembleDebug`
 - Shared tests on JVM (commonTest + androidHostTest): `./gradlew :shared:testAndroidHostTest`
   - One class: `--tests "travel.roame.takehome.SearchTest"`.
@@ -23,8 +24,14 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - CI binary: `./gradlew :server:installDist`, then `server/build/install/server/bin/server`.
 - Python fallback API (COULD, only if built; Python 3.9+): `python3 server/fallback.py` (Windows: `py server\fallback.py`).
 - Android: `./gradlew :androidApp:assembleDebug`. Override the base URL with `-PapiBaseUrl=http://…`.
-- iOS project: edit `iosApp/project.yml`, run `xcodegen generate --spec iosApp/project.yml` (XcodeGen 2.46.0), and commit both. CI fails if the committed `.xcodeproj` differs.
-- iOS build and tests: CI only (`.github/workflows/ios.yml`). Loop: push → `gh run watch` → `gh run view --log-failed` → fix → push. Screenshots: `gh run download`.
+- iOS project:
+  - App sources live in `iosApp/RoameStarter/`; UI tests in `iosApp/RoameStarterUITests/`.
+  - After editing `iosApp/project.yml`, or adding, removing or renaming any file under `iosApp/`, run `xcodegen generate --spec iosApp/project.yml` (XcodeGen 2.46.0) and commit everything.
+  - CI fails if the committed `.xcodeproj` differs.
+- iOS build and tests: CI only (`.github/workflows/ios.yml`, about 12 min).
+  - Loop: push → `gh run watch <run-id> --exit-status` → `gh run view --log-failed` → fix → push.
+  - Screenshots and raw logs: `gh run download <run-id> -n ios-ui-tests`.
+  - `print()` output from tests appears only in the raw `*.log` files; the console shows xcbeautify's summary.
 
 ## Base URLs
 - Android emulator: `http://10.0.2.2:8080` (or `adb reverse tcp:8080 tcp:8080` + `http://localhost:8080`)

@@ -22,7 +22,9 @@ Every step and every QA item carries one:
 
 ## 0. Timeline (Wed Nov 4 – Thu Nov 5, 2026, UTC-5)
 
-Re-estimated for this scope, starting the morning after planning (Tue Nov 3). The main wall-clock cost is iOS CI round trips: about 10 min for a build, 20–30 min for the full UI suite.
+Re-estimated for this scope, starting the morning after planning (Tue Nov 3). The main wall-clock cost is iOS CI round trips. Measured on Nov 3: about 4 min for a build-only job, and 12 min for the job with one UI test plus the persistence probe. Expect 20–30 min once the full UI suite exists.
+
+**Progress:** steps 1b, 2 and 2b were finished on Tue Nov 3, late evening, so Wednesday starts at step 4 with about 3 h in hand. WIN step 1a is still open.
 
 | When | Steps | Done when |
 |---|---|---|
@@ -88,7 +90,7 @@ Never cut any MUST behaviour, the shared tests, README/NOTES, the final reviewer
 
 Done on 2026-11-03: `AbhyudayaSikri/roame-flight-explorer` created as private, first commit `ed2d6a7` ("chore: import starter and planning docs").
 
-- [MUST] Make the repo public for development, since macOS CI minutes are free on public repos:
+- [MUST] Make the repo public for development, since macOS CI minutes are free on public repos. **Done 2026-11-03.**
   ```bash
   gh repo edit --visibility public --accept-visibility-change-consequences
   ```
@@ -98,7 +100,23 @@ Done on 2026-11-03: `AbhyudayaSikri/roame-flight-explorer` created as private, f
 
 ---
 
-## 2b. [MAC + CI] CI skeleton before implementation — MUST — ~2.5 h
+## 2b. [MAC + CI] CI skeleton before implementation — MUST — ~2.5 h — done 2026-11-03
+
+**Outcome.** All four parts went green on the first try; run links are in `docs/NOTES.md` §5. What differs from the steps below:
+- **`ios.yml` triggers:** `ios.yml` itself rather than all of `.github/**`, plus the root Gradle files (`gradle/**`, `*.gradle.kts`, `gradle.properties`).
+- **`ci.yml`:** it already exists. It runs `:androidApp:assembleDebug` and ignores docs-only pushes. Add `:server:test` and `:shared:testAndroidHostTest` as those tasks appear.
+- **iOS file layout:**
+  - App sources live in `iosApp/RoameStarter/` and UI tests in `iosApp/RoameStarterUITests/`.
+  - XcodeGen lists files when it generates the project, so regenerate after adding, removing or renaming anything under `iosApp/`.
+  - XcodeGen's default setting presets apply (for example, `ONLY_ACTIVE_ARCH = YES` in Debug), and the project format is Xcode 16+ (objectVersion 77).
+- **Starter scheme:** the starter as provided built with an auto-created `RoameStarter` scheme, because Xcode ignores the misnamed `.xcscheme.xml`. XcodeGen now commits a real shared scheme.
+- **Measured job time:** about 12 min.
+  - Creating and booting the simulator: 2.5–3 min.
+  - `build-for-testing`: about 3 min.
+  - The first UI-test invocation: about 3 min.
+  - Each further `test-without-building` invocation: about 1 min.
+- **SKIE:** the spike passed at runtime. SKIE adds three harmless Gradle warnings ("configuration resolved during configuration time"). Local Android builds with SKIE applied run fine with `DEVELOPER_DIR=/var/empty`, so they need no Xcode tools.
+- **Persistence probe:** the app's data survives separate `test-without-building` runs (§8.1). The probe steps stay in `ios.yml` until `OfflineRelaunchTests` replace them in step 8.
 
 1. [MUST] **`ios.yml` on the unmodified starter.**
    - Environment:
@@ -167,7 +185,7 @@ Prompt P1 below is the request that produced this section.
 | HTTP client | Ktor 3.6.1: client-core, content-negotiation, serialization-kotlinx-json; okhttp (Android), darwin (iOS) | Release notes (29 Oct 2026); module metadata shows stdlib 2.3.21 | — |
 | Server | Ktor 3.6.1 server-core + server-cio, `application` plugin, JVM module `:server` | Same | Netty also works but is heavier. COULD: stdlib `server/fallback.py` (Python 3.9+) |
 | DB | SQLDelight 2.4.1: runtime, coroutines-extensions, android-driver, native-driver | Release notes: AGP 9 new-DSL support since 2.3.2; android-driver minSdk 23; Gradle ≥ 8.2.1 | The plugin pulls KGP 2.3.10 at runtime, so declare it in the root `plugins {}` with `apply false`. The static framework needs `-lsqlite3` in Xcode (SQLDelight Gradle docs). Fallback: Room 2.8.5 + sqlite-bundled 2.7.1 + KSP 2.3.13, but sqlite-bundled has no `iosX64` artifact, so `iosX64` would have to go |
-| Swift interop | SKIE 0.10.16 (`co.touchlab.skie`) | On Maven Central since 29 Oct 2026. Tag 0.10.16 is commit "Add support for Kotlin 2.4.21 (#211)", which sets `versionSupport.kotlin=…2.4.20(2.4.21)`. Xcode 26 supported since issue #168 | No changelog page yet, hence the spike in §2b. Known issues: #179 (don't force SKIE's own Swift into Swift 6); #208 (if a link fails on macro files, delete `shared/build/skie/**/swift-generated-sources`); #177 (parallel multi-module links; not our case). Fallback: hand-written `observe(onEach): Closeable` plus a Swift `AsyncStream` adapter. KMP-NativeCoroutines 1.0.6 targets Kotlin 2.4.20 and needs KSP plus a Swift package, so it isn't used |
+| Swift interop | SKIE 0.10.16 (`co.touchlab.skie`) | On Maven Central since 29 Oct 2026. Tag 0.10.16 is commit "Add support for Kotlin 2.4.21 (#211)", which sets `versionSupport.kotlin=…2.4.20(2.4.21)`. Xcode 26 supported since issue #168 | No changelog page yet, hence the spike in §2b, which passed in CI on 2026-11-03 (`StateFlow` via `for await`, sealed type via `onEnum(of:)`, both checked at runtime). Known issues: #179 (don't force SKIE's own Swift into Swift 6); #208 (if a link fails on macro files, delete `shared/build/skie/**/swift-generated-sources`); #177 (parallel multi-module links; not our case). Fallback: hand-written `observe(onEach): Closeable` plus a Swift `AsyncStream` adapter. KMP-NativeCoroutines 1.0.6 targets Kotlin 2.4.20 and needs KSP plus a Swift package, so it isn't used |
 | Android UI | Compose BOM 2026.09.00 (Compose 1.12.1, Material3 1.4.0, material-icons-core 1.7.8), activity-compose 1.13.0, lifecycle-viewmodel-compose + lifecycle-runtime-compose 2.11.0 | Latest stable on Google Maven. Strictest AAR metadata: minCompileSdk 37 and AGP ≥ 9.1.0 (compose-ui, lifecycle) | Skip material-icons-extended (frozen and large) |
 | Android map | `org.maplibre.gl:android-sdk-opengl` 13.7.1 + OpenFreeMap `https://tiles.openfreemap.org/styles/liberty` | GitHub release android-v13.7.1 (15 Oct 2026, minSdk 23). Since 13.0.0 the plain `android-sdk` artifact uses Vulkan. The style URL returned 200 | The `-globe` versions are pre-releases, even though Maven's `<release>` tag points at one. Fallback: Google Maps Compose 9.0.1 (needs an API key) |
 | iOS map | MapKit: SwiftUI `Map`, `Annotation`, `MapPolyline(coordinates:contourStyle: .geodesic)` | iOS 17 APIs; deployment target 17.0 | — |
@@ -545,9 +563,9 @@ The repo is public, so the full suite runs on every push to the trigger paths.
 3. `./gradlew :server:installDist`, start `server/build/install/server/bin/server --mode=normal --allow-control` in the background, and poll `/health`.
 4. `xcodebuild build-for-testing -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter -destination "id=$UDID" -derivedDataPath build/dd`, then `test-without-building` for every test except the API-stopped ones.
    - Mode cases set the mode from inside the test via `POST /control/mode`, and reset it to `normal` in `tearDown`: `empty` (O5, V5), `error` → `normal` (O4's Retry), `updated` (V2).
-5. API-stopped cases, on the same simulator: stop the server, then run `-only-testing:RoameStarterUITests/OfflineRelaunchTests`.
+5. API-stopped cases, on the same simulator: stop the server, then run `-only-testing:RoameStarterUITests/OfflineRelaunchTests` as its own invocation.
 
-   On the first run, confirm the app's data survives between `test-without-building` invocations. If it doesn't, do the relaunch inside one test, using `--mode=error` through the control endpoint as the failing API.
+   This relies on the app's data surviving between `test-without-building` invocations. It does: the §2b probe found the data container intact (2026-11-03), so the in-test relaunch fallback isn't needed. Once this step exists, remove the probe steps from `ios.yml` along with `PersistenceProbe.swift` and its tests.
 6. Export screenshots with `xcrun xcresulttool export attachments`. Upload the `.xcresult`, the screenshots and the server log using `if: always()`.
 
 ```mermaid
@@ -715,7 +733,7 @@ The brief requires showing both apps: search, filters, map selection, saving fli
 1. SHOULD — per-step reviewer pass over the shared code and both UIs (P3), if one hasn't run since the last big change.
 2. SHOULD — Android offline fallback map style (QA O8).
 3. SHOULD — camera fits the selected route on both apps (QA M9).
-4. SHOULD — `ci.yml` Linux workflow.
+4. SHOULD — `ci.yml` Linux workflow: done on 2026-11-03. Keep adding new Gradle test tasks to it.
 5. SHOULD — StrictMode in debug builds (QA T1).
 6. SHOULD — iOS sliced observation and the Compose stability config.
 7. SHOULD — polish: individually removable chips, −/+ points buttons, skeleton rows, haptics, "Flight Explorer" display names.

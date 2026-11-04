@@ -35,6 +35,7 @@ struct FilterSheetView: View {
                                 }
                                 .contentShape(Rectangle())
                             }
+                            .tint(.primary)
                             .accessibilityAddTraits(selected ? .isSelected : [])
                             .accessibilityIdentifier(TestIds.shared.cabinOption(cabin: cabin))
                         }

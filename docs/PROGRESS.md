@@ -48,6 +48,22 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
   - Smoke test on a new local emulator, `roame-smoke` (API 35, arm64; your existing AVDs weren't touched).
   - With no server running, the app launches and shows "Couldn't load flights… Retry". No crash; screenshot checked.
   - Starting the local API for a with-data smoke test was blocked by the tool's auto-review (it misread an old "don't start the server" instruction). I didn't work around it, so no with-data smoke test was run on the Mac. Your Windows QA pass covers that.
+- **01:44–01:54 Step 8 (iOS UI), local work.**
+  - SwiftUI app over the shared store:
+    - `@MainActor @Observable ExplorerModel` fed by `for await` over `store.state`.
+    - Explore (search fields, count, chips, Reset, filter sheet, List/Map, card) and Saved tabs.
+    - Loading, error, empty, no-matches and stale states, plus a message banner.
+  - Seven XCUITest classes, one per QA group.
+  - `ios.yml`:
+    - Starts the API with `--allow-control` and runs the suite.
+    - Seeds a cache and a saved flight, stops the API, then runs `OfflineRelaunchTests`.
+  - The step-2b SKIE spike and persistence probe are replaced, as PLAN 8.1 planned.
+- **02:23 First iOS run** ([41788560793](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41788560793)). Everything compiled first time, and 19 of 23 UI tests passed. The offline relaunch run also passed (O1–O3). Four failures, from two causes:
+  - **Map markers not found (3 tests).** The failure's UI hierarchy showed the markers are accessible buttons with the right ids, but the fixed starting region only covered Europe and Africa, so Tokyo was off-screen. The map now uses `.automatic` (it frames the markers) and fits the selected route.
+  - **Slider (1 test).** `adjust(toNormalizedSliderPosition: 0)` stopped at about 20,000 points ("Show 45 flights"). The test now drags the thumb past the left end.
+  - From the screenshots (PLAN 8.4):
+    - The search placeholder was truncated, so it now reads "From" / "To".
+    - "0 flights" showed above the error screen, so the count is now hidden while there's no data.
 
 ## Decisions
 
@@ -63,6 +79,10 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
   - Polish items P1 (consistent spacing via one `Spacing` scale) and P2 (pressed and progress states on Save/Remove) are MUST and are built.
 - **Android pull-to-refresh is on the list only.** On the map, a vertical drag would fight panning. The top bar's refresh button works on every screen.
 - **Search fields own their text.** Typing never waits on the store, which derives asynchronously. Reset clears both the fields and the store.
+- **The iOS demo video is recorded on every iOS CI run**, rather than by a manual `demo.yml`. A `workflow_dispatch` workflow can't be run until it exists on `main`, which this run doesn't touch.
+  - CI records the simulator while `DemoWalkthrough` runs (slow-paced: search → filters → map marker → select → save → Saved tab) and while `OfflineRelaunchTests` runs after the API is stopped.
+  - The walkthrough also seeds the offline run. The mp4 is in the `ios-ui-tests` artifact.
+- **iOS tier choices:** fitting the camera to the selected route (SHOULD) is built, because QA M8 is judged from the screenshot. Not built: re-rendering only the changed slices, haptics, the "Flight Explorer" display name, dark mode and Dynamic Type passes.
 
 ## Step 6 review findings (skeptical re-read of BRIEF.md and the step-6 diff)
 

@@ -97,15 +97,18 @@ struct ExploreView: View {
         } else if mode == .list {
             FlightListView(model: model)
         } else {
-            FlightMapView(model: model)
+            FlightMapView(model: model, bottomInset: state.selected == nil ? 0 : 300)
         }
     }
 
     private var summaryRow: some View {
         HStack(spacing: 8) {
-            Text(verbatim: FormattingKt.formatFlightCount(count: state.resultCount))
-                .font(.subheadline.weight(.semibold))
-                .accessibilityIdentifier(TestIds.shared.resultCount)
+            // With no data at all, the loading, error or empty state below says what's going on.
+            if state.totalCount > 0 {
+                Text(verbatim: FormattingKt.formatFlightCount(count: state.resultCount))
+                    .font(.subheadline.weight(.semibold))
+                    .accessibilityIdentifier(TestIds.shared.resultCount)
+            }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     ForEach(state.activeFilters, id: \.label) { filter in
@@ -158,10 +161,11 @@ private struct SearchField: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: "mappin.and.ellipse").foregroundStyle(.secondary)
-            TextField(title, text: $text, prompt: Text("\(title): city or code"))
+            TextField(title, text: $text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
+                .accessibilityHint("City or airport code")
                 .accessibilityIdentifier(identifier)
             if !text.isEmpty {
                 Button { text = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary) }

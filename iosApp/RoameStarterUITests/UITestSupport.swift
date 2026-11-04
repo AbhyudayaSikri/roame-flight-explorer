@@ -211,6 +211,11 @@ class UITestCase: XCTestCase {
         XCTAssertEqual(XCTWaiter().wait(for: [flipped], timeout: 5), .completed, "\(name) toggled")
     }
 
+    /// Slows the recorded demo down enough to follow.
+    func pace(_ seconds: TimeInterval = 1.5) {
+        Thread.sleep(forTimeInterval: seconds)
+    }
+
     @MainActor
     func screenshot(_ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot())

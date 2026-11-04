@@ -38,7 +38,12 @@ final class FilterTests: UITestCase {
     func testLowestPointsLimitLeavesTheSingleCheapestFlight() {
         launchWithAllFlights()
         openFilters()
-        app.sliders[ID.points].adjust(toNormalizedSliderPosition: 0)
+        // adjust(toNormalizedSliderPosition:) lands imprecisely on SwiftUI sliders, so drag the
+        // thumb (at "no limit", the right end) past the left end instead.
+        let slider = app.sliders[ID.points]
+        XCTAssertTrue(slider.waitForExistence(timeout: 10))
+        slider.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.5))
+            .press(forDuration: 0.3, thenDragTo: slider.coordinate(withNormalizedOffset: CGVector(dx: -0.3, dy: 0.5)))
         expectDone("Show 1 flight")
         closeFilters()
         expectCount("1 flight")

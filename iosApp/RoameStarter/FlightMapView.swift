@@ -6,12 +6,9 @@ import SwiftUI
 /// geodesic polyline, which MapKit draws correctly across the antimeridian.
 struct FlightMapView: View {
     let model: ExplorerModel
-    @State private var position: MapCameraPosition = .region(
-        MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: 25, longitude: 15),
-            span: MKCoordinateSpan(latitudeDelta: 140, longitudeDelta: 300)
-        )
-    )
+    /// Height covered by the flight card, so the framed route stays above it.
+    let bottomInset: CGFloat
+    @State private var position: MapCameraPosition = .automatic
 
     var body: some View {
         let state = model.state
@@ -36,6 +33,27 @@ struct FlightMapView: View {
             }
         }
         .mapStyle(.standard(pointsOfInterest: .excludingAll))
+        .safeAreaPadding(.bottom, bottomInset)
+        .onChange(of: state.selected?.id, initial: true) {
+            frame(model.state.selected)
+        }
+        .onChange(of: state.markers.map(\.airport)) {
+            if model.state.selected == nil { position = .automatic }
+        }
+    }
+
+    /// Fits the selected route, or every marker when nothing is selected.
+    private func frame(_ flight: Flight?) {
+        guard let flight else {
+            position = .automatic
+            return
+        }
+        let route = MKGeodesicPolyline(
+            coordinates: [flight.originPoint.coordinate, flight.destinationPoint.coordinate],
+            count: 2
+        )
+        let rect = route.boundingMapRect
+        position = .rect(rect.insetBy(dx: -rect.width * 0.2, dy: -rect.height * 0.2))
     }
 }
 

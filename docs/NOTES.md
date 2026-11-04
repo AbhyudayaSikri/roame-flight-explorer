@@ -41,6 +41,11 @@ Alternatives considered:
 - **Reset** clears both search fields and every filter. QA F8 expects 1,000 results afterwards.
 - **Results sort** by departure date, then points, then id.
 - **Filter options order (2026-11-04):** cabins run from cheapest to most premium (Economy, Premium Economy, Business, then First if it ever appears), with any unknown cabin names after them alphabetically. Programs are alphabetical.
+- **Result count wording (2026-11-04):** "1 flight", otherwise a grouped plural such as "1,000 flights". Both apps use the shared `formatFlightCount`.
+- **HND and NRT markers overlap at world zoom (2026-11-04).** The airports are 0.6° apart, so at the initial zoom their markers sit on top of each other. They stay separate markers with their own labels, and zooming in separates them.
+- **iOS UI-test plumbing (2026-11-04):**
+  - The test target compiles in Swift 5 mode, and its test methods and helpers are `@MainActor`, matching `XCUIApplication`'s isolation.
+  - Tests switch the server's mode with a raw TCP request (Network framework). That avoids App Transport Security in the test runner, which a plain-HTTP `URLSession` call would hit.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
@@ -69,6 +74,7 @@ To be completed. So far:
 - iOS is never run interactively or on a device.
 - iOS memory leaks aren't checked.
 - Map tiles aren't available offline.
+- The iOS UI tests don't drive the date pickers (QA F1, F2) or set the slider to an exact value such as 60,000 (F6). The shared `FilterTest` covers that logic, and the controls need a manual QA check.
 
 Every item cut under PLAN §0 gets listed here.
 

@@ -142,14 +142,25 @@ jobs:
           set -o pipefail
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
-            -skip-testing:RoameStarterUITests/OfflineSeedTests \
+            -skip-testing:RoameStarterUITests/DemoWalkthrough \
             -skip-testing:RoameStarterUITests/OfflineRelaunchTests \
             -resultBundlePath build/ci/ui-tests.xcresult \
             | tee build/ci/ui-tests.log | xcbeautify --renderer github-actions
 
+      # The demo video covers the walkthrough and the offline relaunch that follows it.
+      - name: Start recording the demo
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          nohup xcrun simctl io "$UDID" recordVideo --codec=h264 --force build/ci/demo.mp4 \
+            > build/ci/recording.log 2>&1 &
+          echo $! > build/ci/recording.pid
+          sleep 3
+
       # App data survives separate test-without-building runs (docs/NOTES.md, persistence probe),
-      # so the offline case reuses what this run leaves behind.
-      - name: Seed a cache and a saved flight for the offline run
+      # so the offline case reuses the cache and saved flight this walkthrough leaves behind.
+      - name: Demo walkthrough (also seeds the offline run)
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         env:
           UDID: ${{ steps.sim.outputs.udid }}
@@ -158,9 +169,9 @@ jobs:
           curl -fsS -X POST "http://127.0.0.1:8080/control/mode?value=normal" > /dev/null
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
-            -only-testing:RoameStarterUITests/OfflineSeedTests \
-            -resultBundlePath build/ci/offline-seed.xcresult \
-            | tee build/ci/offline-seed.log | xcbeautify --renderer github-actions
+            -only-testing:RoameStarterUITests/DemoWalkthrough \
+            -resultBundlePath build/ci/demo-walkthrough.xcresult \
+            | tee build/ci/demo-walkthrough.log | xcbeautify --renderer github-actions
 
       - name: Stop the local API
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
@@ -185,6 +196,18 @@ jobs:
             -resultBundlePath build/ci/offline-relaunch.xcresult \
             | tee build/ci/offline-relaunch.log | xcbeautify --renderer github-actions
 
+      - name: Stop recording the demo
+        if: always()
+        run: |
+          [ -f build/ci/recording.pid ] || exit 0
+          PID=$(cat build/ci/recording.pid)
+          kill -INT "$PID" 2>/dev/null || true
+          for _ in $(seq 1 30); do
+            kill -0 "$PID" 2>/dev/null || break
+            sleep 1
+          done
+          ls -la build/ci/demo.mp4 || echo "::warning::No demo video was written"
+
       - name: Export screenshots
         if: always()
         run: |
@@ -202,6 +225,7 @@ jobs:
           name: ios-ui-tests
           path: |
             build/ci/*.log
+            build/ci/*.mp4
             build/ci/*.xcresult
             build/ci/screenshots
             shared/build/reports/tests/iosSimulatorArm64Test/

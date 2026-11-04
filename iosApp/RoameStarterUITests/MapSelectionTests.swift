@@ -1,16 +1,20 @@
 import XCTest
 
-/// QA M1, M3–M6. M8 (the trans-Pacific arc) is judged from the screenshot.
+/// QA M1, M3–M7. M8 (the trans-Pacific arc) is judged from the screenshot.
 final class MapSelectionTests: UITestCase {
     @MainActor
     func testMarkersShowCountAndLowestPointsPerAirport() {
         launchWithAllFlights()
         showMap()
+        screenshot("M1 map, every destination")
+        search(ID.destination, "tokyo")
+        expectCount("110 flights")
         let haneda = app.buttons[ID.marker("HND")]
         XCTAssertTrue(haneda.waitForExistence(timeout: 15))
         XCTAssertEqual(haneda.label, "HND 55 · 16.5k")
         XCTAssertEqual(app.buttons[ID.marker("NRT")].label, "NRT 55 · 19.5k")
-        screenshot("M1 map")
+        XCTAssertEqual(markers.count, 2, "55 + 55 markers add up to the 110 results")
+        screenshot("M1 map, Tokyo")
     }
 
     @MainActor

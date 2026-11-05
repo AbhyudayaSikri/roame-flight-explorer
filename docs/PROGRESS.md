@@ -332,19 +332,25 @@ A second independent review runs in another chat; its findings arrive as `review
 
 | Item | PR | State |
 |---|---|---|
-| Android UI tests: filters and search (F1–F8, F10–F12, S1–S6) | this PR | in review |
-| Android UI tests: selection, saved, server states (M5, M6, V2, V4, V6, O1, O4, O5) | | not started |
+| Android UI tests: filters and search (F1–F8, F10–F12, S1–S6) | [#42](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/42) | merged 11:40 |
+| Android UI tests: selection, saved, server states (M5, M6, O1, O3–O5, O7, V2, V4–V6) | this PR | in review |
 | Android demo video (`android-demo.mp4`) | | not started |
 
 - **The `qa` and `review` labels didn't exist**, so filing an issue with either label would have failed. I created both. The repo had no issues at all, so none were missed.
 - **Token scopes (`gh auth status`, 11:00):** `gist`, `read:org`, `repo`. Still no `workflow`.
-- **Android UI tests, part 1: filters and search (this PR).**
+- **Android UI tests, part 1: filters and search ([#42](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/42)).**
   - Debug builds take boolean intent extras, like iOS's launch arguments: `resetData`, `failSaves` and `failRemoves`. `ExplorerViewModel` reads them as `DebugOptions`, and drops `resetData` once used, so an activity recreated after process death doesn't wipe the data again.
   - Every test launches through `ExplorerApp` with `resetData`, so each starts from an empty database and the order doesn't matter.
   - New: `FilterTests` (7 tests) and `SearchTests` (3). QA_CHECKLIST.md now marks each automated item by platform.
   - The date picker is Material's `DateRangePicker`. Its month list tells test tools it can't scroll, so the test scrolls by month and taps the day once it's on screen. One tap and Apply give a single-day range.
   - `OfflineRelaunchTest` now seeds its own cache and saved flight in a run before the API stops (`-e offline before`), because every other test resets the database.
   - Locally on `roame-smoke` (API 35) against the jar: all 16 online tests passed in 67 s, and both offline runs passed. Before the last fix, the date test timed out waiting for 21: it had tapped April 1 while that day was still below the visible part of the list.
+  - CI: green, 16 online tests in 117 s; the whole job took 6 minutes.
+- **Android UI tests, part 2: selection, saved and server states (this PR).**
+  - New: `SelectionTests` (4 tests), `SavedTests` (5) and `ServerStateTests` (3); `OfflineRelaunchTest`'s offline run now also pulls to refresh (O1) and searches and removes offline (O3).
+  - The API in CI now runs with `--allow-control`, and `ServerControl.setMode` switches it from the test, as iOS's `ServerControl` does. `ServerModeReset` puts it back after each test.
+  - Beyond your list: V5 (a saved flight survives an empty response), O3, and O7 (recreating the activity and backgrounding keep the search and selection), because each was one short test with the new helpers.
+  - Locally on `roame-smoke` against the jar: all 28 online tests passed in 103 s, and both offline runs passed.
 
 ## Decisions
 

@@ -1,5 +1,6 @@
 package travel.roame.takehome
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -11,6 +12,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
@@ -50,12 +53,20 @@ class FlightExplorerStore internal constructor(
     private var cachedById: Map<String, Flight> = emptyMap()
     private var savedById: Map<String, SavedFlight> = emptyMap()
 
+    /** With a debug reset, the first reads wait for it, so the data it clears never shows. */
+    private val resetDone = CompletableDeferred<Unit>().apply { if (!resetData) complete(Unit) }
+
     // Each source starts as null ("not read yet"), so the state, and any storage error message,
     // shows up without waiting for every database read to succeed.
-    private val stored: Flow<Stored> = combine(
-        repository.cache.retryOnError("Couldn't read cached flights").nullUntilLoaded(),
-        repository.savedFlights.retryOnError("Couldn't read saved flights").nullUntilLoaded(),
-    ) { cache, saved -> Stored(cache, saved) }
+    private val stored: Flow<Stored> = flow {
+        resetDone.await()
+        emitAll(
+            combine(
+                repository.cache.retryOnError("Couldn't read cached flights").nullUntilLoaded(),
+                repository.savedFlights.retryOnError("Couldn't read saved flights").nullUntilLoaded(),
+            ) { cache, saved -> Stored(cache, saved) },
+        )
+    }
 
     private val inputs: Flow<Inputs> = combine(
         query,
@@ -74,6 +85,7 @@ class FlightExplorerStore internal constructor(
     init {
         scope.launch {
             if (resetData && repository.clearAll().isFailure) postMessage("Couldn't reset local data.")
+            resetDone.complete(Unit)
             repository.savedServerUrl()?.let(::normalizedServerUrl)?.let { serverUrl.value = it }
             refresh()
         }
@@ -181,6 +193,12 @@ class FlightExplorerStore internal constructor(
     fun refresh() {
         if (refreshStatus.value is RefreshStatus.Running) return
         startRefresh()
+    }
+
+    /** iOS pull to refresh: like [refresh], but returns once it has finished, so the spinner stays until then. */
+    suspend fun refreshAndWait() {
+        refresh()
+        refreshJob?.join()
     }
 
     /**

@@ -129,6 +129,7 @@ Alternatives considered:
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).
 - **Saved-tab selection** is independent of the discovery filters.
+- **The route connector is drawn on the map (2026-11-05).** Selecting a row in List mode shows the card, and Map shows the same selection with its route. The brief's "selecting a flight should show its route connector and a card" is read as: the route where there's a map to draw it on.
 - **Decoding is strict.** One malformed record makes the whole response `Malformed`, and the cache is kept. Unknown JSON keys are ignored.
 - **Map tiles need the network**, as the brief allows. Offline, the pills and the selected route still render. When Android's map style can't load, it falls back to a built-in style that is just a plain background (QA O8). MapKit draws its own placeholder under the annotations.
 - **Shared display formatting is English-only:** "16.5k", "16,500 pts", "Mon, Feb 1, 2027".
@@ -213,24 +214,49 @@ Dates are local (UTC-5).
   - ios: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604099
   - ci: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604081
 
-### Automated tests (as of 2026-11-04)
+### Automated tests (as of 2026-11-05)
 Every pull request and every push to `main` runs these in CI (`.github/workflows/ci.yml`, `ios.yml`).
 
-- **Shared logic, 120 tests** (`shared/src/commonTest`). They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
+- **Shared logic, 133 tests** (`shared/src/commonTest`), plus one JVM-only test, `FileDatabaseRestartTest`, that closes and reopens a real database file. They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
   - Rules: decoding (`DecodingTest`), the search rule (`SearchTest`), filters with their date and points boundaries (`FilterTest`), filter chips (`ActiveFiltersTest`), map aggregation (`AggregationTest`) and clustering (`MarkerClusteringTest`), camera fitting (`CameraFitTest`), great-circle routes (`RouteGeometryTest`), display formatting (`FormattingTest`), calendar dates and the iOS picker's conversion in ten time zones (`CalendarDateTest`, `PickerDateTest`), server address validation (`ServerUrlTest`).
   - Persistence and networking: `FlightDatabaseStoreTest` on in-memory SQLite, and `FlightsApiTest` with Ktor's `MockEngine`.
   - The store, against a fake API and real SQLite (`FlightExplorerStoreTest`, `StoreRulesTest`, `ServerUrlStoreTest`):
     - Fresh, stale, empty and failed syncs; the cache surviving a restart; offline search and remove.
     - Optimistic save and remove with rollback; "Update saved" without duplicates.
-    - Selection and focus rules; the latest query winning; storage failures becoming messages.
+    - Selection and focus rules; the latest query winning, with a derivation held mid-way; storage failures becoming messages.
+    - Sync state before the cache is read and during a retry; a debug reset never showing the old cache; pull to refresh waiting for the refresh.
+    - Removing one chip; the −/+ points steps, including quick taps.
     - The server address: saved, used after a restart, replacing an in-flight refresh.
 - **Local API.** 19 Kotlin tests (`:server:test`): every mode, the control endpoint, argument parsing, and the embedded fixture. Plus 12 Python tests for `fallback.py`. Linux CI also runs the jar from an empty directory and compares `/flights` byte-for-byte with the fixture.
-- **iOS app, 30 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
+- **iOS app, 32 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
   - `LaunchTests`, `SearchTests`, `FilterTests`, `MapSelectionTests`, `SavedTests`, `ErrorStateTests` and `DebugMenuTests`. The server-mode cases switch modes through `POST /control/mode`, and the debug-menu case reaches the API on the runner's LAN IP.
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
-  - Pushes to `main` and manual runs run all 30; pull requests run 5 smoke tests.
+  - Pushes to `main` and manual runs run all 32; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
 - **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
+
+### Independent review (PLAN P3, 2026-11-04)
+A fresh subagent reviewed `857090e` against the brief, with only the brief, CLAUDE.md and the diff since the starter. It reported 2 bugs, 4 risks, 4 sets of tests that checked less than their names said, and some nits.
+
+Fixed (each with a test where it's logic, and each test checked to fail on the old code):
+- **Bug: the flights response was decoded on the main thread** ([#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22)).
+- **Bug: Android search fields could show a search the store wasn't running** after the system recreated the app ([#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25)). Checked on the emulator by killing the process.
+- **Risk: "no cache" shown before the cache was read, and a first-launch flash of "no flights"** ([#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23)).
+- **Nit: the stale banner disappeared during every retry** ([#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23)).
+- **Risk: the points slider could pull back during a drag** ([#27](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/27)).
+- **Tests:** latest-query-wins, a bad response over a cache, and a real database restart ([#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24)); two XCUITests that passed before their action ([#26](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/26)).
+- **Nits:**
+  - List/Map mode reset after visiting Saved ([#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25)).
+  - A debug reset could flash the previous run's cache ([#32](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/32)).
+  - iOS pull to refresh let go of its spinner early ([#32](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/32)).
+
+Not changed, and why:
+- **Risk: the Android map was blank when its style couldn't load.** Already fixed by [#14](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/14), which landed after the reviewed commit.
+- **`OfflineRelaunchTests` checking a state that was already true.** With the API stopped, a refresh fails within milliseconds, so the end state (cache kept, marked stale) is the only stable thing to check. It's also what QA O2 asks for.
+- **Switching the server could still commit the old server's flights** if a cache write was already running. This is debug only, and the refresh against the new server replaces them a moment later.
+- **CLAUDE.md drift:**
+  - iOS draws and frames the route with MapKit, not the shared helpers (§3).
+  - Each app builds its own "No limit" / "Up to …" label. That's one line of UI text over shared formatting, with no rule in it.
 
 ### Manual and visual checks
 - **iOS screenshots** from the full runs were reviewed against the brief and the QA list (PLAN 8.4). Fixes that came out of that review: map camera framing, marker overlap, the "Premium Economy" truncation, and the cabin row colour.
@@ -238,7 +264,12 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
   - The F1 date-picker investigation (§4): the picker was right, and the test's own tap changed the cabin.
   - The flaky map test: the camera was framing a keyboard-shortened map. Fixed in the app, not in the test.
 - **iOS on a device:** not done (§4).
-- **Android, 2026-11-04 on the Mac:** a local emulator with no API running. The error screen with Retry appeared, with no crash. The Mac never ran the API for Android.
+- **Android on the Mac, 2026-11-04 and 05:** a local emulator with no API running; the Mac never ran the API for Android.
+  - The error screen with Retry appeared, with no crash.
+  - `uiautomator dump` lists the test tags as resource ids, including those in the Server URL dialog's separate window.
+  - After process death, the search fields come back agreeing with the new store.
+  - A chip's × removes it and empties its field.
+  - An unreachable debug Server URL holds the skeleton rows for the 5 s connect timeout.
 - **Android QA on Windows** (PLAN §9): in progress. Results arrive as GitHub issues labelled `qa`; none filed as of 2026-11-04, 22:45.
 
 ## 6. How AI was used and verified

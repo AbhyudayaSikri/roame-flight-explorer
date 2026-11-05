@@ -3,10 +3,44 @@
 Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are filled in as the work lands (PLAN §10, §12). Every assumption gets a date and a reason when it's made.
 
 ## 1. Approach and architecture
-To be written at step 10. Planned:
-- One shared `FlightExplorerStore` in KMP is the single source of truth. It does networking, persistence, search, filtering, map aggregation, selection, sync state, route geometry and display formatting.
-- The SwiftUI and Compose apps only render `state` and send intents.
-- Library choices and the reasons for them: PLAN §3.1.
+**One shared store, two native UIs.** The rules live once, in Kotlin Multiplatform (`shared/`), and both apps are thin native views of the same state.
+- `FlightExplorerStore` is the single source of truth. It exposes one `StateFlow<ExplorerState>` and intents such as `setOriginText`, `setCabin`, `select`, `save`, `refresh` and `setServerUrl`.
+- The SwiftUI app (iOS 17+, MapKit) and the Compose app (Material 3, MapLibre) render that state and send intents. They hold no business logic: no filtering, no aggregation, no formatting of points or dates.
+- What's shared:
+  - Networking (Ktor) and persistence (SQLDelight): the last successful response as a cache, saved flights as snapshots, sync metadata and the debug server address.
+  - Search, filters, destination markers and their clustering, selection, sync state, great-circle routes, camera fitting, and every display string.
+
+**How the store works.**
+- Three database flows (cache, saved flights, last sync time) are combined with the inputs: query, selection, refresh status, saves and removes in flight, the one-shot message and the server address.
+- Each change re-derives the whole state off the main thread (`mapLatest` on `Dispatchers.Default`), so the latest input always wins. Database and network calls run on IO.
+- Corrections run on each new state. A selection or tapped marker that no longer matches the filters is cleared, and saved-tab selection is independent of the filters.
+- Saves and removes are optimistic: the state changes at once and rolls back, with a message, if the write fails.
+- The state never throws. SKIE would turn an exception inside a Flow into a Swift crash, so errors become `sync` (Loading, Fresh, Stale, EmptySuccess, FailedNoCache) or a `message`.
+- The tests drive it through a fake source and an in-memory SQLite database on the test scheduler.
+
+**Swift interop.** SKIE gives Swift `for await` over the `StateFlow`, `onEnum(of:)` for exhaustive switches over sealed types, and Swift enums. The app's `@Observable` model just mirrors the latest state.
+
+**Local API.**
+- `server/` is a Ktor CIO app: `GET /flights` serves the fixture byte-for-byte, with `--mode=empty|error|updated|slow` for the failure and edge cases, and `POST /control/mode` for the iOS UI tests.
+- It also ships as one jar, and `server/fallback.py` is the same API in standard-library Python.
+
+**Libraries** (versions checked against the pinned toolchain; reasons in PLAN §3.1 and Appendix B):
+
+| Area | Choice | Why |
+|---|---|---|
+| Swift bridge | SKIE 0.10.16 | Native `async` sequences and enums with no glue code |
+| HTTP | Ktor 3.6.1 (OkHttp on Android, Darwin on iOS) | One client for both platforms, testable with `MockEngine` |
+| Database | SQLDelight 2.4.1 | Mature drivers on both platforms; Room's bundled SQLite has no `iosX64` artifact |
+| JSON, async, dates | kotlinx-serialization 1.12.0, kotlinx-coroutines 1.11.0, kotlinx-datetime 0.8.0 | Standard multiplatform libraries |
+| Android UI | Compose BOM 2026.09.00, Material 3 | Current stable |
+| Android map | MapLibre 13.7.1 with OpenFreeMap tiles | No API key for a reviewer to set up |
+| iOS map | MapKit for SwiftUI | Built in; geodesic polylines |
+| iOS project | XcodeGen 2.46.0 | A reviewable `project.yml`; CI fails if the committed project drifts |
+
+**Verification.**
+- The rules have shared tests that run on the JVM in every CI run and on the iOS simulator in every iOS run.
+- iOS is tested end to end by XCUITest in CI, against the real API: on pull requests a smoke set, on `main` the full suite, including the offline relaunch with the API stopped.
+- Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
 
 ## 2. Assumptions
 

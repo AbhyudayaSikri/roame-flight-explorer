@@ -10,6 +10,7 @@
 		007CA61C818D74CC3D7103AE /* OfflineRelaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F235448B61A64FEB609AA54 /* OfflineRelaunchTests.swift */; };
 		00FD03D51508F5529BF76746 /* SavedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA3362B94C3224A9C7798A54 /* SavedView.swift */; };
 		015730132BEA6CD56074F97D /* FilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CF373780EB4057B8315D9B /* FilterTests.swift */; };
+		09FC2697CD786F6E937B4353 /* AppearanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC2A19BAC9EDE2B688CE1E0 /* AppearanceTests.swift */; };
 		1DBE2B53E23A47626F8C3F34 /* SharedExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4FAE9B7F498B11AFCB920AB /* SharedExtensions.swift */; };
 		2AECBA6044432A3EA1F1F027 /* FilterSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81C77E0FDDD4CA7A81FE3A0A /* FilterSheetView.swift */; };
 		2D0E7B2EA624234178C2F5B2 /* FlightViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BED75146CBC481C8A8A02DED /* FlightViews.swift */; };
@@ -41,6 +42,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0CC2A19BAC9EDE2B688CE1E0 /* AppearanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceTests.swift; sourceTree = "<group>"; };
 		0F023AB2E0CBED71FD98C8E9 /* SearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTests.swift; sourceTree = "<group>"; };
 		14FC8E3EBFC91F0E91D4287F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		18D812FF6D2539B03EC1E019 /* FlightMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlightMapView.swift; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 		F9CAFEA3F14954E27624E77A /* RoameStarterUITests */ = {
 			isa = PBXGroup;
 			children = (
+				0CC2A19BAC9EDE2B688CE1E0 /* AppearanceTests.swift */,
 				CDB3FBEE7B748FE97926DC42 /* DebugMenuTests.swift */,
 				A50BDB2EC59754BBB07E340F /* ErrorStateTests.swift */,
 				A3CF373780EB4057B8315D9B /* FilterTests.swift */,
@@ -226,6 +229,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				09FC2697CD786F6E937B4353 /* AppearanceTests.swift in Sources */,
 				B92AA2B2B786F953F21D002D /* DebugMenuTests.swift in Sources */,
 				61A6FE4002D197F9F8A509C8 /* ErrorStateTests.swift in Sources */,
 				015730132BEA6CD56074F97D /* FilterTests.swift in Sources */,

@@ -72,6 +72,9 @@ Alternatives considered:
 - **Max points defaults to no limit.**
   - The slider moves in steps of 500, because every fixture price is a multiple of 500.
   - A slider at the data maximum means "no limit" and shows no chip.
+- **Dark mode (2026-11-05).**
+  - Android has a dark colour scheme with the same hues, chosen from the system setting. Before, it stayed light, and with edge-to-edge the system's light status-bar icons sat on the light app.
+  - iOS uses system colours. The map pills, banners and the route keep fixed colours with white text, which read on MapKit's light and dark maps alike. The Android map style stays light.
 - **Haptics (2026-11-05)** come with the tap on Save, Update saved and Remove, because the screen updates at once. Failures give an error buzz when their message appears. Selecting a flight gives none, and nothing fires when saved flights load at launch.
 - **Chips (2026-11-05):** tapping a chip's label opens the filter sheet, and its × removes just that filter (`clearFilter`). Removing From or To also empties that search field, because the fields own their text.
 - **Reset** clears both search fields and every filter. QA F8 expects 1,000 results afterwards.
@@ -184,7 +187,7 @@ Alternatives considered:
 - **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
-  - Dark mode, Dynamic Type and screen-reader passes, LeakCanary.
+  - Dynamic Type and screen-reader passes, LeakCanary.
 
 ## 5. Checks actually performed
 Dates are local (UTC-5).
@@ -228,10 +231,10 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
     - Removing one chip; the −/+ points steps, including quick taps.
     - The server address: saved, used after a restart, replacing an in-flight refresh.
 - **Local API.** 19 Kotlin tests (`:server:test`): every mode, the control endpoint, argument parsing, and the embedded fixture. Plus 12 Python tests for `fallback.py`. Linux CI also runs the jar from an empty directory and compares `/flights` byte-for-byte with the fixture.
-- **iOS app, 32 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
+- **iOS app, 33 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
   - `LaunchTests`, `SearchTests`, `FilterTests`, `MapSelectionTests`, `SavedTests`, `ErrorStateTests` and `DebugMenuTests`. The server-mode cases switch modes through `POST /control/mode`, and the debug-menu case reaches the API on the runner's LAN IP.
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
-  - Pushes to `main` and manual runs run all 32; pull requests run 5 smoke tests.
+  - Pushes to `main` and manual runs run all 33; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
 - **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
 

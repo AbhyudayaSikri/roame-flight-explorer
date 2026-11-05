@@ -294,9 +294,11 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
 
 | Item | PR | State |
 |---|---|---|
-| Docs: merge gate, tonight's log in merge order | this PR | in review |
-| Release rehearsal: `v0.9.0-rc.1` as a pre-release | | not started |
+| Docs: merge gate, tonight's log in merge order | [#37](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/37) | merged 01:39 |
+| Release rehearsal: `v0.9.0-rc.1` as a pre-release | this PR (the `release.yml` fix), then the tag | in review |
 | Android emulator smoke job in Linux CI | | not started |
+
+- **Release rehearsal, part 1: `release.yml` would have published `v0.9.0-rc.1` as a full release.** `gh release create` had no `--prerelease`, so the rc would also have become the repo's "Latest" release. A tag with a suffix (anything after a `-`) now publishes as a pre-release; `v1.0.0` still publishes as a normal release.
 
 ## Decisions
 

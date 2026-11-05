@@ -144,7 +144,8 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | Screenshot timeouts don't fail tests | [#12](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/12) | merged 22:39 |
 | (d) NOTES §1 and §5 | [#13](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/13) | merged after #11 |
 | (e) §13.1 Independent review (prompt P3) | (fixes to follow) | review running |
-| (e) §13.2 Android offline map style (QA O8) | this PR | in review |
+| (e) §13.2 Android offline map style (QA O8) | [#14](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/14) | merged 23:15 |
+| (e) §13.5 StrictMode in debug builds (QA T1) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -161,6 +162,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - Offline, MapLibre couldn't load the OpenFreeMap style, and with no style nothing was drawn: no pills, no route.
   - On `OnDidFailLoadingMap` the map now switches to a background-only style built into the app. The route and pill layers need no downloads, so they still render.
   - There's no logic to unit-test and no Android UI tests, so QA O8 covers it in your Windows pass.
+- **(e) §13.5 StrictMode (QA T1).**
+  - Debug builds turn on StrictMode in a new `FlightExplorerApplication`. It logs, and never crashes on, main-thread disk or network access and leaked closeables, SQLite objects or activities.
+  - Release builds are unchanged. T1 now says how to watch the log: `adb logcat -s StrictMode`.
+  - §13 items 3 (iOS camera fit) and 4 (`ci.yml` on PRs) were already done.
 
 ## Decisions
 

@@ -357,6 +357,64 @@ class FlightExplorerStoreTest {
     }
 
     @Test
+    fun theMinusAndPlusButtonsMoveTheLimitOneStep() = runTest {
+        val (_, store) = loadedStore()
+
+        // From no limit, "−" sets one step below the highest price (133,000), which drops one flight.
+        store.stepMaxPoints(-1)
+        advanceUntilIdle()
+        assertTrue(store.state.value.filters.isPointsLimited)
+        assertEquals(132_500, store.state.value.filters.maxPoints)
+        assertEquals(999, store.state.value.resultCount)
+
+        // Back up to the highest price is no limit again, with no chip.
+        store.stepMaxPoints(1)
+        advanceUntilIdle()
+        assertFalse(store.state.value.filters.isPointsLimited)
+        assertEquals(133_000, store.state.value.filters.maxPoints)
+        assertEquals(1000, store.state.value.resultCount)
+        assertEquals(emptyList(), store.state.value.activeFilters)
+    }
+
+    @Test
+    fun quickTapsOnMinusEachCount() = runTest {
+        val (_, store) = loadedStore()
+        repeat(3) { store.stepMaxPoints(-1) }
+        advanceUntilIdle()
+        assertEquals(131_500, store.state.value.filters.maxPoints)
+        assertEquals(filter(FlightQuery(maxPoints = 131_500)).size, store.state.value.resultCount)
+    }
+
+    @Test
+    fun theButtonsStopAtTheCheapestAndHighestPrices() = runTest {
+        val (_, store) = loadedStore()
+
+        store.setMaxPoints(9_000)
+        store.stepMaxPoints(-1)
+        advanceUntilIdle()
+        assertEquals(9_000, store.state.value.filters.maxPoints)
+        assertEquals(1, store.state.value.resultCount)
+
+        store.clearMaxPoints()
+        store.stepMaxPoints(1)
+        advanceUntilIdle()
+        assertFalse(store.state.value.filters.isPointsLimited)
+        assertEquals(1000, store.state.value.resultCount)
+    }
+
+    @Test
+    fun theButtonsDoNothingBeforeThereIsData() = runTest {
+        val harness = StoreHarness(this)
+        harness.source.fail(RefreshError.Offline)
+        val store = harness.newStore()
+        advanceUntilIdle()
+        store.stepMaxPoints(-1)
+        advanceUntilIdle()
+        assertNull(store.state.value.filters.bounds)
+        assertFalse(store.state.value.filters.isPointsLimited)
+    }
+
+    @Test
     fun movingOnlyTheEndDateToTheStartGivesThatSingleDay() = runTest {
         // What the iOS sheet does for QA F1: the start stays at the data's first day.
         val (_, store) = loadedStore()

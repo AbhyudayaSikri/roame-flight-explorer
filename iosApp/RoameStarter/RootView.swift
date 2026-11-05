@@ -10,10 +10,10 @@ struct RootView: View {
                 .tabItem { Label("Explore", systemImage: "magnifyingglass") }
             SavedView(model: model)
                 .tabItem { Label("Saved", systemImage: "heart") }
-                .badge(model.state.saved.count)
+                .badge(model.saved.count)
         }
         .overlay(alignment: .top) {
-            if let message = model.state.message {
+            if let message = model.message {
                 MessageBanner(message: message, store: model.store)
             }
         }

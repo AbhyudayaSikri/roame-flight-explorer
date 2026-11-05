@@ -12,14 +12,19 @@ class StoreRulesTest {
     fun syncStateCoversEveryCombination() {
         val failed = RefreshStatus.Failed(RefreshError.Offline)
 
-        assertEquals(SyncState.Loading, syncStateOf(hasCachedFlights = false, lastSuccessAtMillis = null, RefreshStatus.Running))
+        assertEquals(SyncState.Loading, syncStateOf(hasCachedFlights = false, lastSuccessAtMillis = null, RefreshStatus.Running()))
         assertEquals(SyncState.Loading, syncStateOf(false, null, RefreshStatus.Idle))
         assertEquals(SyncState.Fresh(5), syncStateOf(true, 5, RefreshStatus.Idle))
-        assertEquals(SyncState.Fresh(5), syncStateOf(true, 5, RefreshStatus.Running))
+        assertEquals(SyncState.Fresh(5), syncStateOf(true, 5, RefreshStatus.Running()))
         assertEquals(SyncState.EmptySuccess(5), syncStateOf(false, 5, RefreshStatus.Idle))
         assertEquals(SyncState.Stale(5, RefreshError.Offline), syncStateOf(true, 5, failed))
         assertEquals(SyncState.Stale(5, RefreshError.Offline), syncStateOf(false, 5, failed))
         assertEquals(SyncState.FailedNoCache(RefreshError.Offline), syncStateOf(false, null, failed))
+
+        // A retry after a failure: cached data stays marked stale, and with no cache Retry shows loading.
+        val retrying = RefreshStatus.Running(previousFailure = RefreshError.Offline)
+        assertEquals(SyncState.Stale(5, RefreshError.Offline), syncStateOf(true, 5, retrying))
+        assertEquals(SyncState.Loading, syncStateOf(false, null, retrying))
     }
 
     @Test

@@ -8,7 +8,6 @@ struct DebugSheetView: View {
     @State private var text = ""
 
     var body: some View {
-        let state = model.state
         let problem = ServerUrlKt.serverUrlProblem(text: text)
         NavigationStack {
             Form {
@@ -30,16 +29,16 @@ struct DebugSheetView: View {
                     }
                     .disabled(problem != nil)
                     .accessibilityIdentifier(TestIds.shared.debugServerUrlSave)
-                    Button("Use the default (\(state.defaultServerUrl))") {
+                    Button("Use the default (\(model.defaultServerUrl))") {
                         model.store.useDefaultServerUrl()
                         dismiss()
                     }
-                    .disabled(state.isDefaultServerUrl)
+                    .disabled(model.isDefaultServerUrl)
                     .accessibilityIdentifier(TestIds.shared.debugServerUrlDefault)
                 } header: {
                     Text("Server URL")
                 } footer: {
-                    Text("Now using \(state.serverUrl). On a phone, use the Mac's address on the same network, such as http://192.168.1.20:8080 or http://your-mac.local:8080. It's kept until you change it or reset the app's data.")
+                    Text("Now using \(model.serverUrl). On a phone, use the Mac's address on the same network, such as http://192.168.1.20:8080 or http://your-mac.local:8080. It's kept until you change it or reset the app's data.")
                 }
             }
             .navigationTitle("Debug")
@@ -50,7 +49,7 @@ struct DebugSheetView: View {
                         .accessibilityIdentifier(TestIds.shared.debugDone)
                 }
             }
-            .onAppear { text = state.serverUrl }
+            .onAppear { text = model.serverUrl }
         }
     }
 }

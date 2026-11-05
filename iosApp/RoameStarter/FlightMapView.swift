@@ -80,10 +80,13 @@ struct FlightMapView: View {
     /// Moves the camera and re-clusters for the new zoom at once. MapKit shows at least [rect],
     /// widened to the view's shape.
     private func show(_ rect: MKMapRect, animated: Bool = false) {
+        // Setting an equal position doesn't move the camera, so fitting the same area again (after
+        // the map is resized) goes through the equivalent region, which MapKit fits afresh.
+        let target: MapCameraPosition = position == .rect(rect) ? .region(MKCoordinateRegion(rect)) : .rect(rect)
         if animated {
-            withAnimation { position = .rect(rect) }
+            withAnimation { position = target }
         } else {
-            position = .rect(rect)
+            position = target
         }
         guard viewSize.width > 0, viewSize.height > 0, rect.size.width > 0 else { return }
         let visibleWidth = max(rect.size.width, rect.size.height * viewSize.width / viewSize.height)

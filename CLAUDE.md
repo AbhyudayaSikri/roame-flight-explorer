@@ -37,7 +37,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - Loop: push → `gh run watch <run-id> --exit-status` → `gh run view --log-failed` → fix → push.
   - Screenshots and raw logs: `gh run download <run-id> -n ios-ui-tests`.
   - `print()` output from tests appears only in the raw `*.log` files; the console shows xcbeautify's summary.
-- Android UI tests: `androidApp/src/androidTest`, on an API 37 emulator in CI (`.github/workflows/android-ui.yml`), against the real API.
+- Android UI tests: `androidApp/src/androidTest`, on an API 36 emulator in CI (`.github/workflows/android-ui.yml`), against the real API.
   - `.github/scripts/android-ui-tests.sh` installs both APKs, runs `SmokeTest`, stops the API, then runs `OfflineRelaunchTest` with `-e offline true` on the cache the first run left.
   - On your own emulator: build `:androidApp:assembleDebug :androidApp:assembleDebugAndroidTest :server:fatJar`, start the jar on port 8080 with its PID in `$RUNNER_TEMP/server.pid`, then run the script with `RUNNER_TEMP` (and `ANDROID_SERIAL`) set. It uninstalls the app first.
   - Results, logcat and failure screenshots: `gh run download <run-id> -n android-ui-tests`.

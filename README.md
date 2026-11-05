@@ -86,7 +86,7 @@ Enter the computer's address, such as `http://192.168.1.20:8080`. The apps check
 
 CI runs all of it on pull requests and pushes to `main` that change code (docs-only changes skip it):
 - `.github/workflows/ci.yml` (Linux): server tests, shared tests, Android build.
-- `.github/workflows/android-ui.yml` (Linux): the Android UI tests on an API 37 emulator, against the running API. Its `android-ui-tests` artifact has the results, logcat and any failure screenshots.
+- `.github/workflows/android-ui.yml` (Linux): the Android UI tests on an API 36 emulator, against the running API. Its `android-ui-tests` artifact has the results, logcat and any failure screenshots.
 - `.github/workflows/ios.yml` (macOS): the build and the shared tests on the simulator, then XCUITests against the running API.
   - Pull requests run 5 smoke tests: launch, search, map selection, save, error state.
   - Pushes to `main` and manual runs (workflow_dispatch) run the full suite, then the offline relaunch with the API stopped.

@@ -144,6 +144,7 @@ Alternatives considered:
 - **Each platform keeps its own local data.** There's no cross-device sync, per the brief.
 - **iOS is verified only on the CI simulator** (iPhone 17, iOS 26.4, Xcode 26.4.1) by XCUITest and screenshots. It's never run interactively or on a device.
 - **The repo is public during development**, so macOS CI minutes are free. Visibility is confirmed at submission (PLAN §12).
+- **The Android emulator job runs API 36, not 37 (2026-11-05).** On the API 37 `google_apis` x86_64 image (revision 8), SurfaceFlinger aborted within seconds of boot under the CI emulator's SwiftShader GPU, in the emulator's graphics mapper (`mapper.ranchu`: `Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma`). That restarts the whole system, so no test could run; it happened in two runs. The emulator has no switch for that host feature, so the job uses API 36, the nearest image. The app still targets API 37.
 
 ## 3. Tradeoffs
 - **MapLibre with OpenFreeMap tiles on Android, not Google Maps.**
@@ -177,7 +178,7 @@ Alternatives considered:
 
 ## 4. Known limitations
 - **iOS has never run on a device or interactively.** It's checked only on the CI simulator (iPhone 17, iOS 26.4) by XCUITest, screenshots and the demo video.
-- **Android runs against the real API only in the five emulator UI tests** (CI's API 37 emulator, and one local run on 2026-11-05). Everything else on Android is checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
+- **Android runs against the real API only in the five emulator UI tests** (CI's API 36 emulator, and one local run on 2026-11-05). Everything else on Android is checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
 - **Map tiles need the network**, which the brief allows. Offline, the maps show the pills and route on a plain background, with no coastlines. iOS hasn't been checked offline on the map tab.
 - **Some QA items aren't covered by iOS UI tests:** F1 and F2 (single-day date ranges) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers all three rules, and the iOS store uses it unchanged.
   - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox. It stays on the unmerged branch `test/ios-date-range-f1`.
@@ -240,7 +241,7 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
   - Pushes to `main` and manual runs run all 34; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
-- **Android app, 5 Compose UI tests** (`androidApp/src/androidTest`) on an API 37 emulator in CI (`android-ui.yml`), against the real API:
+- **Android app, 5 Compose UI tests** (`androidApp/src/androidTest`) on an API 36 emulator in CI (`android-ui.yml`), against the real API:
   - `SmokeTest`: launch loads 1,000 flights (QA L1), "tokyo" finds 110 (S3), a map pill's flight opens its card (M3), and a saved flight appears in Saved (V1).
   - Then the API is stopped, and `OfflineRelaunchTest` relaunches onto the cache: marked stale, with the saved flight (O2).
   - They find controls by the shared `TestIds`. Map pills are drawn by MapLibre, so the test taps the point MapLibre's projection gives for the pill.

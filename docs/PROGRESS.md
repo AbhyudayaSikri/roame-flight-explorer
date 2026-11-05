@@ -303,7 +303,11 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
   - The map pills are MapLibre bitmaps, not Compose nodes. The test asks MapLibre for the rendered pill and its projected screen point, then taps there through the input system.
   - `.github/scripts/android-ui-tests.sh` runs `am instrument` twice on one install, so the second run relaunches onto the first run's database; `connectedAndroidTest` would uninstall the app in between.
   - Locally on `roame-smoke` (API 35), against the server jar: all five passed. With the API left running, the offline test failed as it should, and saved its failure screenshot.
-  - CI: an API 37 `google_apis` x86_64 image, Pixel 7 profile, android-emulator-runner v2.38.0. MapLibre already used its OpenGL artifact.
+  - CI: an API 36 `google_apis` x86_64 image, Pixel 7 profile, android-emulator-runner v2.38.0. MapLibre already used its OpenGL artifact.
+  - Getting it green on the runner:
+    - Fix 1: a 6 GB data partition. The 57 MB debug APK didn't fit ("Requested internal only, but not enough space").
+    - Fix 2: API 37 crashed the system. SurfaceFlinger aborted in the emulator's graphics mapper (`Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma`) within seconds of boot, in both runs. I tried turning that host feature off, but the emulator has no feature by that name ("Bad feature name").
+    - Fix 3: API 36, the nearest image, as your answer allowed. NOTES §2.2 records why.
 
 ## Decisions
 

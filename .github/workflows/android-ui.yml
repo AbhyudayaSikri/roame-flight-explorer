@@ -1,6 +1,6 @@
 name: android-ui
 
-# Compose UI tests on an API 37 emulator, against the real local API (.github/scripts/android-ui-tests.sh).
+# Compose UI tests on an API 36 emulator, against the real local API (.github/scripts/android-ui-tests.sh).
 # Required for pull requests that touch androidApp/ or shared/ (CLAUDE.md, Merging).
 on:
   push:
@@ -68,10 +68,13 @@ jobs:
           for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1 && break; sleep 1; done
           curl -fsS http://127.0.0.1:8080/health
 
-      - name: UI tests on the emulator (API 37)
+      # API 36, the nearest image to the app's target: on the API 37 google_apis image, SurfaceFlinger
+      # aborts under this emulator's SwiftShader GPU (mapper.ranchu: "Assertion failed:
+      # !rcEnc->featureInfo()->hasReadColorBufferDma"), which restarts the system (docs/NOTES.md).
+      - name: UI tests on the emulator (API 36)
         uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
-          api-level: '37.0'
+          api-level: '36'
           target: google_apis
           arch: x86_64
           profile: pixel_7
@@ -80,9 +83,7 @@ jobs:
           # The default data partition can't fit the 57 MB debug APK ("not enough space").
           disk-size: 6000M
           emulator-boot-timeout: 900
-          # With this host feature on, the API 37 image's graphics mapper aborts SurfaceFlinger
-          # ("Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma"), which restarts the system.
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -feature -ReadColorBufferDma
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: .github/scripts/android-ui-tests.sh
 

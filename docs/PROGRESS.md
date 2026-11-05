@@ -157,6 +157,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.8 Android `testTag`s (QA T4) | [#21](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/21) | merged after #24 |
 | (e) §13.1 Review fixes: Android Explore state (QA O9, M10) | [#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25) | merged after #21 |
 | (e) §13.1 Review fixes: iOS UI-test assertions | [#26](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/26) | merged after #25 |
+| (e) §13.1 Review fix: the points slider during a drag | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -182,6 +183,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
+  - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
+  - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.
+  - QA F9 now includes a fast drag. This is UI-only. The iOS slider test (`testLowestPointsLimitLeavesTheSingleCheapestFlight`) ran in the full suite on the branch.
 - **(e) §13.6b iOS sliced observation.**
   - `ExplorerModel` now mirrors each state field the views read as its own observed property, and assigns it only when its value changed. Each view reads the fields it needs from the model, not the whole `ExplorerState`.
   - The behaviour is meant to be identical. The full XCUITest suite ran on the branch before merging.

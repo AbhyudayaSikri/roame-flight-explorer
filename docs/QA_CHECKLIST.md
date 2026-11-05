@@ -35,7 +35,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - F6 [MUST] Cabin Business + program Avios + max 60,000 → 32 flights (AND across all three).
 - F7 [MUST] Active filters are visible as chips/summary; the result count updates with every change.
 - F8 [MUST] Reset → search fields and every filter back to defaults; count 1,000.
-- F9 [MUST] Typing fast or changing filters quickly → the final results match the last input; no jank.
+- F9 [MUST] Typing fast or changing filters quickly → the final results match the last input; no jank. Drag the points slider fast back and forth: the thumb follows the finger and never jumps back.
 - F10 [MUST] Select a program, then deselect it → all programs are included again (1,000). "Mileage Plan" (203) and "MileagePlus" (199) are separate options.
 
 ## List / map / selection

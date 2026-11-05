@@ -30,6 +30,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -149,7 +150,13 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 private fun PointsSlider(filters: FiltersUi, bounds: DataBounds, store: FlightExplorerStore) {
     val min = bounds.minPoints
     val max = bounds.maxPoints
-    var value by remember(filters.maxPoints, min, max) { mutableFloatStateOf(filters.maxPoints.coerceIn(min, max).toFloat()) }
+    var dragging by remember { mutableStateOf(false) }
+    var value by remember { mutableFloatStateOf(filters.maxPoints.coerceIn(min, max).toFloat()) }
+    // Follow the store (Reset, new data) except mid-drag: its value arrives a moment after each
+    // step, and following it then would pull the thumb back.
+    LaunchedEffect(filters.maxPoints, min, max) {
+        if (!dragging) value = filters.maxPoints.coerceIn(min, max).toFloat()
+    }
     val points = value.roundToInt()
 
     Text(
@@ -160,9 +167,11 @@ private fun PointsSlider(filters: FiltersUi, bounds: DataBounds, store: FlightEx
     Slider(
         value = value,
         onValueChange = {
+            dragging = true
             value = it
             store.setMaxPoints(it.roundToInt())
         },
+        onValueChangeFinished = { dragging = false },
         valueRange = min.toFloat()..max.toFloat(),
         steps = ((max - min) / filters.pointsStep - 1).coerceAtLeast(0),
         modifier = Modifier.testTag(TestIds.filterPoints),

@@ -105,6 +105,7 @@ Alternatives considered:
 - **Compose treats the shared value types as stable (2026-11-04).** `:shared` isn't compiled with the Compose compiler, so on its own Compose compares `ExplorerState`, `Flight`, `FiltersUi` and the rest by identity. Every rebuilt but equal value then recomposes.
   - `androidApp/compose-stability.conf` names each shared value type, plus read-only `List` and `Set` with stable elements. It names them one by one, not with a package wildcard, so the store and repository aren't covered.
   - Compiler report: unstable arguments went from 35 to 17, and unknown-stability ones (the lists and sets) from 14 to 6. The ones left are the store, which is one instance for the app's lifetime, so comparing by identity already skips.
+- **The apps are called "Flight Explorer" on the home screen (2026-11-04).** Only the display name changed: iOS `CFBundleDisplayName` and Android `android:label`. The project, the `RoameStarter.app` bundle, the bundle ID and the package name keep the starter's names, because the release workflow, QUICKSTART and the UI tests use them.
 - **Release packaging (2026-11-04).**
   - A `v*` tag publishes a GitHub Release (`release.yml`):
     - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
@@ -171,7 +172,7 @@ Alternatives considered:
 - **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
-  - Individually removable chips, −/+ points buttons, skeleton rows, haptics, "Flight Explorer" display names.
+  - Individually removable chips, −/+ points buttons, skeleton rows, haptics.
   - iOS sliced observation, Android `testTag`s.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
 

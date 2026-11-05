@@ -59,14 +59,10 @@ class DemoWalkthrough {
         pace(1.0)
         compose.closeFilters()
 
-        // Paris, not Tokyo, for the map: Android opens the map on a fixed world view, which leaves
-        // Japan off the right edge of a phone screen.
-        compose.typeSlowly(TestIds.searchDestination, "paris")
-        compose.waitForCount(8)
-        app.hideKeyboard()
         compose.onNodeWithTag(TestIds.viewMap).performClick()
+        compose.waitUntil(LOAD_TIMEOUT) { app.pillsOnScreen().containsAll(listOf("HND", "NRT")) }
         pace(2.0)
-        compose.tapPill(app, "CDG")
+        compose.tapPill(app, "NRT")
         compose.waitForTag(TestIds.destinationSheet)
         pace()
         compose.onAllNodes(flightRows(container = TestIds.destinationSheet)).onFirst().performClick()

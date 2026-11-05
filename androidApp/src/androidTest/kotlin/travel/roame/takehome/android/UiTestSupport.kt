@@ -322,6 +322,21 @@ private fun ExplorerApp.pillOnScreen(pillId: String?): PointF? = onActivity { ac
     point
 }
 
+/** The ids of the pills MapLibre has drawn with their centre inside the map view. */
+fun ExplorerApp.pillsOnScreen(): Set<String> = onActivity { activity ->
+    val view = activity.window.decorView.findMapView() ?: return@onActivity emptySet()
+    var ids = emptySet<String>()
+    view.getMapAsync { map ->
+        val everything = RectF(0f, 0f, view.width.toFloat(), view.height.toFloat())
+        ids = map.queryRenderedFeatures(everything, MARKER_LAYER).mapNotNull { feature ->
+            val center = feature.geometry() as? Point ?: return@mapNotNull null
+            val at = map.projection.toScreenLocation(LatLng(center.latitude(), center.longitude()))
+            feature.getStringProperty("pill").takeIf { everything.contains(at.x, at.y) }
+        }.toSet()
+    }
+    ids
+}
+
 private fun View.findMapView(): MapView? = when (this) {
     is MapView -> this
     is ViewGroup -> (0 until childCount).firstNotNullOfOrNull { getChildAt(it).findMapView() }

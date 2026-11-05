@@ -41,7 +41,7 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 **Verification.**
 - The rules have shared tests that run on the JVM in every CI run and on the iOS simulator in every iOS run.
 - iOS is tested end to end by XCUITest in CI, against the real API: on pull requests a smoke set, on `main` the full suite, including the offline relaunch with the API stopped.
-- Android has 28 Compose UI tests on an emulator in CI, against the real API, including a relaunch with the API stopped. The rest of Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
+- Android has 29 Compose UI tests on an emulator in CI, against the real API, including a relaunch with the API stopped. The rest of Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
 
 ## 2. Assumptions
 
@@ -94,7 +94,9 @@ Alternatives considered:
   - Tests switch the server's mode with a raw TCP request (Network framework). That avoids App Transport Security in the test runner, which a plain-HTTP `URLSession` call would hit.
 - **Camera fit on a selected route (2026-11-04):**
   - Android frames the route with the shared `fitCamera`, which uses Web Mercator and MapLibre's 512-dp world at zoom 0. It leaves out the card covering the bottom of the map. iOS gets the same result from MapKit (`MKGeodesicPolyline.boundingMapRect` plus a bottom safe-area inset).
-  - Android re-frames only when the selected flight changes. iOS also re-frames the markers when the filters change and nothing is selected.
+  - With nothing selected, both apps also frame the markers when a search, filter or Reset changes which airports show.
+  - Android does it (2026-11-05) with the shared `fitMarkers`: animated, once the airports have stayed the same for 400 ms, and never while a finger is moving the map, over a selected route, or for no markers.
+  - `fitMarkers` stops at zoom 7, so one airport, or HND + NRT, gets a regional view with separate pills. Markers that span the world keep Android's opening world view.
   - iOS also frames again when the map is resized (the keyboard closing, a rotation), because a frame chosen in a short map stays too zoomed out once the map is tall again.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
@@ -189,8 +191,7 @@ Alternatives considered:
   - Debug builds run LeakCanary (QA T2). On the emulator with no API, four rotations and some tab switches left nothing retained. The map wasn't opened, because it needs data.
   - iOS has no leak check beyond the code review.
 - **Clustering uses one pill size**, so a merged pill, which is wider than a single airport's, can still touch a neighbour.
-- **In portrait, the world map can't show every destination at once.** iOS frames the markers it can fit; Android starts at a fixed world view.
-- **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
+- **In portrait, the world map can't show every destination at once.** iOS frames the markers it can fit; Android keeps its opening world view whenever the markers span the world.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Everything in PLAN §13 is built.** Android at the largest font size and with TalkBack is only checked by QA P4 and P5, and haptics only by P7 on a phone.
 
@@ -225,8 +226,8 @@ Dates are local (UTC-5).
 ### Automated tests (as of 2026-11-05)
 Every pull request and every push to `main` runs these in CI (`.github/workflows/ci.yml`, `ios.yml`).
 
-- **Shared logic, 134 tests** (`shared/src/commonTest`), plus one JVM-only test, `FileDatabaseRestartTest`, that closes and reopens a real database file. They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
-  - Rules: decoding (`DecodingTest`), the search rule (`SearchTest`), filters with their date and points boundaries (`FilterTest`), filter chips (`ActiveFiltersTest`), map aggregation (`AggregationTest`) and clustering (`MarkerClusteringTest`), camera fitting (`CameraFitTest`), great-circle routes (`RouteGeometryTest`), display formatting (`FormattingTest`), calendar dates and the iOS picker's conversion in ten time zones (`CalendarDateTest`, `PickerDateTest`), server address validation (`ServerUrlTest`).
+- **Shared logic, 137 tests** (`shared/src/commonTest`), plus one JVM-only test, `FileDatabaseRestartTest`, that closes and reopens a real database file. They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
+  - Rules: decoding (`DecodingTest`), the search rule (`SearchTest`), filters with their date and points boundaries (`FilterTest`), filter chips (`ActiveFiltersTest`), map aggregation (`AggregationTest`) and clustering (`MarkerClusteringTest`), camera fitting for routes and for a search's markers (`CameraFitTest`), great-circle routes (`RouteGeometryTest`), display formatting (`FormattingTest`), calendar dates and the iOS picker's conversion in ten time zones (`CalendarDateTest`, `PickerDateTest`), server address validation (`ServerUrlTest`).
   - Persistence and networking: `FlightDatabaseStoreTest` on in-memory SQLite, and `FlightsApiTest` with Ktor's `MockEngine`.
   - The store, against a fake API and real SQLite (`FlightExplorerStoreTest`, `StoreRulesTest`, `ServerUrlStoreTest`):
     - Fresh, stale, empty and failed syncs; the cache surviving a restart; offline search and remove.
@@ -241,7 +242,7 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
   - Pushes to `main` and manual runs run all 34; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
-- **Android app, 28 Compose UI tests** (`androidApp/src/androidTest`) on an API 36 emulator in CI (`android-ui.yml`), against the real API. `QA_CHECKLIST.md` marks each item they assert.
+- **Android app, 29 Compose UI tests** (`androidApp/src/androidTest`) on an API 36 emulator in CI (`android-ui.yml`), against the real API. `QA_CHECKLIST.md` marks each item they assert.
   - Each test starts from an empty database: debug builds take the boolean intent extras `resetData`, `failSaves` and `failRemoves`, like iOS's launch arguments.
   - `SmokeTest`: launch loads 1,000 flights with no chips (QA L1, L2), "tokyo" finds 110 (S3), a map pill's flight opens its card (M3), and a saved flight appears in Saved (V1).
   - `SearchTests`: case and spaces, city names, both fields together, the no-matches state with its Reset, and an exact code beating city prefixes (S1, S2, S4–S6).
@@ -254,7 +255,8 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
   - `SelectionTests`: a flight selected on the list stays selected on the map and back, and one picked on the map stays selected on the list (M5); filtering it out clears it on both views (M6); recreating the activity, as a rotation does, and backgrounding keep the search and selection (O7).
   - `SavedTests`: remove from the card and from the Saved tab (V4); a failed save or remove rolls back with a message, using the `failSaves` and `failRemoves` extras (V6); after `--mode=updated`, "Update saved" replaces the snapshot with the new points and no duplicate (V2); a saved flight survives `--mode=empty` (V5).
   - `ServerStateTests`: a failed refresh keeps the cache, marked stale (O1, with `--mode=error`); with no cache, an error with Retry that loads once the API recovers (O4); `--mode=empty` on a fresh install says "No flights available", not an error (O5). They switch the mode through `POST /control/mode`, as iOS does.
-  - `DemoWalkthrough`, recorded as `android-demo.mp4`: a 3 s first load showing the skeleton rows, typed searches, the filter sheet, the CDG pill on the map, the card, Save and the Saved tab. It runs only with `-e demo true`, and leaves the cache and saved flight the offline run uses.
+  - `MapTests`: on the Map tab, To `tokyo` moves the map from its world view to Japan, with HND and NRT as separate pills (M11).
+  - `DemoWalkthrough`, recorded as `android-demo.mp4`: a 3 s first load showing the skeleton rows, typed searches, the filter sheet, the map framing Tokyo, the NRT pill, the card, Save and the Saved tab. It runs only with `-e demo true`, and leaves the cache and saved flight the offline run uses.
   - `OfflineRelaunchTest`, recorded too: CI stops the API after the walkthrough, then relaunches. The cache is marked stale, with the saved flight (O2); pull to refresh keeps it stale (O1, with the API really stopped); search works offline, and the saved flight can be removed (O3).
   - They find controls by the shared `TestIds`. Map pills are drawn by MapLibre, so the test taps the point MapLibre's projection gives for the pill.
   - The rest of Android is checked by hand (below).

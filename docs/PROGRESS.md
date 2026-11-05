@@ -361,6 +361,24 @@ A second independent review runs in another chat; its findings arrive as `review
   - CI: green. The 28 online tests took 165 s, the walkthrough 41 s and the offline run 13 s; the whole job took 7.4 minutes. The video was 57 s (3.1 MB).
 - **12:06: `main` green with all three PRs** on `4232194`: Linux CI and the emulator job ([42070323335](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42070323335), which uploaded `android-demo`). They change no iOS paths, so `ios.yml` didn't run.
 
+## Afternoon: your fifth list (from 12:22)
+
+After these two items, only `qa` and `review` fixes.
+
+| Item | PR | State |
+|---|---|---|
+| Android map frames the markers after a search, filter or Reset (QA M11) | this PR | in review |
+| `docs/AI_FACTS.md`, the facts for NOTES §6 | | not started |
+
+- **Android map framing (this PR), your rules:**
+  - The map frames the markers when a search, filter or Reset changes which airports show. It animates, once the airports have stayed the same for 400 ms.
+  - Never while a finger is moving the map. A selected flight's route framing wins, and no markers leave the camera where it is.
+  - Shared `fitMarkers` wraps `fitCamera` with room for the pills (72 dp) and a zoom cap of 7, about the 2.5° square iOS shows for one airport or HND + NRT. Markers that span the world keep the opening world view.
+  - New shared tests: one airport gets zoom 7, centred on it; HND and NRT both land inside the padding and don't merge into one pill; no markers give no camera. With the cap at 6, both of the first two fail; I checked by setting it.
+  - New Android UI test `MapTests`: on the Map tab, the opening world view doesn't show both Tokyo pills; after To `tokyo`, HND and NRT are both on screen. New QA item M11.
+  - The demo walkthrough is back on Tokyo: it opens the map on New York → Tokyo, waits for both pills, and picks an NRT flight.
+  - Locally on `roame-smoke` against the jar: all 29 online tests, the walkthrough and the offline run passed; the video's frame at 28 s shows the HND and NRT pills over Tokyo.
+
 ## Decisions
 
 - **Lighter iOS job on pull requests (Nov 4, evening, your call).**

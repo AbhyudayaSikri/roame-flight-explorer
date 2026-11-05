@@ -8,6 +8,7 @@ import android.os.SystemClock
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -32,6 +33,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
@@ -80,6 +82,12 @@ class ExplorerApp : ExternalResource() {
     /** Destroys and recreates the activity, as a rotation does. */
     fun recreate() {
         checkNotNull(scenario) { "launch() first" }.recreate()
+    }
+
+    /** Closes the soft keyboard that typing opened, so the screen behind it shows. */
+    fun hideKeyboard() = onActivity { activity ->
+        activity.getSystemService(InputMethodManager::class.java)
+            .hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
     }
 
     /** Sends the app to the background and brings it back. */
@@ -154,6 +162,18 @@ fun ComposeTestRule.waitForCount(count: Int, timeoutMillis: Long = UI_TIMEOUT) =
 fun ComposeTestRule.search(field: String, text: String) {
     onNodeWithTag(field).performTextReplacement(text)
 }
+
+/** Types into a search field a key at a time, so a recording shows it being typed. */
+fun ComposeTestRule.typeSlowly(field: String, text: String) {
+    onNodeWithTag(field).performTextReplacement("")
+    text.forEach { key ->
+        onNodeWithTag(field).performTextInput(key.toString())
+        Thread.sleep(120)
+    }
+}
+
+/** Slows a recorded test down enough to follow. */
+fun pace(seconds: Double = 1.5) = Thread.sleep((seconds * 1000).toLong())
 
 fun ComposeTestRule.fieldText(field: String): String =
     onNodeWithTag(field).fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text.orEmpty()

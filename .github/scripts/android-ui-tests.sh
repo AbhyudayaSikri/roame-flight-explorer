@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # Android emulator smoke tests (android-ui.yml). Runs once the emulator has booted, with the local
-# API serving on port 8080 with `--allow-control`, and its PID in "$RUNNER_TEMP/server.pid". To run it on your own
-# emulator, start the API the same way and set RUNNER_TEMP (and ANDROID_SERIAL if more than one
-# device is attached).
+# API serving on port 8080 with `--allow-control`, and its PID in "$RUNNER_TEMP/server.pid". To run
+# it on your own emulator, start the API the same way and set RUNNER_TEMP (and ANDROID_SERIAL if
+# more than one device is attached).
 #
 # Every run uses one install, so the app keeps its database: the last run relaunches onto the cache
-# and saved flight the one before it left, after the API has been stopped.
+# and the saved flight that the demo walkthrough left, after the API has been stopped.
 set -euo pipefail
 
 out="$RUNNER_TEMP/android-ui"
 mkdir -p "$out"
 runner=travel.roame.takehome.android.test/androidx.test.runner.AndroidJUnitRunner
+tests=travel.roame.takehome.android
 
 # A clean install, so nothing from an earlier run on this device (a saved flight, a debug Server
 # URL) carries over.
@@ -29,10 +30,14 @@ instrument() {
 }
 
 status=0
-offline=travel.roame.takehome.android.OfflineRelaunchTest
-# Every class; OfflineRelaunchTest skips itself without `-e offline`.
-instrument online -e package travel.roame.takehome.android || status=1
-instrument offline-before -e class "$offline" -e offline before || status=1
+# Every class; DemoWalkthrough and OfflineRelaunchTest skip themselves without their arguments.
+instrument online -e package "$tests" || status=1
+
+# android-demo.mp4: the walkthrough, then the offline relaunch once the API has stopped.
+adb shell screenrecord --time-limit 180 --size 720x1600 --bit-rate 3000000 /sdcard/android-demo.mp4 &
+recorder=$!
+sleep 1
+instrument demo -e class "$tests.DemoWalkthrough" -e demo true || status=1
 
 kill "$(cat "$RUNNER_TEMP/server.pid")"
 for _ in $(seq 1 20); do
@@ -40,7 +45,13 @@ for _ in $(seq 1 20); do
   sleep 0.5
 done
 
-instrument offline-after -e class "$offline" -e offline after || status=1
+instrument offline -e class "$tests.OfflineRelaunchTest" -e offline true || status=1
+
+# SIGINT makes screenrecord finish the file; then give it a moment to close it.
+adb shell pkill -INT screenrecord || true
+wait "$recorder" || true
+sleep 2
+adb pull /sdcard/android-demo.mp4 "$out/android-demo.mp4" || true
 
 adb pull /sdcard/Android/data/travel.roame.takehome.android/files/ui-test-failures "$out/" > /dev/null 2>&1 || true
 adb exec-out screencap -p > "$out/last-screen.png" || true

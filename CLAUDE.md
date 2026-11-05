@@ -61,7 +61,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - "Update saved" re-saves when the cached flight differs from the snapshot.
 - SyncState distinguishes a successful EMPTY response from a FAILED request. A failed refresh keeps the cache and shows Stale.
 - Save/remove return `Result` internally. On failure, the store rolls back optimistic changes and emits a `message`, and the UI must surface it.
-- Never block the main thread: filtering on `Dispatchers.Default`, DB and network on IO, and the latest query wins (`mapLatest`/`flatMapLatest`).
+- Never block the main thread: filtering and decoding the flights response on `Dispatchers.Default`, DB on IO, and the latest query wins (`mapLatest`/`flatMapLatest`).
 - Flight IDs are opaque strings (the fixture has `f101`–`f106`). Never parse them.
 
 ## Swift-facing API rules (SKIE)
@@ -103,4 +103,4 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - Keep `gradlew` LF + executable. Never commit `.DS_Store`.
 - **UI identifiers:**
   - iOS: every interactive control gets an `accessibilityIdentifier` from shared `TestIds`. XCUITest depends on them.
-  - Android: there are no Android UI tests. When touching a control, reuse the same `TestIds` as `Modifier.testTag`, for parity with iOS and for manual QA tooling (SHOULD).
+  - Android: every interactive control gets a `Modifier.testTag` from the same `TestIds`, for parity with iOS and for QA tooling. `testTagsAsResourceIds()` shows them to UiAutomator. Each window sets it on its root (the `Scaffold`, every sheet, dialog and menu), because new windows don't inherit it. There are no Android UI tests.

@@ -237,10 +237,14 @@ class UITestCase: XCTestCase {
     }
 
     @MainActor
+    /// Review evidence, not an assertion: on a loaded CI runner XCTest can time out capturing the
+    /// screen ("Timed out while requesting screenshot"), which mustn't fail the test.
     func screenshot(_ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        XCTExpectFailure("Capturing a screenshot can time out on a busy runner", options: .nonStrict()) {
+            let attachment = XCTAttachment(screenshot: app.screenshot())
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
     }
 }

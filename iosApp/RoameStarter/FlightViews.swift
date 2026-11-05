@@ -54,6 +54,7 @@ struct FlightCardView: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(flight.origin) → \(flight.destination)").font(.title2.weight(.bold))
+                    .accessibilityLabel(FormattingKt.spokenRoute(flight: flight))
                     Text("\(flight.originCity) to \(flight.destinationCity)").foregroundStyle(.secondary)
                 }
                 Spacer()
@@ -154,6 +155,7 @@ struct DestinationSheetView: View {
                     FlightRowView(flight: flight, saved: savedIds.contains(flight.id))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(FormattingKt.spokenFlight(flight: flight, saved: savedIds.contains(flight.id)))
                 .accessibilityIdentifier(TestIds.shared.flightRow(flightId: flight.id))
             }
             .listStyle(.plain)

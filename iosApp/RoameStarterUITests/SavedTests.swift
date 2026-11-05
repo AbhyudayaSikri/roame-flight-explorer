@@ -12,7 +12,7 @@ final class SavedTests: UITestCase {
         launch()
         waitForAllFlights()
         saveFirstJfkToHaneda()
-        XCTAssertTrue(flightRows.firstMatch.label.contains("Saved"), "The list row shows the saved state")
+        XCTAssertTrue(flightRows.firstMatch.label.hasSuffix(", saved"), "VoiceOver hears the saved state: \(flightRows.firstMatch.label)")
 
         // Wait for JFK → Paris to apply, so "Saved ignores the filters" is checked against them.
         search(ID.destination, "paris")

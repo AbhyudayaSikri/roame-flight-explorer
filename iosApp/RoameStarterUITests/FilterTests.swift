@@ -49,8 +49,8 @@ final class FilterTests: UITestCase {
         expectCount("1 flight")
         let row = flightRows.firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 10))
-        XCTAssertTrue(row.label.contains("LAX → MEX"), row.label)
-        XCTAssertTrue(row.label.contains("9,000 pts"), row.label)
+        XCTAssertTrue(row.label.hasPrefix("LAX to MEX, Los Angeles to Mexico City"), row.label)
+        XCTAssertTrue(row.label.contains("9,000 points"), row.label)
     }
 
     @MainActor

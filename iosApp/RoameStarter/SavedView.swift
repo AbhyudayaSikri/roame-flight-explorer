@@ -25,6 +25,7 @@ struct SavedView: View {
                                     FlightRowView(flight: saved.flight, saved: true)
                                 }
                                 .buttonStyle(.plain)
+                                .accessibilityLabel(FormattingKt.spokenFlight(flight: saved.flight, saved: true))
                                 .accessibilityIdentifier(TestIds.shared.savedRow(flightId: saved.flight.id))
                                 Button("Remove", role: .destructive) {
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()

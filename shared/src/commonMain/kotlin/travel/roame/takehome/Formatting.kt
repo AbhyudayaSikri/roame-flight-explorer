@@ -16,6 +16,20 @@ internal fun formatThousands(value: Int): String {
 /** 16500 -> "16,500 pts" */
 fun formatPoints(points: Int): String = "${formatThousands(points)} pts"
 
+/**
+ * What a screen reader says for a flight: words instead of "→" and "pts", so VoiceOver and TalkBack
+ * don't read out "right arrow". "LAX to MEX, Los Angeles to Mexico City, Thu, Feb 18, 2027, Economy,
+ * MileagePlus, 9,000 points, saved".
+ */
+fun spokenFlight(flight: Flight, saved: Boolean): String = buildString {
+    append("${spokenRoute(flight)}, ${flight.originCity} to ${flight.destinationCity}, ")
+    append("${flight.dateLabel}, ${flight.cabin}, ${flight.program}, ${formatThousands(flight.points)} points")
+    if (saved) append(", saved")
+}
+
+/** "LAX to MEX" */
+fun spokenRoute(flight: Flight): String = "${flight.origin} to ${flight.destination}"
+
 /** 1 -> "1 flight", 1000 -> "1,000 flights" */
 fun formatFlightCount(count: Int): String = if (count == 1) "1 flight" else "${formatThousands(count)} flights"
 

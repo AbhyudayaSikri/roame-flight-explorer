@@ -34,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.DestinationMarker
@@ -41,11 +43,16 @@ import travel.roame.takehome.Flight
 import travel.roame.takehome.SaveStatus
 import travel.roame.takehome.TestIds
 import travel.roame.takehome.formatPoints
+import travel.roame.takehome.spokenFlight
+import travel.roame.takehome.spokenRoute
 
 @Composable
 fun FlightRow(flight: Flight, saved: Boolean, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ListItem(
-        modifier = modifier.clickable(onClick = onClick),
+        // TalkBack reads this instead of the row's texts, so it hears words, not "→" and "pts".
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = spokenFlight(flight, saved) },
         colors = if (selected) {
             ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         } else {
@@ -95,7 +102,11 @@ fun FlightCard(
         Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
-                    Text("${flight.origin} → ${flight.destination}", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        "${flight.origin} → ${flight.destination}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.semantics { contentDescription = spokenRoute(flight) },
+                    )
                     Text("${flight.originCity} to ${flight.destinationCity}", style = MaterialTheme.typography.bodyMedium)
                 }
                 IconButton(onClick = onClose, modifier = Modifier.testTag(TestIds.cardClose)) {

@@ -39,6 +39,15 @@ class FormattingTest {
     }
 
     @Test
+    fun screenReadersHearWordsNotSymbols() {
+        val flight = fixtureFlights.first { it.id == "fx-LAX-MEX-20270218" }
+        val spoken = "LAX to MEX, Los Angeles to Mexico City, Thu, Feb 18, 2027, Economy, MileagePlus, 9,000 points"
+        assertEquals(spoken, spokenFlight(flight, saved = false))
+        assertEquals("$spoken, saved", spokenFlight(flight, saved = true))
+        assertEquals("LAX to MEX", spokenRoute(flight))
+    }
+
+    @Test
     fun flightsCarryTheirLabels() {
         val flight = fixtureFlights.first { it.id == "fx-LAX-MEX-20270218" }
 

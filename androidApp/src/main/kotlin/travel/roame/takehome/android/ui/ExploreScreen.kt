@@ -2,6 +2,7 @@
 
 package travel.roame.takehome.android.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,12 +11,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AssistChip
@@ -40,12 +44,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.ExplorerState
+import travel.roame.takehome.FilterKind
 import travel.roame.takehome.FlightExplorerStore
 import travel.roame.takehome.SyncState
 import travel.roame.takehome.TestIds
@@ -66,6 +72,15 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore, mode: ViewMo
         destination = ""
         store.resetFilters()
     }
+    // The search fields own their text, so removing their chip empties them too.
+    val removeFilter = { kind: FilterKind ->
+        when (kind) {
+            FilterKind.ORIGIN -> origin = ""
+            FilterKind.DESTINATION -> destination = ""
+            else -> Unit
+        }
+        store.clearFilter(kind)
+    }
 
     Column(Modifier.fillMaxSize()) {
         Row(
@@ -81,7 +96,7 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore, mode: ViewMo
                 store.setDestinationText(it)
             }
         }
-        SummaryRow(state, onOpenFilters = { showFilters = true }, onReset = reset)
+        SummaryRow(state, onOpenFilters = { showFilters = true }, onRemove = removeFilter, onReset = reset)
         SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.xs)) {
             ViewMode.entries.forEachIndexed { index, item ->
                 SegmentedButton(
@@ -196,7 +211,7 @@ private fun SearchField(label: String, placeholder: String, value: String, tag: 
 }
 
 @Composable
-private fun SummaryRow(state: ExplorerState, onOpenFilters: () -> Unit, onReset: () -> Unit) {
+private fun SummaryRow(state: ExplorerState, onOpenFilters: () -> Unit, onRemove: (FilterKind) -> Unit, onReset: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(start = Spacing.l, end = Spacing.s),
         verticalAlignment = Alignment.CenterVertically,
@@ -211,9 +226,22 @@ private fun SummaryRow(state: ExplorerState, onOpenFilters: () -> Unit, onReset:
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
             items(state.activeFilters, key = { it.kind.name }) { filter ->
+                // The label opens the filters; the × removes just this one.
                 AssistChip(
                     onClick = onOpenFilters,
                     label = { Text(filter.label, maxLines = 1) },
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Remove ${filter.label}",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .clickable { onRemove(filter.kind) }
+                                .padding(3.dp)
+                                .testTag(TestIds.filterChipRemove(filter.kind)),
+                        )
+                    },
                     modifier = Modifier.testTag(TestIds.filterChip(filter.kind)),
                 )
             }

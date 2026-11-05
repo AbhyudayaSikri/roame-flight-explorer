@@ -72,6 +72,7 @@ Alternatives considered:
 - **Max points defaults to no limit.**
   - The slider moves in steps of 500, because every fixture price is a multiple of 500.
   - A slider at the data maximum means "no limit" and shows no chip.
+- **Chips (2026-11-05):** tapping a chip's label opens the filter sheet, and its × removes just that filter (`clearFilter`). Removing From or To also empties that search field, because the fields own their text.
 - **Reset** clears both search fields and every filter. QA F8 expects 1,000 results afterwards.
 - **Results sort** by departure date, then points, then id.
 - **Filter options order (2026-11-04):** cabins run from cheapest to most premium (Economy, Premium Economy, Business, then First if it ever appears), with any unknown cabin names after them alphabetically. Programs are alphabetical.
@@ -181,7 +182,7 @@ Alternatives considered:
 - **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
-  - Individually removable chips, −/+ points buttons, skeleton rows, haptics.
+  - −/+ points buttons, skeleton rows, haptics.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary.
 
 ## 5. Checks actually performed

@@ -75,7 +75,7 @@ Branch `overnight`, cut from `main` at `6f91c42`. Scope: `docs/PLAN.md` steps 4�
   - The screenshots confirm the regional zoom for one airport and HND/NRT apart for Tokyo.
   - Per-item iOS QA results are in `docs/QA_IOS.md`.
   - Cleanup: stopped the local `roame-smoke` emulator. The AVD itself is still there.
-- **03:56 Draft PR [#1](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/1) opened.**
+- **03:27 Draft PR [#1](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/1) opened.**
   - Its iOS check ([41799697121](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41799697121)) failed 1 of 23 on unchanged code: V2's "No flight card".
   - Diagnosis from the failure's UI hierarchy:
     - The list already showed the 3 JFK → HND flights at the updated prices, but nothing was selected.
@@ -91,10 +91,10 @@ Your order: (a) Android camera fit, (b) `--mode=slow`, (c) polish (iOS cabin tru
 
 | Item | PR | State |
 |---|---|---|
-| (a) Android camera fits the selected route | [#2](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/2) | merged 11:15 (iOS evidence from a dispatched run, see below) |
-| (b) `--mode=slow` | [#3](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/3) | merged 21:29, its own Linux and iOS checks green |
-| (c) Polish | [#4](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/4) | merged 11:16 (same evidence) |
-| (c) follow-up: iOS map re-frames and re-clusters reliably | [#6](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/6) | merged 21:28, its own Linux and iOS checks green |
+| (a) Android camera fits the selected route | [#2](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/2) | merged 11:38 (iOS evidence from a dispatched run, see below) |
+| (b) `--mode=slow` | [#3](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/3) | merged 21:24, its own Linux and iOS checks green |
+| (c) Polish | [#4](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/4) | merged 11:39 (same evidence) |
+| (c) follow-up: iOS map re-frames and re-clusters reliably | [#6](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/6) | merged 21:24, its own Linux and iOS checks green |
 | F1 XCUITest | — (branch `test/ios-date-range-f1`) | dropped at the 45-minute timebox |
 | (d) README, NOTES §3/§4 | [#5](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/5) | this PR, docs only |
 
@@ -344,21 +344,21 @@ A second independent review runs in another chat; its findings arrive as `review
   - New: `FilterTests` (7 tests) and `SearchTests` (3). QA_CHECKLIST.md now marks each automated item by platform.
   - The date picker is Material's `DateRangePicker`. Its month list tells test tools it can't scroll, so the test scrolls by month and taps the day once it's on screen. One tap and Apply give a single-day range.
   - `OfflineRelaunchTest` now seeds its own cache and saved flight in a run before the API stops (`-e offline before`), because every other test resets the database.
-  - Locally on `roame-smoke` (API 35) against the jar: all 16 online tests passed in 67 s, and both offline runs passed. Before the last fix, the date test timed out waiting for 21: it had tapped April 1 while that day was still below the visible part of the list.
-  - CI: green, 16 online tests in 117 s; the whole job took 6 minutes.
+  - Locally on `roame-smoke` (API 35) against the jar: the online pass passed in 67 s (14 tests; the 2 offline tests skip themselves there), and both offline runs passed. Before the last fix, the date test timed out waiting for 21: it had tapped April 1 while that day was still below the visible part of the list.
+  - CI: green, the online pass in 117 s; the whole job took 6 minutes.
 - **Android UI tests, part 2: selection, saved and server states ([#43](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/43)).**
   - New: `SelectionTests` (4 tests), `SavedTests` (5) and `ServerStateTests` (3); `OfflineRelaunchTest`'s offline run now also pulls to refresh (O1) and searches and removes offline (O3).
   - The API in CI now runs with `--allow-control`, and `ServerControl.setMode` switches it from the test, as iOS's `ServerControl` does. `ServerModeReset` puts it back after each test.
   - Beyond your list: V5 (a saved flight survives an empty response), O3, and O7 (recreating the activity and backgrounding keep the search and selection), because each was one short test with the new helpers.
-  - Locally on `roame-smoke` against the jar: all 28 online tests passed in 103 s, and both offline runs passed.
-  - CI: green, 28 online tests in 180 s; the whole job took 6.5 minutes.
+  - Locally on `roame-smoke` against the jar: the online pass passed in 103 s (26 tests; the 2 offline tests skip themselves there), and both offline runs passed.
+  - CI: green, the online pass in 180 s; the whole job took 6.5 minutes.
 - **Android demo video ([#44](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/44)).**
   - `DemoWalkthrough`, slow on purpose like iOS's: a 3 s first load (`--mode=slow`, so the skeleton rows show), typed searches, the filter sheet, the map, the CDG pill, a flight's card, Save and the Saved tab. Then the script stops the API, and `OfflineRelaunchTest` relaunches onto the stale cache, pulls to refresh, searches and removes the saved flight, with pauses.
   - The script records both with `adb shell screenrecord` (720×1600, 3 Mbit/s) into `android-demo.mp4`, its own artifact, `android-demo`.
   - The walkthrough leaves the cache and saved flight the offline run needs, as iOS's does, so the separate "before" seed is gone.
   - The map part uses Paris, not Tokyo: Android opens the map on a fixed world view, which leaves Japan off a phone screen's right edge, so the HND pill was never drawn.
   - Locally: the walkthrough took 38 s and the offline run 13 s, giving a 53 s video (about 3.4 MB). Frames show the skeleton rows at 5 s, "new york" at 113 flights, the JFK → CDG arc with the card, then the offline banner and the Saved tab.
-  - CI: green. The 28 online tests took 165 s, the walkthrough 41 s and the offline run 13 s; the whole job took 7.4 minutes. The video was 57 s (3.1 MB).
+  - CI: green. The online pass (26 tests; the walkthrough and the offline test skip themselves there) took 165 s, the walkthrough 41 s and the offline run 13 s; the whole job took 7.4 minutes. The video was 57 s (3.1 MB).
 - **12:06: `main` green with all three PRs** on `4232194`: Linux CI and the emulator job ([42070323335](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42070323335), which uploaded `android-demo`). They change no iOS paths, so `ios.yml` didn't run.
 
 ## Afternoon: your fifth list (from 12:22)
@@ -367,17 +367,22 @@ After these two items, only `qa` and `review` fixes.
 
 | Item | PR | State |
 |---|---|---|
-| Android map frames the markers after a search, filter or Reset (QA M11) | this PR | in review |
-| `docs/AI_FACTS.md`, the facts for NOTES §6 | | not started |
+| Android map frames the markers after a search, filter or Reset (QA M11) | [#46](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/46) | merged 12:50 |
+| `docs/AI_FACTS.md`, the facts for NOTES §6 | this PR | docs only |
 
-- **Android map framing (this PR), your rules:**
+- **Android map framing ([#46](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/46)), your rules:**
   - The map frames the markers when a search, filter or Reset changes which airports show. It animates, once the airports have stayed the same for 400 ms.
   - Never while a finger is moving the map. A selected flight's route framing wins, and no markers leave the camera where it is.
   - Shared `fitMarkers` wraps `fitCamera` with room for the pills (72 dp) and a zoom cap of 7, about the 2.5° square iOS shows for one airport or HND + NRT. Markers that span the world keep the opening world view.
   - New shared tests: one airport gets zoom 7, centred on it; HND and NRT both land inside the padding and don't merge into one pill; no markers give no camera. With the cap at 6, both of the first two fail; I checked by setting it.
   - New Android UI test `MapTests`: on the Map tab, the opening world view doesn't show both Tokyo pills; after To `tokyo`, HND and NRT are both on screen. New QA item M11.
   - The demo walkthrough is back on Tokyo: it opens the map on New York → Tokyo, waits for both pills, and picks an NRT flight.
-  - Locally on `roame-smoke` against the jar: all 29 online tests, the walkthrough and the offline run passed; the video's frame at 28 s shows the HND and NRT pills over Tokyo.
+  - Locally on `roame-smoke` against the jar: the online pass (27 tests), the walkthrough and the offline run passed; the video's frame at 28 s shows the HND and NRT pills over Tokyo.
+  - CI: green. The online pass took 236 s, the walkthrough 49 s and the offline run 17 s; the whole job took 9 minutes.
+
+- **`docs/AI_FACTS.md` (this PR):** the facts for NOTES §6, with PR and run links: machines, models and tools; the workflow; counts; every bug that CI, a review or the agent's own checks caught, and how each was confirmed; agent errors and your overrides; and what only automation or the agent has checked.
+  - Corrected here while checking: #1's opening time, the merge times of #2, #3, #4 and #6 in the daytime table (GitHub's times), and the "online tests" totals for #42–#46, which included the 2 tests that skip themselves in that pass.
+  - Not logged before: on #9's dispatched full run ([41957681937](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41957681937)), the demo walkthrough lost keyboard focus while typing; every other UI test passed, and it hasn't recurred.
 
 ## Decisions
 

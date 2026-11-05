@@ -277,7 +277,7 @@ To be completed. So far:
   - Avios + Aeroplan → 386; Business + Avios + ≤ 60,000 → 32.
   - ≤ 132,999 points → 999.
   - Markers at defaults: 24, with HND "55 · 16.5k" and NRT "55 · 19.5k".
-- **File:** 432,741 bytes, ASCII, LF line endings with a final newline, no `$` or `"""`. In git it has only the `text=auto` attribute.
+- **File:** 432,741 bytes, ASCII, LF line endings with a final newline, no `$` or `"""`. Since 2026-11-04, `.gitattributes` has `fixtures/*.json text eol=lf`, so every checkout, Windows included, gets these exact bytes. Before that it had only `text=auto`, which converts to CRLF on a Windows checkout with `core.autocrlf=true`.
 
 ## Appendix B. Verification log (2026-11-03)
 - **Latest versions:**

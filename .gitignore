@@ -6,3 +6,6 @@ local.properties
 .DS_Store
 **/xcuserdata/
 DerivedData/
+
+# Python fallback server tests
+__pycache__/

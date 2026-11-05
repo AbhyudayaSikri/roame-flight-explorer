@@ -1,0 +1,124 @@
+name: release
+
+# A tag such as v1.0.0 builds every download and publishes them as a GitHub Release.
+# Pull requests that change this file, and manual runs, build and upload the files without publishing.
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths: ['.github/workflows/release.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Same toolchain as ios.yml.
+  XCODE_APP: /Applications/Xcode_26.4.1.app
+
+jobs:
+  linux:
+    name: Android APK and server jar (Linux)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      # Debug builds, so testers get the debug menu's Server URL.
+      - name: Build the debug APK and the server jar
+        run: ./gradlew --console=plain :androidApp:assembleDebug :server:fatJar
+
+      - name: Collect the files
+        run: |
+          mkdir -p dist
+          cp androidApp/build/outputs/apk/debug/androidApp-debug.apk dist/FlightExplorer-android-debug.apk
+          cp server/build/libs/roame-flights-server.jar dist/roame-flights-server.jar
+          ls -la dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-linux
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  ios:
+    name: iOS simulator app (macOS)
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "$XCODE_APP"
+          xcodebuild -version
+
+      # Xcode's build phase runs Gradle for the shared framework.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Cache the Kotlin/Native toolchain
+        uses: actions/cache@v6
+        with:
+          path: ~/.konan
+          key: konan-${{ runner.os }}-${{ runner.arch }}-kotlin-2.4.21
+
+      # Debug for the debug sheet's Server URL; arm64 only, so it runs in simulators on Apple silicon Macs.
+      - name: Build the app for the simulator
+        run: |
+          set -o pipefail
+          xcodebuild build -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' ARCHS=arm64 -derivedDataPath build/dd \
+            | xcbeautify --renderer github-actions
+
+      - name: Zip the .app
+        run: |
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/dd/Build/Products/Debug-iphonesimulator/RoameStarter.app dist/FlightExplorer-ios-simulator.zip
+          ls -la dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-ios
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish the GitHub Release
+    needs: [linux, ios]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Add the Python fallback server, its fixture and the quick start
+        run: cp server/fallback.py fixtures/flights.json QUICKSTART.md dist/
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -la dist
+          gh release create "$TAG" dist/* --verify-tag --title "Flight Explorer $TAG" --notes-file QUICKSTART.md

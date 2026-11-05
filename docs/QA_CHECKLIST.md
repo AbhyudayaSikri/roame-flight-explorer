@@ -81,7 +81,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 ## Polish
 - P1 [MUST] Spacing, typography and hierarchy are consistent across list rows, the card, sheets and the Saved tab.
 - P2 [MUST] Every tap gives visible feedback. Save/Remove show progress and can't be double-submitted.
-- P3 [COULD] Dark mode: everything is legible, including the map and markers.
+- P3 [COULD] Dark mode: everything is legible, including the map and markers. Android follows the system setting. iOS follows it too, and debug builds take `-forceDarkMode`, which the full iOS run uses for its "P3 dark" screenshots.
 - P4 [COULD] Largest system font size: rows and the card don't truncate the route, date or points.
 - P5 [COULD] TalkBack / VoiceOver read the route, date, points and saved state.
 - P6 [SHOULD] The launcher (Android) and home screen (iOS) show the app as "Flight Explorer".

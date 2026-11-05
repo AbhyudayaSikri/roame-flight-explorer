@@ -163,6 +163,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.7 Polish: skeleton rows (QA L4) | this PR | in review |
 | (e) §13.7 Polish: haptics (QA P7) | this PR | in review |
 | (e) §13.1 Review fixes: debug reset race, iOS pull to refresh; review summary | this PR | in review |
+| (e) §13.9 COULD: dark mode (QA P3) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -210,6 +211,9 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - With `-resetData`, the store started reading the database before the reset cleared it, so the previous run's cache could flash in UI tests. Reads now wait for the reset. `aDebugResetNeverShowsThePreviousRunsCache` holds the reset open with `SlowResetRepository`, and fails without the fix; I checked by removing it.
   - iOS `.refreshable` returned at once, so the system spinner went away mid-request. It now awaits the new `refreshAndWait()`, tested by `refreshAndWaitReturnsOnlyOnceTheRefreshHasFinished`.
   - NOTES §5 now has the review summary: each finding, the PR that fixed it, and why the rest weren't changed. Also updated: test counts (133 shared plus 1 JVM-only, 32 XCUITests) and the Android emulator checks. NOTES §2.2 records the route-connector reading.
+- **(e) §13.9 COULD: dark mode (QA P3).** §13's SHOULD items were all in PRs by then, and no `qa` issues were open.
+  - Android: a dark colour scheme, from `isSystemInDarkTheme()`. Emulator in night mode: dark surfaces, light text, readable status bar, Retry button and Server URL dialog.
+  - iOS already used system colours. Debug builds take `-forceDarkMode` (`preferredColorScheme`), and the new `AppearanceTests.testDarkModeScreenshots` saves "P3 dark" screenshots of the list, card, map, filters and Saved in the full run.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

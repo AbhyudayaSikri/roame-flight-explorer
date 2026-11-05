@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 @preconcurrency import Shared
 
 enum AppConfig {
@@ -22,6 +23,15 @@ enum AppConfig {
         )
         #else
         return DebugOptions(resetData: false, failSaves: false, failRemoves: false)
+        #endif
+    }
+
+    /// `-forceDarkMode` (Debug only): dark appearance for UI-test screenshots, whatever the simulator uses.
+    static var forcedColorScheme: ColorScheme? {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("-forceDarkMode") ? .dark : nil
+        #else
+        return nil
         #endif
     }
 }

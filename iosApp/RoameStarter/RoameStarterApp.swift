@@ -10,6 +10,7 @@ struct RoameStarterApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(model: model)
+                .preferredColorScheme(AppConfig.forcedColorScheme)
                 .task { await model.observe() }
         }
     }

@@ -26,6 +26,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - Server as one jar: `./gradlew :server:fatJar` → `server/build/libs/roame-flights-server.jar` (fixture embedded; `java -jar`, same flags).
 - Releases: `.github/workflows/release.yml` on a `v*` tag publishes the debug APK, the zipped simulator `.app`, the jar, `fallback.py`, `flights.json` and `QUICKSTART.md`. Pull requests that change the workflow and manual runs only build.
 - Android: `./gradlew :androidApp:assembleDebug`. Override the base URL with `-PapiBaseUrl=http://…`.
+- Compose stability reports: `./gradlew :androidApp:compileDebugKotlin --rerun -PcomposeReports` → `androidApp/build/compose-reports`. New shared types the UI takes as parameters go in `androidApp/compose-stability.conf`.
 - iOS project:
   - App sources live in `iosApp/RoameStarter/`; UI tests in `iosApp/RoameStarterUITests/`.
   - After editing `iosApp/project.yml`, or adding, removing or renaming any file under `iosApp/`, run `xcodegen generate --spec iosApp/project.yml` (XcodeGen 2.46.0) and commit everything.

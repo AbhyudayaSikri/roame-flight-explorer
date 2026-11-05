@@ -143,6 +143,8 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (b2) Release packaging | [#11](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/11) | merged 23:04, by git |
 | Screenshot timeouts don't fail tests | [#12](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/12) | merged 22:39 |
 | (d) NOTES §1 and §5 | [#13](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/13) | merged after #11 |
+| (e) §13.1 Independent review (prompt P3) | (fixes to follow) | review running |
+| (e) §13.2 Android offline map style (QA O8) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -155,6 +157,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **(b1)** `DebugMenuTests` passed in CI over plain HTTP to the runner's LAN IP (`192.168.64.14`), which confirms `NSAllowsLocalNetworking` covers IP addresses.
 - **Merging #10 and #11:** the gh token lacks the `workflow` scope, which GitHub requires to merge PRs that change `.github/workflows/`. At your call they're merged by git: the same merge commit, pushed to `main` over SSH, and GitHub marks the PR merged.
 - No `qa` issues were filed as of 22:45.
+- **(e) §13.2 Android offline map style (QA O8).**
+  - Offline, MapLibre couldn't load the OpenFreeMap style, and with no style nothing was drawn: no pills, no route.
+  - On `OnDidFailLoadingMap` the map now switches to a background-only style built into the app. The route and pill layers need no downloads, so they still render.
+  - There's no logic to unit-test and no Android UI tests, so QA O8 covers it in your Windows pass.
 
 ## Decisions
 

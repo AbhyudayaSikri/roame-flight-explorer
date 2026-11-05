@@ -13,6 +13,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.delay
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -21,9 +22,12 @@ import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 private const val EMPTY_ENVELOPE = """{"flights":[]}"""
 private const val ERROR_BODY = """{"error":"simulated server failure (--mode=error)"}"""
+private val SLOW_MODE_DELAY = 3.seconds
 
 class ServerState(initialMode: Mode) {
     @Volatile
@@ -35,6 +39,7 @@ fun Application.flightsModule(
     state: ServerState,
     allowControl: Boolean,
     log: (String) -> Unit = ::println,
+    pause: suspend (Duration) -> Unit = { delay(it) },
 ) {
     val updatedFixture by lazy { withUpdatedPoints(fixture) }
 
@@ -56,6 +61,10 @@ fun Application.flightsModule(
                 Mode.EMPTY -> call.respondText(EMPTY_ENVELOPE, ContentType.Application.Json)
                 Mode.ERROR -> call.respondText(ERROR_BODY, ContentType.Application.Json, HttpStatusCode.InternalServerError)
                 Mode.UPDATED -> call.respondBytes(updatedFixture, ContentType.Application.Json)
+                Mode.SLOW -> {
+                    pause(SLOW_MODE_DELAY)
+                    call.respondBytes(fixture, ContentType.Application.Json)
+                }
             }
         }
 

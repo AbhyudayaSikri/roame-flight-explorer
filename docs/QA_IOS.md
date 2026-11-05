@@ -14,7 +14,7 @@ Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/Abhyuday
 
 | QA | How | Result |
 |---|---|---|
-| L1 | test `LaunchTests.testFreshInstallLoadsEveryFlightWithNoFiltersActive`; screenshot "L1 launch" | pass |
+| L1 | tests `LaunchTests.testFreshInstallLoadsEveryFlightWithNoFiltersActive` and, for the loading state first, `testASlowAPIShowsTheLoadingStateUntilTheFlightsArrive`; screenshot "L1 launch" | pass |
 | L2 | same test (no chips, "Show 1,000 flights"); screenshot "L2 default filters" shows Feb 1, 2027 – Apr 1, 2027 | pass |
 | L3 | needs eyes (scrolling in `demo.mp4`) | not judged |
 | S1–S5 | test `SearchTests` (113, 113, 110 with both Tokyo markers, 7, no-matches state with Reset) | pass |
@@ -49,6 +49,7 @@ Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/Abhyuday
 | O1–O3 | test `OfflineRelaunchTests` with the API process stopped; screenshots "O2 relaunch offline" (stale banner, Saved badge), "O3 removed offline" | pass |
 | O4 | test `ErrorStateTests.testNoCacheErrorOffersRetryThatLoadsOnceTheServerRecovers` (`--mode=error`, then `normal` and Retry); screenshot "O4 error with no cache" | pass |
 | O5 | test `ErrorStateTests.testEmptyResponseOnAFreshInstallSaysNoFlightsAvailable`; screenshot "O5 empty response" | pass |
+| O6 (SHOULD) | test `LaunchTests.testASlowAPIShowsTheLoadingStateUntilTheFlightsArrive` (`--mode=slow`); screenshot "O6 loading". The recorded demo also starts with a 3 s load. | pass |
 | O7 | test `LaunchTests.testRotatingAndBackgroundingKeepsSearchAndSelection`. XCUITest's landscape screenshot comes out rotated and clipped, so the landscape layout itself isn't judged. | pass (state) |
 | P1 | screenshots: the same row typography in the list, the destination sheet and Saved; 16 pt margins throughout | pass |
 | P2 | Buttons use system styles with pressed states. The store ignores Save/Remove while one is in flight (shared tests). The card's progress state wasn't caught on screen, because local writes finish within a frame. | partly checked |

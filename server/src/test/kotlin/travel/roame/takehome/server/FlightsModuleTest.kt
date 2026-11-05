@@ -19,16 +19,21 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 class FlightsModuleTest {
     private val fixture = File(System.getProperty("fixture.path")).readBytes()
+
+    /** What the module asked to wait for; tests record pauses instead of sleeping. */
+    private val pauses = mutableListOf<Duration>()
 
     private fun serve(
         mode: Mode,
         allowControl: Boolean = false,
         block: suspend ApplicationTestBuilder.() -> Unit,
     ) = testApplication {
-        application { flightsModule(fixture, ServerState(mode), allowControl, log = {}) }
+        application { flightsModule(fixture, ServerState(mode), allowControl, log = {}, pause = { pauses += it }) }
         block()
     }
 
@@ -67,6 +72,28 @@ class FlightsModuleTest {
             assertEquals(before.getValue("points").jsonPrimitive.int + 500, after.getValue("points").jsonPrimitive.int)
             assertEquals(before - "points", after - "points")
         }
+    }
+
+    @Test
+    fun slowModeWaitsThreeSecondsThenServesTheFixture() = serve(Mode.SLOW) {
+        val response = client.get("/flights")
+
+        assertEquals(listOf(3.seconds), pauses)
+        assertEquals(HttpStatusCode.OK, response.status)
+        assertEquals(ContentType.Application.Json, response.contentType()?.withoutParameters())
+        assertContentEquals(fixture, response.bodyAsBytes())
+    }
+
+    @Test
+    fun onlySlowModeWaits() = serve(Mode.NORMAL, allowControl = true) {
+        client.get("/flights")
+        client.get("/health")
+        assertEquals(emptyList(), pauses)
+
+        assertEquals(HttpStatusCode.OK, client.post("/control/mode?value=slow").status)
+        client.get("/health")
+        assertContentEquals(fixture, client.get("/flights").bodyAsBytes())
+        assertEquals(listOf(3.seconds), pauses)
     }
 
     @Test

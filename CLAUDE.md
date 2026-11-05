@@ -19,7 +19,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - Shared tests on the iOS simulator (CI only): `./gradlew :shared:iosSimulatorArm64Test --device "$UDID"`. `iosX64Test` exists but is disabled on Apple Silicon.
 - Never run on the Mac: `build`, `check`, `allTests`, `assemble`, any `*Ios*` task (`compileKotlinIos*`, `link*Ios*`, `iosSimulatorArm64Test`), or `embedAndSignAppleFrameworkForXcode`. They call `xcrun`/`xcodebuild`.
 - API:
-  - Run: `./gradlew :server:run --args="--mode=normal|empty|error|updated|slow --port=8080"`. In CI, add `--allow-control`, which enables `POST /control/mode?value=…`.
+  - Run: `./gradlew :server:run --args="--mode=normal|empty|error|updated|slow --port=8080"`. `slow` serves the normal fixture 3 s late, to show loading states. In CI, add `--allow-control`, which enables `POST /control/mode?value=…`.
   - Tests: `./gradlew :server:test`.
   - CI binary: `./gradlew :server:installDist`, then `server/build/install/server/bin/server`.
 - Python fallback API (COULD, only if built; Python 3.9+): `python3 server/fallback.py` (Windows: `py server\fallback.py`).

@@ -79,6 +79,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - P3 [COULD] Dark mode: everything is legible, including the map and markers.
 - P4 [COULD] Largest system font size: rows and the card don't truncate the route, date or points.
 - P5 [COULD] TalkBack / VoiceOver read the route, date, points and saved state.
+- P6 [SHOULD] The launcher (Android) and home screen (iOS) show the app as "Flight Explorer".
 
 ## Tooling (debug builds)
 - T1 [SHOULD] StrictMode (Android): no disk or network access on the main thread in logcat during a full pass. Debug builds enable it at startup (`FlightExplorerApplication`) and only log. Watch `adb logcat -s StrictMode`, and file `qa` issues for stack traces in `travel.roame.takehome`; ones only inside MapLibre or the framework are worth a note.

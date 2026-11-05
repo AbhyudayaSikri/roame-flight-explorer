@@ -166,6 +166,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.9 COULD: dark mode (QA P3) | this PR | in review |
 | (e) §13.9 COULD: large text (QA P4) | this PR | in review |
 | (e) §13.9 COULD: screen-reader labels (QA P5) | this PR | in review |
+| (e) §13.9 COULD: LeakCanary in debug builds (QA T2) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -225,6 +226,9 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - `FormattingTest.screenReadersHearWordsNotSymbols` checks the cheapest flight's label, saved and not.
   - iOS UI tests now read the new labels, including one assertion in the smoke test `testOriginAndDestinationCombine`.
   - Android needs data to show rows, so TalkBack is checked by QA P5.
+- **(e) §13.9 COULD: LeakCanary (QA T2).** This is the last §13 item; the Python fallback (also §13.9) shipped with the release packaging.
+  - `debugImplementation` LeakCanary 2.14, the latest stable (3.0 is alpha). The merged manifest has 15 LeakCanary entries in debug and none in release.
+  - Emulator, no API: four rotations plus tab switches. LeakCanary watched 8 destroyed objects (4 activities, 4 `ReportFragment`s) and found none retained.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

@@ -89,7 +89,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 
 ## Tooling (debug builds)
 - T1 [SHOULD] StrictMode (Android): no disk or network access on the main thread in logcat during a full pass. Debug builds enable it at startup (`FlightExplorerApplication`) and only log. Watch `adb logcat -s StrictMode`, and file `qa` issues for stack traces in `travel.roame.takehome`; ones only inside MapLibre or the framework are worth a note.
-- T2 [COULD] LeakCanary (Android): no leaks after rotating, switching tabs and opening and closing the map.
+- T2 [COULD] LeakCanary (Android): no leaks after rotating, switching tabs and opening and closing the map. Debug builds include it. A leak shows as a notification and under the "Leaks" launcher icon, with its trace. `adb logcat -s LeakCanary` says "Found N objects retained" when something stays.
 - T3 [SHOULD] Debug menu → Server URL (Android ⋮; iOS ladybug, top left):
   - Enter the computer's LAN address, such as `http://192.168.1.20:8080`: the flights load from it.
   - Relaunch: the same address is still used.

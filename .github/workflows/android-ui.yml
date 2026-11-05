@@ -77,6 +77,8 @@ jobs:
           profile: pixel_7
           cores: 4
           ram-size: 4096M
+          # The default data partition can't fit the 57 MB debug APK ("not enough space").
+          disk-size: 6000M
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           disable-animations: true

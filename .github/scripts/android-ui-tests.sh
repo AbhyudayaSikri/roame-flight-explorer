@@ -4,8 +4,8 @@
 # emulator, start the API the same way and set RUNNER_TEMP (and ANDROID_SERIAL if more than one
 # device is attached).
 #
-# Both runs use one install, so the app keeps its database: the second run relaunches with the
-# first run's cache, after the API has been stopped.
+# Every run uses one install, so the app keeps its database: the last run relaunches onto the cache
+# and saved flight the one before it left, after the API has been stopped.
 set -euo pipefail
 
 out="$RUNNER_TEMP/android-ui"
@@ -29,7 +29,10 @@ instrument() {
 }
 
 status=0
-instrument online -e class travel.roame.takehome.android.SmokeTest || status=1
+offline=travel.roame.takehome.android.OfflineRelaunchTest
+# Every class; OfflineRelaunchTest skips itself without `-e offline`.
+instrument online -e package travel.roame.takehome.android || status=1
+instrument offline-before -e class "$offline" -e offline before || status=1
 
 kill "$(cat "$RUNNER_TEMP/server.pid")"
 for _ in $(seq 1 20); do
@@ -37,7 +40,7 @@ for _ in $(seq 1 20); do
   sleep 0.5
 done
 
-instrument offline -e class travel.roame.takehome.android.OfflineRelaunchTest -e offline true || status=1
+instrument offline-after -e class "$offline" -e offline after || status=1
 
 adb pull /sdcard/Android/data/travel.roame.takehome.android/files/ui-test-failures "$out/" > /dev/null 2>&1 || true
 adb exec-out screencap -p > "$out/last-screen.png" || true

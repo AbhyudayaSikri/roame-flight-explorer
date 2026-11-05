@@ -9,6 +9,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Runnable
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlin.coroutines.CoroutineContext
 import kotlin.test.Test
@@ -26,24 +27,30 @@ class FlightsApiTest {
     private fun api(engine: MockEngine) =
         Api(FlightsApi(HttpClient(engine) { flightsClientDefaults() }, Dispatchers.Unconfined))
 
-    /** Runs work in place and knows whether it is running it, so a test can ask where code ran. */
-    private class InPlaceDispatcher : CoroutineDispatcher() {
-        private var depth = 0
-        val isRunning get() = depth > 0
+    /**
+     * Knows whether it is running one of its own blocks, so a test can ask where code ran. On
+     * Native the engine resumes from its own thread, so every block goes through the test's
+     * scheduler and runs on the test thread: [isRunning] is never read mid-block from another thread.
+     */
+    private class RecordingDispatcher(private val scheduled: CoroutineDispatcher) : CoroutineDispatcher() {
+        var isRunning = false
+            private set
 
         override fun dispatch(context: CoroutineContext, block: Runnable) {
-            depth++
-            try {
-                block.run()
-            } finally {
-                depth--
-            }
+            scheduled.dispatch(context, Runnable {
+                isRunning = true
+                try {
+                    block.run()
+                } finally {
+                    isRunning = false
+                }
+            })
         }
     }
 
     @Test
     fun theBodyIsDecodedOnTheWorkDispatcherNotTheCallers() = runTest {
-        val work = InPlaceDispatcher()
+        val work = RecordingDispatcher(StandardTestDispatcher(testScheduler))
         var decodedOnWork: Boolean? = null
         val engine = MockEngine { respond(FIXTURE_JSON, HttpStatusCode.OK, json) }
         val api = FlightsApi(HttpClient(engine) { flightsClientDefaults() }, work) { body ->

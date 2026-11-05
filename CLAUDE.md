@@ -38,11 +38,11 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - Screenshots and raw logs: `gh run download <run-id> -n ios-ui-tests`.
   - `print()` output from tests appears only in the raw `*.log` files; the console shows xcbeautify's summary.
 - Android UI tests: `androidApp/src/androidTest`, on an API 36 emulator in CI (`.github/workflows/android-ui.yml`), against the real API.
-  - `.github/scripts/android-ui-tests.sh` installs both APKs and runs every class, then `OfflineRelaunchTest` with `-e offline before` (fill the cache, save a flight), stops the API, and runs it with `-e offline after`.
+  - `.github/scripts/android-ui-tests.sh` installs both APKs and runs every class. Then it records the screen while `DemoWalkthrough` runs (`-e demo true`), stops the API, and runs `OfflineRelaunchTest` (`-e offline true`) on the cache and saved flight the walkthrough left. The recording is `android-demo.mp4`.
   - Tests launch `MainActivity` through `ExplorerApp`, with the debug intent extras `resetData` (default on), `failSaves` and `failRemoves`, like iOS's launch arguments.
   - The API runs with `--allow-control`; `ServerControl.setMode(...)` switches it, and `ServerModeReset` puts it back to normal after each test.
   - On your own emulator: build `:androidApp:assembleDebug :androidApp:assembleDebugAndroidTest :server:fatJar`, start the jar on port 8080 with `--allow-control` and its PID in `$RUNNER_TEMP/server.pid`, then run the script with `RUNNER_TEMP` (and `ANDROID_SERIAL`) set. It uninstalls the app first.
-  - Results, logcat and failure screenshots: `gh run download <run-id> -n android-ui-tests`.
+  - Results, logcat and failure screenshots: `gh run download <run-id> -n android-ui-tests`. The video: `-n android-demo`.
 
 ## Base URLs
 - Android emulator: `http://10.0.2.2:8080` (or `adb reverse tcp:8080 tcp:8080` + `http://localhost:8080`)

@@ -95,6 +95,17 @@ jobs:
           name: android-ui-tests
           path: |
             ${{ runner.temp }}/android-ui/
+            !${{ runner.temp }}/android-ui/android-demo.mp4
             ${{ runner.temp }}/server.log
           if-no-files-found: ignore
+          retention-days: 14
+
+      # The demo walkthrough and the offline relaunch after it, recorded by the script.
+      - name: Upload the demo video
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-demo
+          path: ${{ runner.temp }}/android-ui/android-demo.mp4
+          if-no-files-found: warn
           retention-days: 14

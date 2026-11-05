@@ -6,9 +6,9 @@ import kotlin.test.assertFailsWith
 
 class ServerConfigTest {
     @Test
-    fun defaultsServeTheFixtureNormallyOnPort8080() {
+    fun defaultsServeTheEmbeddedFixtureNormallyOnPort8080() {
         assertEquals(
-            ServerConfig(port = 8080, mode = Mode.NORMAL, fixturePath = "fixtures/flights.json", allowControl = false),
+            ServerConfig(port = 8080, mode = Mode.NORMAL, fixturePath = null, allowControl = false),
             ServerConfig.parse(emptyArray()),
         )
     }

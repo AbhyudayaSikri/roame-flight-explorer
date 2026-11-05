@@ -188,6 +188,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - Each chip has a × that removes just its filter, through the store's existing `clearFilter`. The label still opens the filter sheet. Removing From or To also empties the field, because the fields own their text.
   - New shared test `removingOneChipClearsOnlyThatFilter`: with all six filters set (2 flights), removing each one in turn leaves exactly the other five chips, with the count the fixture gives without it.
   - New iOS UI test `FilterTests.testEachChipRemovesOnlyItsOwnFilter`, the F11 steps. New id `filterChipRemove(kind)`.
+  - Emulator check, no API: typing `jfk` shows the "From: jfk" chip with a × read as "Remove From: jfk". Tapping the × removes the chip and empties the field.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

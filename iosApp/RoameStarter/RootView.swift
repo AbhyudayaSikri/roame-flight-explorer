@@ -17,6 +17,12 @@ struct RootView: View {
                 MessageBanner(message: message, store: model.store)
             }
         }
+        // Saves and removes show in savedIds at once (optimistic), so the feedback comes with the tap.
+        .sensoryFeedback(trigger: model.savedIds) { old, new in
+            new.count > old.count ? .success : (new.count < old.count ? .impact(weight: .light) : nil)
+        }
+        .sensoryFeedback(.selection, trigger: model.selected?.id) { _, new in new != nil }
+        .sensoryFeedback(.error, trigger: model.message?.id) { _, new in new != nil }
     }
 }
 

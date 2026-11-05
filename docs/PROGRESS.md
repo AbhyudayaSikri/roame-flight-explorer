@@ -177,6 +177,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **(e) §13.8 `.gitattributes` LF for the fixture.**
   - `fixtures/*.json text eol=lf` keeps the fixture byte-identical on every clone. A Windows checkout with `core.autocrlf=true` would otherwise get CRLF, and the server would serve those bytes.
   - `git add --renormalize .` changed nothing, because the committed fixture was already LF.
+  - Cloned with `core.autocrlf=true`, the fixture was 447,745 bytes with 15,004 CRs before the rule, and exactly 432,741 bytes with none after.
 
 ## Decisions
 

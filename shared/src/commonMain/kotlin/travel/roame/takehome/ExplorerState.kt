@@ -134,6 +134,7 @@ object TestIds {
     val debugDone = "debug.done"
 
     fun filterChip(kind: FilterKind) = "filters.chip.${kind.name.lowercase()}"
+    fun filterChipRemove(kind: FilterKind) = "${filterChip(kind)}.remove"
     fun cabinOption(cabin: String?) = "filters.cabin.${cabin ?: "any"}"
     fun programOption(program: String) = "filters.program.$program"
     fun flightRow(flightId: String) = "flight.row.$flightId"

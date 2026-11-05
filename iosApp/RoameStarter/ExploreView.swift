@@ -122,15 +122,27 @@ struct ExploreView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 6) {
                     ForEach(model.activeFilters, id: \.label) { filter in
-                        Button { showFilters = true } label: {
-                            Text(filter.label)
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Capsule().fill(Color.accentColor.opacity(0.12)))
+                        // The label opens the filters; the × removes just this one.
+                        HStack(spacing: 2) {
+                            Button { showFilters = true } label: {
+                                Text(filter.label).font(.caption.weight(.medium))
+                            }
+                            .accessibilityIdentifier(TestIds.shared.filterChip(kind: filter.kind))
+                            Button { remove(filter.kind) } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .padding(4)
+                                    .contentShape(Rectangle())
+                            }
+                            .accessibilityLabel("Remove \(filter.label)")
+                            .accessibilityIdentifier(TestIds.shared.filterChipRemove(kind: filter.kind))
                         }
                         .buttonStyle(.plain)
-                        .accessibilityIdentifier(TestIds.shared.filterChip(kind: filter.kind))
+                        .padding(.leading, 10)
+                        .padding(.trailing, 2)
+                        .padding(.vertical, 1)
+                        .background(Capsule().fill(Color.accentColor.opacity(0.12)))
                     }
                 }
             }
@@ -159,6 +171,16 @@ struct ExploreView: View {
         origin = ""
         destination = ""
         store.resetFilters()
+    }
+
+    /// The search fields own their text, so removing their chip empties them too.
+    private func remove(_ kind: FilterKind) {
+        switch kind {
+        case .origin: origin = ""
+        case .destination: destination = ""
+        default: break
+        }
+        store.clearFilter(kind: kind)
     }
 }
 

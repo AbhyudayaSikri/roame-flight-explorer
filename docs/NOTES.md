@@ -12,7 +12,7 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 
 **How the store works.**
 - Three database flows (cache, saved flights, last sync time) are combined with the inputs: query, selection, refresh status, saves and removes in flight, the one-shot message and the server address.
-- Each change re-derives the whole state off the main thread (`mapLatest` on `Dispatchers.Default`), so the latest input always wins. Database and network calls run on IO.
+- Each change re-derives the whole state off the main thread (`mapLatest` on `Dispatchers.Default`), so the latest input always wins. Database calls run on IO. The network fetch, including reading and decoding the response, runs on `Dispatchers.Default`.
 - Corrections run on each new state. A selection or tapped marker that no longer matches the filters is cleared, and saved-tab selection is independent of the filters.
 - Saves and removes are optimistic: the state changes at once and rolls back, with a message, if the write fails.
 - The state never throws. SKIE would turn an exception inside a Flow into a Swift crash, so errors become `sync` (Loading, Fresh, Stale, EmptySuccess, FailedNoCache) or a `message`.

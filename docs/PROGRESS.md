@@ -140,9 +140,9 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | Lighter iOS job on PRs | [#8](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/8) | merged 22:15 |
 | `main` was red: map test, keyboard | [#9](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/9) | merged 22:14 |
 | (b1) Server URL in both debug menus | [#10](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/10) | merged 22:47, by git (see below) |
-| (b2) Release packaging | [#11](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/11) | in review |
+| (b2) Release packaging | [#11](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/11) | merged 23:04, by git |
 | Screenshot timeouts don't fail tests | [#12](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/12) | merged 22:39 |
-| (d) NOTES §1 and §5 | this PR | in review |
+| (d) NOTES §1 and §5 | [#13](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/13) | merged after #11 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".

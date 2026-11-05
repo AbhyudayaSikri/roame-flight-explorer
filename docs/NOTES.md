@@ -41,7 +41,7 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 **Verification.**
 - The rules have shared tests that run on the JVM in every CI run and on the iOS simulator in every iOS run.
 - iOS is tested end to end by XCUITest in CI, against the real API: on pull requests a smoke set, on `main` the full suite, including the offline relaunch with the API stopped.
-- Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
+- Android has five Compose UI tests on an emulator in CI, against the real API, including a relaunch with the API stopped. The rest of Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
 
 ## 2. Assumptions
 
@@ -177,7 +177,7 @@ Alternatives considered:
 
 ## 4. Known limitations
 - **iOS has never run on a device or interactively.** It's checked only on the CI simulator (iPhone 17, iOS 26.4) by XCUITest, screenshots and the demo video.
-- **Android was never run against the real API on the Mac.** It's checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
+- **Android runs against the real API only in the five emulator UI tests** (CI's API 37 emulator, and one local run on 2026-11-05). Everything else on Android is checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
 - **Map tiles need the network**, which the brief allows. Offline, the maps show the pills and route on a plain background, with no coastlines. iOS hasn't been checked offline on the map tab.
 - **Some QA items aren't covered by iOS UI tests:** F1 and F2 (single-day date ranges) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers all three rules, and the iOS store uses it unchanged.
   - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox. It stays on the unmerged branch `test/ios-date-range-f1`.
@@ -240,7 +240,11 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
   - Pushes to `main` and manual runs run all 34; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
-- **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
+- **Android app, 5 Compose UI tests** (`androidApp/src/androidTest`) on an API 37 emulator in CI (`android-ui.yml`), against the real API:
+  - `SmokeTest`: launch loads 1,000 flights (QA L1), "tokyo" finds 110 (S3), a map pill's flight opens its card (M3), and a saved flight appears in Saved (V1).
+  - Then the API is stopped, and `OfflineRelaunchTest` relaunches onto the cache: marked stale, with the saved flight (O2).
+  - They find controls by the shared `TestIds`. Map pills are drawn by MapLibre, so the test taps the point MapLibre's projection gives for the pill.
+  - The rest of Android is checked by hand (below).
 
 ### Independent review (PLAN P3, 2026-11-04)
 A fresh subagent reviewed `857090e` against the brief, with only the brief, CLAUDE.md and the diff since the starter. It reported 2 bugs, 4 risks, 4 sets of tests that checked less than their names said, and some nits.
@@ -271,7 +275,8 @@ Not changed, and why:
   - The F1 date-picker investigation (§4): the picker was right, and the test's own tap changed the cabin.
   - The flaky map test: the camera was framing a keyboard-shortened map. Fixed in the app, not in the test.
 - **iOS on a device:** not done (§4).
-- **Android on the Mac, 2026-11-04 and 05:** a local emulator with no API running; the Mac never ran the API for Android.
+- **Android on the Mac, 2026-11-05, with the API:** the emulator UI tests on `roame-smoke` (API 35), against `java -jar roame-flights-server.jar`. All five passed. The offline test failed as it should with the API left running, and its failure screenshot showed 1,000 flights, no stale banner and the saved ORD → DUB flight.
+- **Android on the Mac, 2026-11-04 and 05, without the API:** a local emulator with no API running.
   - The error screen with Retry appeared, with no crash.
   - `uiautomator dump` lists the test tags as resource ids, including those in the Server URL dialog's separate window.
   - After process death, the search fields come back agreeing with the new store.

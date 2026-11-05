@@ -296,7 +296,14 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
 |---|---|---|
 | Docs: merge gate, tonight's log in merge order | this PR | in review |
 | Release rehearsal: `v0.9.0-rc.1` as a pre-release | | not started |
-| Android emulator smoke job in Linux CI | | not started |
+| Android emulator smoke job in Linux CI | this PR | in review |
+
+- **Android emulator smoke job (`android-ui.yml`, this PR).**
+  - Five Compose UI tests in `androidApp/src/androidTest`, which find controls by the shared `TestIds`. `SmokeTest`: launch loads 1,000; "tokyo" finds 110; a map pill's flight opens its card; a saved flight appears in Saved. Then the API is stopped and `OfflineRelaunchTest` relaunches: the cache is marked stale and the saved flight is still there.
+  - The map pills are MapLibre bitmaps, not Compose nodes. The test asks MapLibre for the rendered pill and its projected screen point, then taps there through the input system.
+  - `.github/scripts/android-ui-tests.sh` runs `am instrument` twice on one install, so the second run relaunches onto the first run's database; `connectedAndroidTest` would uninstall the app in between.
+  - Locally on `roame-smoke` (API 35), against the server jar: all five passed. With the API left running, the offline test failed as it should, and saved its failure screenshot.
+  - CI: an API 37 `google_apis` x86_64 image, Pixel 7 profile, android-emulator-runner v2.38.0. MapLibre already used its OpenGL artifact.
 
 ## Decisions
 

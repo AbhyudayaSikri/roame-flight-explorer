@@ -50,7 +50,8 @@ import kotlin.math.pow
 
 private const val STYLE_URL = "https://tiles.openfreemap.org/styles/liberty"
 private const val MARKER_SOURCE = "destination-markers"
-private const val MARKER_LAYER = "destination-markers-layer"
+/** Internal because the emulator tests find a pill's position by querying this layer. */
+internal const val MARKER_LAYER = "destination-markers-layer"
 private const val ROUTE_SOURCE = "selected-route"
 private const val ROUTE_LAYER = "selected-route-layer"
 private const val INITIAL_ZOOM = 0.6

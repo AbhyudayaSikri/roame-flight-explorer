@@ -37,6 +37,10 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - Loop: push → `gh run watch <run-id> --exit-status` → `gh run view --log-failed` → fix → push.
   - Screenshots and raw logs: `gh run download <run-id> -n ios-ui-tests`.
   - `print()` output from tests appears only in the raw `*.log` files; the console shows xcbeautify's summary.
+- Android UI tests: `androidApp/src/androidTest`, on an API 37 emulator in CI (`.github/workflows/android-ui.yml`), against the real API.
+  - `.github/scripts/android-ui-tests.sh` installs both APKs, runs `SmokeTest`, stops the API, then runs `OfflineRelaunchTest` with `-e offline true` on the cache the first run left.
+  - On your own emulator: build `:androidApp:assembleDebug :androidApp:assembleDebugAndroidTest :server:fatJar`, start the jar on port 8080 with its PID in `$RUNNER_TEMP/server.pid`, then run the script with `RUNNER_TEMP` (and `ANDROID_SERIAL`) set. It uninstalls the app first.
+  - Results, logcat and failure screenshots: `gh run download <run-id> -n android-ui-tests`.
 
 ## Base URLs
 - Android emulator: `http://10.0.2.2:8080` (or `adb reverse tcp:8080 tcp:8080` + `http://localhost:8080`)
@@ -103,9 +107,10 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - Everything merges through a PR, with a merge commit. Never push to `main`.
   - PRs that only touch `androidApp/`, `server/`, `fixtures/` or docs merge on green Linux CI (`ci.yml`).
   - PRs touching `shared/` or `iosApp/` also need the PR iOS job green. Gradle build files (`gradle/`, `*.gradle.kts`) count as shared, because they can break the iOS build.
+  - PRs touching `androidApp/` or `shared/` also need the Android emulator job (`android-ui.yml`) green.
   - A green full iOS run on `main` is required before "final". If `main`'s full run goes red, fixing it comes first.
 - Record every assumption in `docs/NOTES.md` when you make it.
 - Keep `gradlew` LF + executable. Never commit `.DS_Store`.
 - **UI identifiers:**
   - iOS: every interactive control gets an `accessibilityIdentifier` from shared `TestIds`. XCUITest depends on them.
-  - Android: every interactive control gets a `Modifier.testTag` from the same `TestIds`, for parity with iOS and for QA tooling. `testTagsAsResourceIds()` shows them to UiAutomator. Each window sets it on its root (the `Scaffold`, every sheet, dialog and menu), because new windows don't inherit it. There are no Android UI tests.
+  - Android: every interactive control gets a `Modifier.testTag` from the same `TestIds`, for parity with iOS and for QA tooling. `testTagsAsResourceIds()` shows them to UiAutomator. Each window sets it on its root (the `Scaffold`, every sheet, dialog and menu), because new windows don't inherit it. The emulator UI tests find controls by these tags.

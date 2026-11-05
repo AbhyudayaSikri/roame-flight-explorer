@@ -17,6 +17,8 @@ struct RootView: View {
                 MessageBanner(message: message, store: model.store)
             }
         }
+        // Messages are failures ("Couldn't save…"); Save and Remove give their own feedback on tap.
+        .sensoryFeedback(.error, trigger: model.message?.id) { _, new in new != nil }
     }
 }
 

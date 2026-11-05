@@ -161,6 +161,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.7 Polish: individually removable chips (QA F11) | this PR | in review |
 | (e) §13.7 Polish: −/+ points buttons (QA F12) | this PR | in review |
 | (e) §13.7 Polish: skeleton rows (QA L4) | this PR | in review |
+| (e) §13.7 Polish: haptics (QA P7) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -200,6 +201,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - There's no pulse animation, because XCUITest waits for animations to finish before it acts.
   - Android check: a debug Server URL that never answers (`http://10.255.255.1:8080`) held the loading state for the 5 s connect timeout. The dump showed `state.loading` with the placeholder rows, then the error screen.
   - iOS: `LaunchTests.testASlowAPIShowsTheLoadingStateUntilTheFlightsArrive` still finds `state.loading` and saves its "O6 loading" screenshot.
+- **(e) §13.7 Polish: haptics (QA P7).**
+  - Save and Update saved give a firm tap, and Remove a light one, at the tap itself (iOS `UIImpactFeedbackGenerator`, Android `Confirm` / `ContextClick`). A failure message gives an error buzz (iOS `sensoryFeedback(.error)`, Android `Reject`).
+  - I first tried triggering on changes to the saved ids. It buzzed at launch, when saved flights load from the database, and watching the save status can miss a fast write's in-progress step. So the feedback is tied to the taps.
+  - Simulators and emulators have no haptics, so only P7 on a phone can check it. iOS CI shows it compiles and changes nothing else.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

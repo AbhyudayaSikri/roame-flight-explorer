@@ -16,6 +16,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.ExplorerState
@@ -26,6 +28,7 @@ import travel.roame.takehome.TestIds
 /** Saved snapshots, newest first. Independent of Explore's filters, and works offline. */
 @Composable
 fun SavedScreen(state: ExplorerState, store: FlightExplorerStore) {
+    val haptics = LocalHapticFeedback.current
     if (state.saved.isEmpty()) {
         EmptyView(
             title = "No saved flights yet",
@@ -51,7 +54,10 @@ fun SavedScreen(state: ExplorerState, store: FlightExplorerStore) {
                     )
                     Row(Modifier.fillMaxWidth().padding(end = Spacing.s), horizontalArrangement = Arrangement.End) {
                         TextButton(
-                            onClick = { store.remove(saved.flight.id) },
+                            onClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                                store.remove(saved.flight.id)
+                            },
                             modifier = Modifier.testTag(TestIds.savedRemove(saved.flight.id)),
                         ) { Text("Remove") }
                     }

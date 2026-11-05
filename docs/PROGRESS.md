@@ -153,6 +153,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.8 Search-rule QA (S6) as an XCUITest | [#19](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/19) | merged after #17 |
 | (e) §13.1 Review fix: decode off the main thread | [#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22) | merged after #19 |
 | (e) §13.1 Review fixes: sync state | [#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23) | merged after #22 |
+| (e) §13.1 Review fixes: store tests that checked too little | [#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24) | merged after #23 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -191,6 +192,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - The cache and its timestamp come from one transaction (`CachedFlights`), so a first launch can't flash "no flights".
   - A retry keeps the stale banner up (`RefreshStatus.Running.previousFailure`).
   - New tests: `aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache`, `aRetryKeepsTheCacheMarkedStaleUntilItSucceeds`, `everyCacheSnapshotPairsTheFlightsWithTheirOwnTimestamp`, and two more `syncStateOf` cases. With the old code, the two store tests fail; I checked by restoring it.
+- **(e) §13.1 Review fixes: tests that checked less than their names said** (review findings 7 to 9).
+  - `anOutdatedQueryStillBeingComputedNeverReachesTheState` holds the derivation for "jfk" on a new `ManualDispatcher` while "sea" arrives. It fails if `mapLatest` becomes `map`; the old rapid-typing test didn't.
+  - `aBadResponseOverACacheKeepsTheCacheAndMarksItStale` covers a malformed response and HTTP 500 over a real cache. The old malformed test is renamed to what it checks, an error with nothing cached.
+  - `FileDatabaseRestartTest` closes and reopens an SQLite file between two stores, instead of sharing one in-memory database.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

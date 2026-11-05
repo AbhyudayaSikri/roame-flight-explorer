@@ -494,6 +494,48 @@ class FlightExplorerStoreTest {
     }
 
     @Test
+    fun removingOneChipClearsOnlyThatFilter() = runTest {
+        val (_, store) = loadedStore()
+        val all = FlightQuery(
+            originText = "yyz",
+            destinationText = "tokyo",
+            dateRange = DateRange(date("2027-02-01"), date("2027-03-15")),
+            cabin = "Business",
+            maxPoints = 80_000,
+            programs = setOf("Flying Blue", "Mileage Plan", "MileagePlus"),
+        )
+        // Every filter narrows these results, so removing any one of them must widen them.
+        assertEquals(2, filter(all).size)
+
+        FilterKind.entries.forEach { kind ->
+            store.resetFilters()
+            store.setOriginText(all.originText)
+            store.setDestinationText(all.destinationText)
+            store.setDateRange(all.dateRange!!.start, all.dateRange.end)
+            store.setCabin(all.cabin)
+            store.setMaxPoints(all.maxPoints!!)
+            all.programs.forEach(store::toggleProgram)
+            advanceUntilIdle()
+            assertEquals(FilterKind.entries.toSet(), store.state.value.activeFilters.map { it.kind }.toSet())
+
+            store.clearFilter(kind)
+            advanceUntilIdle()
+            val state = store.state.value
+            assertEquals(FilterKind.entries.toSet() - kind, state.activeFilters.map { it.kind }.toSet(), "$kind")
+            val without = when (kind) {
+                FilterKind.ORIGIN -> all.copy(originText = "")
+                FilterKind.DESTINATION -> all.copy(destinationText = "")
+                FilterKind.DATES -> all.copy(dateRange = null)
+                FilterKind.CABIN -> all.copy(cabin = null)
+                FilterKind.MAX_POINTS -> all.copy(maxPoints = null)
+                FilterKind.PROGRAMS -> all.copy(programs = emptySet())
+            }
+            assertTrue(state.resultCount > 2, "$kind")
+            assertEquals(filter(without).size, state.resultCount, "$kind")
+        }
+    }
+
+    @Test
     fun aBrokenStorageReadBecomesAMessageAndRecovers() = runTest {
         val harness = StoreHarness(this)
         val store = harness.newStore(repository = FlakyCacheRepository(harness.defaultRepository()))

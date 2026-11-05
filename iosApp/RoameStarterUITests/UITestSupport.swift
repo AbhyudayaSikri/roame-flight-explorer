@@ -28,6 +28,7 @@ enum ID {
     static let debugServerUrlDefault = "debug.serverUrl.default"
     static func clear(_ field: String) -> String { "\(field).clear" }
     static func chip(_ kind: String) -> String { "filters.chip.\(kind)" }
+    static func chipRemove(_ kind: String) -> String { "filters.chip.\(kind).remove" }
     static func cabin(_ name: String?) -> String { "filters.cabin.\(name ?? "any")" }
     static func program(_ name: String) -> String { "filters.program.\(name)" }
     static func marker(_ airport: String) -> String { "marker.\(airport)" }

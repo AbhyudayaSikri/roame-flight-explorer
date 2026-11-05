@@ -49,8 +49,7 @@ struct FlightMapView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 worldWidth = geometry.size.width * MKMapSize.world.width / context.rect.size.width
             }
-            // The keyboard or a rotation resizes the map. Frame again for the new shape: a frame
-            // chosen while the keyboard was up would stay zoomed out once it's gone.
+            // A rotation resizes the map; frame again for the new shape.
             .onChange(of: geometry.size, initial: true) { _, size in
                 viewSize = size
                 frame(model.state.selected)
@@ -62,6 +61,10 @@ struct FlightMapView: View {
                 if model.state.selected == nil { frameMarkers() }
             }
         }
+        // The map runs under the keyboard instead of shrinking for it. A frame chosen while the
+        // keyboard was up (typing a search) would otherwise be for a short map, and MapKit keeps
+        // that camera once the keyboard closes.
+        .ignoresSafeArea(.keyboard)
     }
 
     /// A destination opens its flights; a cluster zooms in until its airports separate.

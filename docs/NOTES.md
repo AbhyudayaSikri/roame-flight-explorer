@@ -102,6 +102,9 @@ Alternatives considered:
   - `NSLocalNetworkUsageDescription` explains the Local Network permission prompt that iOS shows on a device.
 - **Android cleartext for LAN addresses (2026-11-04).** A network security config can't allow an IP range, only named hosts. So debug builds (`src/debug`) allow plain HTTP to any host, and release builds keep `src/main`'s config: 10.0.2.2, localhost and 127.0.0.1 only.
 - **StrictMode in Android debug builds (2026-11-04)** only logs, so a library's own violation can't crash a QA pass. Release builds don't enable it.
+- **Compose treats the shared value types as stable (2026-11-04).** `:shared` isn't compiled with the Compose compiler, so on its own Compose compares `ExplorerState`, `Flight`, `FiltersUi` and the rest by identity. Every rebuilt but equal value then recomposes.
+  - `androidApp/compose-stability.conf` names each shared value type, plus read-only `List` and `Set` with stable elements. It names them one by one, not with a package wildcard, so the store and repository aren't covered.
+  - Compiler report: unstable arguments went from 35 to 17, and unknown-stability ones (the lists and sets) from 14 to 6. The ones left are the store, which is one instance for the app's lifetime, so comparing by identity already skips.
 - **Release packaging (2026-11-04).**
   - A `v*` tag publishes a GitHub Release (`release.yml`):
     - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
@@ -169,7 +172,7 @@ Alternatives considered:
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
   - Individually removable chips, −/+ points buttons, skeleton rows, haptics, "Flight Explorer" display names.
-  - The Compose stability config, iOS sliced observation, Android `testTag`s.
+  - iOS sliced observation, Android `testTag`s.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
 
 ## 5. Checks actually performed

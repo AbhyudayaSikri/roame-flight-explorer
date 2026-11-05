@@ -16,9 +16,8 @@ struct FlightMapView: View {
     @State private var viewSize: CGSize = .zero
 
     var body: some View {
-        let state = model.state
         let pills = MarkerClusteringKt.clusterMarkers(
-            markers: state.markers, worldWidth: worldWidth, pillWidth: 104, pillHeight: 24
+            markers: model.markers, worldWidth: worldWidth, pillWidth: 104, pillHeight: 24
         )
         GeometryReader { geometry in
             Map(position: $position) {
@@ -36,7 +35,7 @@ struct FlightMapView: View {
                     }
                     .annotationTitles(.hidden)
                 }
-                if let flight = state.selected {
+                if let flight = model.selected {
                     MapPolyline(
                         coordinates: [flight.originPoint.coordinate, flight.destinationPoint.coordinate],
                         contourStyle: .geodesic
@@ -52,13 +51,13 @@ struct FlightMapView: View {
             // A rotation resizes the map; frame again for the new shape.
             .onChange(of: geometry.size, initial: true) { _, size in
                 viewSize = size
-                frame(model.state.selected)
+                frame(model.selected)
             }
-            .onChange(of: state.selected?.id, initial: true) {
-                frame(model.state.selected)
+            .onChange(of: model.selected?.id, initial: true) {
+                frame(model.selected)
             }
-            .onChange(of: state.markers.map(\.airport)) {
-                if model.state.selected == nil { frameMarkers() }
+            .onChange(of: model.markers.map(\.airport)) {
+                if model.selected == nil { frameMarkers() }
             }
         }
         // The map runs under the keyboard instead of shrinking for it. A frame chosen while the
@@ -113,7 +112,7 @@ struct FlightMapView: View {
     /// `.automatic` zooms to street level around a single airport, so markers that all sit within
     /// a couple of degrees (one airport, or HND + NRT) get a 2.5° square instead.
     private func frameMarkers() {
-        let points = model.state.markers.map(\.point)
+        let points = model.markers.map(\.point)
         guard let minLat = points.map(\.latitude).min(), let maxLat = points.map(\.latitude).max(),
               let minLon = points.map(\.longitude).min(), let maxLon = points.map(\.longitude).max(),
               maxLat - minLat < 2, maxLon - minLon < 2 else {

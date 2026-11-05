@@ -6,7 +6,7 @@ struct FilterSheetView: View {
     let onReset: () -> Void
     @Environment(\.dismiss) private var dismiss
 
-    private var filters: FiltersUi { model.state.filters }
+    private var filters: FiltersUi { model.filters }
     private var store: FlightExplorerStore { model.store }
 
     var body: some View {
@@ -71,7 +71,7 @@ struct FilterSheetView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button { dismiss() } label: {
-                        Text(verbatim: "Show \(FormattingKt.formatFlightCount(count: model.state.resultCount))")
+                        Text(verbatim: "Show \(FormattingKt.formatFlightCount(count: model.resultCount))")
                     }
                     .accessibilityIdentifier(TestIds.shared.filtersDone)
                 }
@@ -95,14 +95,14 @@ struct FilterSheetView: View {
 
     private var pointsBinding: Binding<Double> {
         Binding(
-            get: { Double(model.state.filters.maxPoints) },
+            get: { Double(model.filters.maxPoints) },
             set: { store.setMaxPoints(points: Int32($0.rounded())) }
         )
     }
 
     private func programBinding(_ program: String) -> Binding<Bool> {
         Binding(
-            get: { model.state.filters.programs.contains(program) },
+            get: { model.filters.programs.contains(program) },
             set: { _ in store.toggleProgram(program: program) }
         )
     }

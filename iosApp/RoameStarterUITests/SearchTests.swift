@@ -1,6 +1,6 @@
 import XCTest
 
-/// QA S1–S5.
+/// QA S1–S6.
 final class SearchTests: UITestCase {
     @MainActor
     func testOriginIgnoresCaseAndSurroundingSpaces() {
@@ -46,5 +46,23 @@ final class SearchTests: UITestCase {
         screenshot("S5 no matches")
         app.buttons["Reset filters"].tap()
         waitForAllFlights()
+    }
+
+    /// An exact airport code wins over city prefixes: "dub" is Dublin, not Dubai, and "fra" is
+    /// Frankfurt (never an origin), not San Francisco. Typing on falls back to prefixes.
+    @MainActor
+    func testAnExactCodeWinsOverCityPrefixes() {
+        launchWithAllFlights()
+        search(ID.destination, "dub")
+        expectCount("29 flights")
+        search(ID.destination, "du")
+        expectCount("69 flights")
+        clearSearch(ID.destination)
+        waitForAllFlights()
+        search(ID.origin, "fra")
+        expectCount("0 flights")
+        XCTAssertTrue(element(ID.noMatches).waitForExistence(timeout: 10))
+        search(ID.origin, "fran")
+        expectCount("123 flights")
     }
 }

@@ -299,8 +299,8 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
 | Item | PR | State |
 |---|---|---|
 | Docs: merge gate, tonight's log in merge order | [#37](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/37) | merged 01:39 |
-| Release rehearsal: `v0.9.0-rc.1` as a pre-release | [#38](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/38) (the `release.yml` fix), then the tag | rehearsed 07:05–07:12, then deleted; the fix waits on the `workflow` scope |
-| Android emulator smoke job in Linux CI | this PR | in review |
+| Release rehearsal: `v0.9.0-rc.1` as a pre-release | [#38](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/38) (the `release.yml` fix), then the tag | rehearsed 07:05–07:12, then deleted; #38 merged 09:39 |
+| Android emulator smoke job in Linux CI | [#40](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/40) | merged 09:39 |
 
 - **Release rehearsal, part 1: `release.yml` would have published `v0.9.0-rc.1` as a full release.** `gh release create` had no `--prerelease`, so the rc would also have become the repo's "Latest" release. A tag with a suffix (anything after a `-`) now publishes as a pre-release; `v1.0.0` still publishes as a normal release.
 - **Release rehearsal, part 2: `v0.9.0-rc.1`, 07:05–07:12.**
@@ -311,7 +311,7 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
   - The downloaded APK installed on the `roame-smoke` emulator, cold-started in 1.8 s and showed the jar's 1,000 flights through `10.0.2.2:8080`, with no stale banner.
   - The iOS zip holds `RoameStarter.app`: an arm64 Debug build for the iPhone Simulator (SDK 26.4), named "Flight Explorer", with QUICKSTART's bundle id. It wasn't run, because this Mac doesn't run Xcode.
   - The only problem found was the missing pre-release flag (part 1). Then I deleted the release and the tag (`gh release delete --cleanup-tag`); no releases or tags remain.
-- **Android emulator smoke job (`android-ui.yml`, this PR).**
+- **Android emulator smoke job (`android-ui.yml`, [#40](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/40)).**
   - Five Compose UI tests in `androidApp/src/androidTest`, which find controls by the shared `TestIds`. `SmokeTest`: launch loads 1,000; "tokyo" finds 110; a map pill's flight opens its card; a saved flight appears in Saved. Then the API is stopped and `OfflineRelaunchTest` relaunches: the cache is marked stale and the saved flight is still there.
   - The map pills are MapLibre bitmaps, not Compose nodes. The test asks MapLibre for the rendered pill and its projected screen point, then taps there through the input system.
   - `.github/scripts/android-ui-tests.sh` runs `am instrument` twice on one install, so the second run relaunches onto the first run's database; `connectedAndroidTest` would uninstall the app in between.
@@ -321,6 +321,10 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
     - Fix 1: a 6 GB data partition. The 57 MB debug APK didn't fit ("Requested internal only, but not enough space").
     - Fix 2: API 37 crashed the system. SurfaceFlinger aborted in the emulator's graphics mapper (`Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma`) within seconds of boot, in both runs. I tried turning that host feature off, but the emulator has no feature by that name ("Bad feature name").
     - Fix 3: API 36, the nearest image, as your answer allowed. NOTES §2.2 records why.
+- **07:34: `main` green again** on `5d89852` ([#39](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/39)): the full iOS suite ([42023837394](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42023837394)) and Linux CI.
+- **09:39: #38, then #40, merged through the API.**
+  - The token still had no `workflow` scope, and GitHub allowed both merges anyway. It refused #10 on Nov 4, which merged a workflow file that `main` had also changed. Probably the difference: these merges only brought in workflow files exactly as the PRs had pushed them.
+  - On `31ffcac`, the emulator job's first run on `main` ([42047127064](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42047127064)) and Linux CI passed. The full iOS run was still going when this was written.
 
 ## Decisions
 

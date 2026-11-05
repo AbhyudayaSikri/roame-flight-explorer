@@ -51,6 +51,20 @@ fun fitCamera(
     )
 }
 
+/**
+ * The camera for a search's or filter's markers: [fitCamera] over their airports. [padding] keeps
+ * room for the pills at the edges, and [maxZoom] keeps one airport, or HND and NRT, at a regional
+ * view instead of street level. Zoom 7 is close to the 2.5° square iOS shows for them, and close
+ * enough that HND's and NRT's pills don't overlap.
+ */
+fun fitMarkers(
+    markers: List<DestinationMarker>,
+    viewWidth: Double,
+    viewHeight: Double,
+    padding: Double = 72.0,
+    maxZoom: Double = 7.0,
+): CameraFit? = fitCamera(markers.map { it.point }, viewWidth, viewHeight, padding = padding, maxZoom = maxZoom)
+
 private const val MAX_MERCATOR_LATITUDE = 85.05112878
 
 /** 0 at 180° W, 1 at 180° E; unwrapped longitudes go past either end. */

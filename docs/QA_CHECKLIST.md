@@ -56,6 +56,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - M8 [MUST] Select a trans-Pacific flight (e.g. SFO → NRT or JFK → SYD) → one continuous arc over the Pacific, never a line across the whole map.
 - M9 [SHOULD] After selecting, the camera frames the whole route, including M8's routes.
 - M10 [SHOULD] Switch to Map, open the Saved tab, come back to Explore: it's still on Map.
+- M11 [SHOULD] On the Map tab, To `tokyo` → the map moves to Japan and shows HND and NRT as separate pills. A search never moves the map while a finger is panning or zooming it, a selected flight's route stays framed, and `xyz` (no matches) leaves the map where it is. **Automated:** Android (the Tokyo part).
 
 ## Saved
 - V1 [MUST] Save from the card → it appears in the Saved tab; the saved state shows on list rows and on the map. **Automated:** iOS, Android.

@@ -23,6 +23,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import kotlinx.coroutines.delay
 import org.maplibre.android.MapLibre
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.camera.CameraUpdateFactory
@@ -45,6 +46,7 @@ import travel.roame.takehome.GeoPoint
 import travel.roame.takehome.MarkerCluster
 import travel.roame.takehome.clusterMarkers
 import travel.roame.takehome.fitCamera
+import travel.roame.takehome.fitMarkers
 import kotlin.math.max
 import kotlin.math.pow
 
@@ -54,7 +56,11 @@ private const val MARKER_SOURCE = "destination-markers"
 internal const val MARKER_LAYER = "destination-markers-layer"
 private const val ROUTE_SOURCE = "selected-route"
 private const val ROUTE_LAYER = "selected-route-layer"
+private val WORLD_CENTER = LatLng(25.0, 15.0)
 private const val INITIAL_ZOOM = 0.6
+
+/** How long the airports must stay the same before the map frames them, so typing doesn't jerk it. */
+private const val MARKER_FIT_DELAY_MS = 400L
 
 /** A style with nothing to download: just a sea-coloured background for the pills and route. */
 private const val OFFLINE_STYLE =
@@ -72,7 +78,9 @@ private const val PILL_HEIGHT_DP = 28.0
  * `clusterMarkers` merges pills that would overlap at the current zoom; tapping a merged pill
  * zooms in until its airports separate (HND and NRT do once you're over Japan). The view follows
  * the screen's lifecycle and is destroyed when it leaves the composition. A newly selected route
- * is framed above the card covering the bottom [bottomInset] of the map.
+ * is framed above the card covering the bottom [bottomInset] of the map. When a search, filter or
+ * Reset changes which airports show, the map frames them (shared [fitMarkers]), unless a route is
+ * selected or a finger is moving the map.
  */
 @Composable
 fun FlightMap(
@@ -96,6 +104,10 @@ fun FlightMap(
         clusterMarkers(markers, worldWidth = WORLD_DP_AT_ZOOM_0 * 2.0.pow(zoom), pillWidth = PILL_WIDTH_DP, pillHeight = PILL_HEIGHT_DP)
     }
     val currentPills by rememberUpdatedState(pills)
+    val currentMarkers by rememberUpdatedState(markers)
+    val currentRoute by rememberUpdatedState(route)
+    val airports = remember(markers) { markers.map { it.airport } }
+    var userMoving by remember { mutableStateOf(false) }
     val markerImages = remember { mutableSetOf<String>() }
 
     DisposableEffect(lifecycle, mapView) {
@@ -134,9 +146,15 @@ fun FlightMap(
         mapView.addOnDidFailLoadingMapListener(onStyleFailed)
         mapView.getMapAsync { loadedMap ->
             map = loadedMap
-            loadedMap.cameraPosition = CameraPosition.Builder().target(LatLng(25.0, 15.0)).zoom(INITIAL_ZOOM).build()
+            loadedMap.cameraPosition = CameraPosition.Builder().target(WORLD_CENTER).zoom(INITIAL_ZOOM).build()
             loadedMap.uiSettings.isRotateGesturesEnabled = false
-            loadedMap.addOnCameraIdleListener { zoom = loadedMap.cameraPosition.zoom }
+            loadedMap.addOnCameraMoveStartedListener { reason ->
+                if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) userMoving = true
+            }
+            loadedMap.addOnCameraIdleListener {
+                userMoving = false
+                zoom = loadedMap.cameraPosition.zoom
+            }
             loadedMap.setStyle(Style.Builder().fromUri(STYLE_URL)) { loaded ->
                 addFlightLayers(loaded)
                 style = loaded
@@ -166,6 +184,14 @@ fun FlightMap(
         val loadedMap = map
         if (style != null && loadedMap != null) frameRoute(loadedMap, mapView, route, bottomInset)
     }
+    // Restarts whenever the airports change, so only the last result set of a burst of typing is
+    // framed. A selected route keeps its framing, and no markers leave the camera where it is.
+    LaunchedEffect(style, airports) {
+        val loadedMap = map
+        if (style == null || loadedMap == null || airports.isEmpty() || currentRoute.size >= 2) return@LaunchedEffect
+        delay(MARKER_FIT_DELAY_MS)
+        if (!userMoving && currentRoute.size < 2) frameMarkers(loadedMap, mapView, currentMarkers)
+    }
 
     AndroidView(factory = { mapView }, modifier = modifier)
 }
@@ -181,6 +207,22 @@ private fun frameRoute(map: MapLibreMap, view: MapView, route: List<GeoPoint>, b
         bottomInset = bottomInset.value.toDouble(),
     ) ?: return
     map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(fit.center.latitude, fit.center.longitude), fit.zoom), 600)
+}
+
+/**
+ * Animates to the shared [fitMarkers]. Markers spread over the world don't fit a phone screen at
+ * any zoom, so they get the opening world view instead of a fit that's zoomed out further.
+ */
+private fun frameMarkers(map: MapLibreMap, view: MapView, markers: List<DestinationMarker>) {
+    if (view.width == 0 || view.height == 0) return
+    val density = view.resources.displayMetrics.density.toDouble()
+    val fit = fitMarkers(markers, viewWidth = view.width / density, viewHeight = view.height / density) ?: return
+    val camera = if (fit.zoom < INITIAL_ZOOM) {
+        CameraUpdateFactory.newLatLngZoom(WORLD_CENTER, INITIAL_ZOOM)
+    } else {
+        CameraUpdateFactory.newLatLngZoom(LatLng(fit.center.latitude, fit.center.longitude), fit.zoom)
+    }
+    map.animateCamera(camera, 600)
 }
 
 /** The selected route under the pills; both use only our own data, so they work offline. */

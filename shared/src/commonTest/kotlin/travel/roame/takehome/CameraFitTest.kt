@@ -37,6 +37,40 @@ class CameraFitTest {
         assertEquals(haneda.longitude, fit.center.longitude, 1e-9)
     }
 
+    private fun markersTo(vararg airports: String) =
+        aggregateByDestination(fixtureFlights.filter { it.destination in airports }, savedIds = emptySet())
+
+    @Test
+    fun noMarkersGiveNoCamera() {
+        assertNull(fitMarkers(emptyList(), width, height))
+    }
+
+    @Test
+    fun oneAirportsMarkerGetsARegionalViewNotStreetLevel() {
+        val dublin = markersTo("DUB").single()
+        val fit = fitMarkers(listOf(dublin), width, height)!!
+        assertEquals(7.0, fit.zoom)
+        assertEquals(dublin.point.latitude, fit.center.latitude, 1e-9)
+        assertEquals(dublin.point.longitude, fit.center.longitude, 1e-9)
+    }
+
+    @Test
+    fun bothTokyoAirportsLandInsideThePaddingAsSeparatePills() {
+        val tokyo = markersTo("HND", "NRT")
+        assertEquals(listOf("HND", "NRT"), tokyo.map { it.airport })
+        val markerPadding = 72.0
+        val fit = fitMarkers(tokyo, width, height, padding = markerPadding)!!
+        val world = 512.0 * 2.0.pow(fit.zoom)
+        for (marker in tokyo) {
+            val x = (mercatorX(marker.point.longitude) - mercatorX(fit.center.longitude)) * world + width / 2
+            val y = (mercatorY(marker.point.latitude) - mercatorY(fit.center.latitude)) * world + height / 2
+            val inside = x in markerPadding..(width - markerPadding) && y in markerPadding..(height - markerPadding)
+            assertTrue(inside, "${marker.airport} lands at ($x, $y) with zoom ${fit.zoom}")
+        }
+        // Android's pills are 130 × 28 dp; at this zoom the two don't overlap, so they show apart.
+        assertEquals(2, clusterMarkers(tokyo, worldWidth = world, pillWidth = 130.0, pillHeight = 28.0).size)
+    }
+
     @Test
     fun aTransPacificRouteIsCentredOverThePacificNotEurope() {
         val flight = fixtureFlights.first { it.origin == "SFO" && it.destination == "NRT" }

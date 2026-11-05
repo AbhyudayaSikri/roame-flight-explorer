@@ -41,7 +41,7 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 **Verification.**
 - The rules have shared tests that run on the JVM in every CI run and on the iOS simulator in every iOS run.
 - iOS is tested end to end by XCUITest in CI, against the real API: on pull requests a smoke set, on `main` the full suite, including the offline relaunch with the API stopped.
-- Android has 16 Compose UI tests on an emulator in CI, against the real API, including a relaunch with the API stopped. The rest of Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
+- Android has 28 Compose UI tests on an emulator in CI, against the real API, including a relaunch with the API stopped. The rest of Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
 
 ## 2. Assumptions
 
@@ -241,7 +241,7 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
   - Pushes to `main` and manual runs run all 34; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
-- **Android app, 16 Compose UI tests** (`androidApp/src/androidTest`) on an API 36 emulator in CI (`android-ui.yml`), against the real API. `QA_CHECKLIST.md` marks each item they assert.
+- **Android app, 28 Compose UI tests** (`androidApp/src/androidTest`) on an API 36 emulator in CI (`android-ui.yml`), against the real API. `QA_CHECKLIST.md` marks each item they assert.
   - Each test starts from an empty database: debug builds take the boolean intent extras `resetData`, `failSaves` and `failRemoves`, like iOS's launch arguments.
   - `SmokeTest`: launch loads 1,000 flights with no chips (QA L1, L2), "tokyo" finds 110 (S3), a map pill's flight opens its card (M3), and a saved flight appears in Saved (V1).
   - `SearchTests`: case and spaces, city names, both fields together, the no-matches state with its Reset, and an exact code beating city prefixes (S1, S2, S4–S6).
@@ -251,7 +251,10 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
     - Programs combine with OR, and deselecting restores all 1,000 (F5, F10).
     - Chips (F7); Reset (F8); each chip's × (F11); the −/+ buttons (F12).
     - iOS can't set an exact date or points limit from XCUITest, so F1, F2 and F6 are UI-tested on Android only.
-  - `OfflineRelaunchTest`: CI fills the cache and saves a flight, stops the API, then relaunches: the cache is marked stale and the saved flight is still there (O2).
+  - `SelectionTests`: a flight selected on the list stays selected on the map and back, and one picked on the map stays selected on the list (M5); filtering it out clears it on both views (M6); recreating the activity, as a rotation does, and backgrounding keep the search and selection (O7).
+  - `SavedTests`: remove from the card and from the Saved tab (V4); a failed save or remove rolls back with a message, using the `failSaves` and `failRemoves` extras (V6); after `--mode=updated`, "Update saved" replaces the snapshot with the new points and no duplicate (V2); a saved flight survives `--mode=empty` (V5).
+  - `ServerStateTests`: a failed refresh keeps the cache, marked stale (O1, with `--mode=error`); with no cache, an error with Retry that loads once the API recovers (O4); `--mode=empty` on a fresh install says "No flights available", not an error (O5). They switch the mode through `POST /control/mode`, as iOS does.
+  - `OfflineRelaunchTest`: CI fills the cache and saves a flight, stops the API, then relaunches. The cache is marked stale, with the saved flight (O2); pull to refresh keeps it stale (O1, with the API really stopped); search works offline, and the saved flight can be removed (O3).
   - They find controls by the shared `TestIds`. Map pills are drawn by MapLibre, so the test taps the point MapLibre's projection gives for the pill.
   - The rest of Android is checked by hand (below).
 

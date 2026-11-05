@@ -50,8 +50,8 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - M2 [MUST] Pan and zoom are smooth.
 - M3 [MUST] Tap a marker → browse that destination's flights → pick one → route line + flight card. **Automated:** iOS, Android.
 - M4 [MUST] The card shows origin, destination, date, cabin, points, program and Save/Remove. **Automated:** iOS.
-- M5 [MUST] Select on the list → switch to the map → the same flight is still selected, and the reverse. **Automated:** iOS.
-- M6 [MUST] Change filters so the selected flight is excluded → the selection is cleared on both views. **Automated:** iOS.
+- M5 [MUST] Select on the list → switch to the map → the same flight is still selected, and the reverse. **Automated:** iOS, Android.
+- M6 [MUST] Change filters so the selected flight is excluded → the selection is cleared on both views. **Automated:** iOS, Android.
 - M7 [MUST] The list and the map always agree on the result set (marker counts add up to the result count). **Automated:** iOS.
 - M8 [MUST] Select a trans-Pacific flight (e.g. SFO → NRT or JFK → SYD) → one continuous arc over the Pacific, never a line across the whole map.
 - M9 [SHOULD] After selecting, the camera frames the whole route, including M8's routes.
@@ -59,24 +59,24 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 
 ## Saved
 - V1 [MUST] Save from the card → it appears in the Saved tab; the saved state shows on list rows and on the map. **Automated:** iOS, Android.
-- V2 [MUST] Saving again updates without duplicates: **Automated:** iOS.
+- V2 [MUST] Saving again updates without duplicates: **Automated:** iOS, Android.
   1. Save a flight.
   2. Restart the server with `--mode=updated`, then pull to refresh.
   3. The card shows "Update saved". Tap it.
   4. The Saved tab shows the new points (+500) and still exactly one entry.
 - V3 [MUST] The Saved tab is unaffected by the current discovery filters. **Automated:** iOS.
-- V4 [MUST] Remove works from the Saved tab and from the card. **Automated:** iOS.
-- V5 [MUST] A saved flight absent from the latest API response (`--mode=empty`, then refresh) → still in Saved. **Automated:** iOS.
-- V6 [MUST] Simulated save failure and remove failure (Android debug menu; iOS `-failSaves` / `-failRemoves`) → an error is shown and the state rolls back. **Automated:** iOS.
+- V4 [MUST] Remove works from the Saved tab and from the card. **Automated:** iOS, Android.
+- V5 [MUST] A saved flight absent from the latest API response (`--mode=empty`, then refresh) → still in Saved. **Automated:** iOS, Android.
+- V6 [MUST] Simulated save failure and remove failure (Android debug menu; iOS `-failSaves` / `-failRemoves`) → an error is shown and the state rolls back. **Automated:** iOS, Android.
 
 ## Offline / errors
-- O1 [MUST] Stop the server → pull to refresh → existing data kept + stale/offline indicator. **Automated:** iOS.
+- O1 [MUST] Stop the server → pull to refresh → existing data kept + stale/offline indicator. **Automated:** iOS, Android.
 - O2 [MUST] Stop the server → force-quit the app → reopen → cached results + saved flights + stale indicator. **Automated:** iOS, Android.
-- O3 [MUST] Offline: search and filter cached results; view saved flights; remove a saved flight. **Automated:** iOS.
-- O4 [MUST] Clear app data (Android "Clear storage"; iOS `-resetData`) → launch with the server stopped → understandable error + Retry. Start the server → Retry works. (iOS CI uses `--mode=error`, then `normal`, through the control endpoint.) **Automated:** iOS.
-- O5 [MUST] `--mode=empty` on a fresh install → "No flights available", visibly different from the O4 error. **Automated:** iOS.
+- O3 [MUST] Offline: search and filter cached results; view saved flights; remove a saved flight. **Automated:** iOS, Android.
+- O4 [MUST] Clear app data (Android "Clear storage"; iOS `-resetData`) → launch with the server stopped → understandable error + Retry. Start the server → Retry works. (iOS CI uses `--mode=error`, then `normal`, through the control endpoint.) **Automated:** iOS, Android.
+- O5 [MUST] `--mode=empty` on a fresh install → "No flights available", visibly different from the O4 error. **Automated:** iOS, Android.
 - O6 [SHOULD] `--mode=slow` → the loading indicator shows for ~3 s; the UI stays responsive. **Automated:** iOS.
-- O7 [MUST] Rotate the device / background and foreground the app → no crash, state preserved. **Automated:** iOS.
+- O7 [MUST] Rotate the device / background and foreground the app → no crash, state preserved. **Automated:** iOS, Android.
 - O8 [SHOULD] Offline, Map tab → markers and the selected route still render. A blank background is fine; tiles aren't required.
 - O9 [SHOULD] Android, Developer options → "Don't keep activities" on. Search From `jfk`, press Home, then return. The From field and the results agree: the field is empty and all flights show. Turn the option off afterwards.
 

@@ -60,10 +60,11 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # The emulator reaches it as 10.0.2.2:8080, the debug build's default base URL.
-      - name: Start the local API
+      # The emulator reaches it as 10.0.2.2:8080, the debug build's default base URL. The tests switch
+      # its mode through POST /control/mode, as ios.yml's do.
+      - name: Start the local API (control endpoint on)
         run: |
-          java -jar server/build/libs/roame-flights-server.jar --mode=normal --port=8080 > "$RUNNER_TEMP/server.log" 2>&1 &
+          java -jar server/build/libs/roame-flights-server.jar --mode=normal --port=8080 --allow-control > "$RUNNER_TEMP/server.log" 2>&1 &
           echo $! > "$RUNNER_TEMP/server.pid"
           for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1 && break; sleep 1; done
           curl -fsS http://127.0.0.1:8080/health

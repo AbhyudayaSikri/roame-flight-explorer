@@ -33,6 +33,9 @@ import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
+import androidx.lifecycle.Lifecycle
 import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
@@ -47,6 +50,8 @@ import travel.roame.takehome.TestIds
 import travel.roame.takehome.android.ui.MARKER_LAYER
 import travel.roame.takehome.formatFlightCount
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 /** The first launch on a cold emulator fetches and stores all 1,000 flights, and loads the map style. */
 const val LOAD_TIMEOUT = 60_000L
@@ -72,6 +77,18 @@ class ExplorerApp : ExternalResource() {
     /** Closes the app and opens it again on the same database. */
     fun relaunch() = launch(resetData = false)
 
+    /** Destroys and recreates the activity, as a rotation does. */
+    fun recreate() {
+        checkNotNull(scenario) { "launch() first" }.recreate()
+    }
+
+    /** Sends the app to the background and brings it back. */
+    fun backgroundAndReturn() {
+        val running = checkNotNull(scenario) { "launch() first" }
+        running.moveToState(Lifecycle.State.CREATED)
+        running.moveToState(Lifecycle.State.RESUMED)
+    }
+
     fun <T> onActivity(block: (MainActivity) -> T): T {
         var result: Result<T>? = null
         checkNotNull(scenario) { "launch() first" }.onActivity { result = runCatching { block(it) } }
@@ -81,6 +98,31 @@ class ExplorerApp : ExternalResource() {
     override fun after() {
         scenario?.close()
         scenario = null
+    }
+}
+
+/** Switches the local API's mode; CI starts it with `--allow-control`, as ios.yml does. */
+object ServerControl {
+    fun setMode(mode: String) {
+        val connection = URL("${BuildConfig.API_BASE_URL}/control/mode?value=$mode").openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "POST"
+            connection.connectTimeout = 5_000
+            connection.readTimeout = 5_000
+            connection.doOutput = true
+            connection.setFixedLengthStreamingMode(0)
+            connection.outputStream.close()
+            check(connection.responseCode == 200) { "mode=$mode: HTTP ${connection.responseCode}" }
+        } finally {
+            connection.disconnect()
+        }
+    }
+}
+
+/** Puts the API back in normal mode after each test, even a failed one. */
+class ServerModeReset : ExternalResource() {
+    override fun after() {
+        runCatching { ServerControl.setMode("normal") }
     }
 }
 
@@ -156,6 +198,24 @@ fun ComposeTestRule.selectFirstRow(): String {
     row.performClick()
     waitForTag(TestIds.card)
     return id
+}
+
+val savedRows = hasTagStartingWith(TestIds.savedRow(""))
+
+/** Searches JFK → HND (3 flights), selects the first and saves it; returns its id. */
+fun ComposeTestRule.saveFirstJfkToHaneda(): String {
+    search(TestIds.searchOrigin, "jfk")
+    search(TestIds.searchDestination, "hnd")
+    waitForCount(3)
+    val id = selectFirstRow()
+    onNodeWithTag(TestIds.cardSave).performClick()
+    waitForTag(TestIds.cardRemove)
+    return id
+}
+
+/** Pulls the result list down, as a finger does to refresh. */
+fun ComposeTestRule.pullToRefresh() {
+    onNode(hasScrollToIndexAction() and hasAnyDescendant(flightRows())).performTouchInput { swipeDown() }
 }
 
 /** Every text on the flight card, which together identify the selected flight. */

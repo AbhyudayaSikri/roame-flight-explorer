@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Android emulator smoke tests (android-ui.yml). Runs once the emulator has booted, with the local
-# API serving on port 8080 and its PID in "$RUNNER_TEMP/server.pid". To run it on your own
+# API serving on port 8080 with `--allow-control`, and its PID in "$RUNNER_TEMP/server.pid". To run it on your own
 # emulator, start the API the same way and set RUNNER_TEMP (and ANDROID_SERIAL if more than one
 # device is attached).
 #

@@ -130,6 +130,32 @@ Your order: (a) Android camera fit, (b) `--mode=slow`, (c) polish (iOS cabin tru
   - #6 also gives the cabin rows primary text instead of the accent tint.
 - **Runner shortage continued until about 17:20**: two more dropped jobs for #3, and one dispatched run that never got a runner. After that every job got a runner within minutes.
 
+## Evening: your second list (from 21:36)
+
+Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` issues as you file them, ahead of everything; (d) NOTES §1 and §5; (e) the remaining §13 items. Also the lighter iOS job on pull requests (your answer 2).
+
+| Item | PR | State |
+|---|---|---|
+| (a) F1 investigation | [#7](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/7) | merged 22:38 |
+| Lighter iOS job on PRs | [#8](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/8) | merged 22:15 |
+| `main` was red: map test, keyboard | [#9](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/9) | merged 22:14 |
+| (b1) Server URL in both debug menus | [#10](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/10) | merged 22:47, by git (see below) |
+| (b2) Release packaging | [#11](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/11) | in review |
+| Screenshot timeouts don't fail tests | [#12](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/12) | merged 22:39 |
+| (d) NOTES §1 and §5 | this PR | in review |
+
+- **(a) F1: not a conversion bug.**
+  - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
+  - The calendar then closed by itself, and the test's "dismiss" tap landed on the Economy row. Feb 1 in Economy is 10 flights.
+  - The conversion now lives in shared code, with `PickerDateTest` in ten time zones and two store tests.
+- **`main` was red after the daytime merges** (full run [41955053011](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41955053011)): the map test again.
+  - The recording showed the camera framing Tokyo while the keyboard shortened the map; when the keyboard closed, the map grew but kept that camera.
+  - #9 lets the map run under the keyboard. It passed two full runs before merging.
+- **PR #7's first run** also failed on "Timed out while requesting screenshot" with five macOS jobs running. #12 makes capturing evidence screenshots non-fatal; assertions are unchanged.
+- **(b1)** `DebugMenuTests` passed in CI over plain HTTP to the runner's LAN IP (`192.168.64.14`), which confirms `NSAllowsLocalNetworking` covers IP addresses.
+- **Merging #10 and #11:** the gh token lacks the `workflow` scope, which GitHub requires to merge PRs that change `.github/workflows/`. At your call they're merged by git: the same merge commit, pushed to `main` over SSH, and GitHub marks the PR merged.
+- No `qa` issues were filed as of 22:45.
+
 ## Decisions
 
 - **Lighter iOS job on pull requests (Nov 4, evening, your call).**

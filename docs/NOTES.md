@@ -191,6 +191,34 @@ Dates are local (UTC-5).
   - ios: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604099
   - ci: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604081
 
+### Automated tests (as of 2026-11-04)
+Every pull request and every push to `main` runs these in CI (`.github/workflows/ci.yml`, `ios.yml`).
+
+- **Shared logic, 120 tests** (`shared/src/commonTest`). They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
+  - Rules: decoding (`DecodingTest`), the search rule (`SearchTest`), filters with their date and points boundaries (`FilterTest`), filter chips (`ActiveFiltersTest`), map aggregation (`AggregationTest`) and clustering (`MarkerClusteringTest`), camera fitting (`CameraFitTest`), great-circle routes (`RouteGeometryTest`), display formatting (`FormattingTest`), calendar dates and the iOS picker's conversion in ten time zones (`CalendarDateTest`, `PickerDateTest`), server address validation (`ServerUrlTest`).
+  - Persistence and networking: `FlightDatabaseStoreTest` on in-memory SQLite, and `FlightsApiTest` with Ktor's `MockEngine`.
+  - The store, against a fake API and real SQLite (`FlightExplorerStoreTest`, `StoreRulesTest`, `ServerUrlStoreTest`):
+    - Fresh, stale, empty and failed syncs; the cache surviving a restart; offline search and remove.
+    - Optimistic save and remove with rollback; "Update saved" without duplicates.
+    - Selection and focus rules; the latest query winning; storage failures becoming messages.
+    - The server address: saved, used after a restart, replacing an in-flight refresh.
+- **Local API.** 19 Kotlin tests (`:server:test`): every mode, the control endpoint, argument parsing, and the embedded fixture. Plus 12 Python tests for `fallback.py`. Linux CI also runs the jar from an empty directory and compares `/flights` byte-for-byte with the fixture.
+- **iOS app, 29 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
+  - `LaunchTests`, `SearchTests`, `FilterTests`, `MapSelectionTests`, `SavedTests`, `ErrorStateTests` and `DebugMenuTests`. The server-mode cases switch modes through `POST /control/mode`, and the debug-menu case reaches the API on the runner's LAN IP.
+  - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
+  - Pushes to `main` and manual runs run all 29; pull requests run 5 smoke tests.
+  - Per-QA-item results are in `docs/QA_IOS.md`.
+- **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
+
+### Manual and visual checks
+- **iOS screenshots** from the full runs were reviewed against the brief and the QA list (PLAN 8.4). Fixes that came out of that review: map camera framing, marker overlap, the "Premium Economy" truncation, and the cabin row colour.
+- **iOS failures read from XCTest's screen recordings** (frames pulled with ffmpeg):
+  - The F1 date-picker investigation (§4): the picker was right, and the test's own tap changed the cabin.
+  - The flaky map test: the camera was framing a keyboard-shortened map. Fixed in the app, not in the test.
+- **iOS on a device:** not done (§4).
+- **Android, 2026-11-04 on the Mac:** a local emulator with no API running. The error screen with Retry appeared, with no crash. The Mac never ran the API for Android.
+- **Android QA on Windows** (PLAN §9): in progress. Results arrive as GitHub issues labelled `qa`; none filed as of 2026-11-04, 22:45.
+
 ## 6. How AI was used and verified
 To be completed. So far:
 - **Plan verification (2026-11-03):** an AI agent in Cursor (Claude Opus 5.5) did the following:

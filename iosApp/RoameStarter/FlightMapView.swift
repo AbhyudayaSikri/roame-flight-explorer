@@ -49,8 +49,11 @@ struct FlightMapView: View {
             .onMapCameraChange(frequency: .onEnd) { context in
                 worldWidth = geometry.size.width * MKMapSize.world.width / context.rect.size.width
             }
+            // The keyboard or a rotation resizes the map. Frame again for the new shape: a frame
+            // chosen while the keyboard was up would stay zoomed out once it's gone.
             .onChange(of: geometry.size, initial: true) { _, size in
                 viewSize = size
+                frame(model.state.selected)
             }
             .onChange(of: state.selected?.id, initial: true) {
                 frame(model.state.selected)
@@ -102,7 +105,7 @@ struct FlightMapView: View {
     }
 
     /// `.automatic` zooms to street level around a single airport, so markers that all sit within
-    /// a couple of degrees (one airport, or HND + NRT) get a regional view instead.
+    /// a couple of degrees (one airport, or HND + NRT) get a 2.5° square instead.
     private func frameMarkers() {
         let points = model.state.markers.map(\.point)
         guard let minLat = points.map(\.latitude).min(), let maxLat = points.map(\.latitude).max(),
@@ -111,13 +114,12 @@ struct FlightMapView: View {
             position = .automatic
             return
         }
-        let span = 2.5
-        position = .region(MKCoordinateRegion(
-            center: CLLocationCoordinate2D(latitude: (minLat + maxLat) / 2, longitude: (minLon + maxLon) / 2),
-            span: MKCoordinateSpan(latitudeDelta: span, longitudeDelta: span)
-        ))
-        // A portrait view fits the region by its width, so the visible span is 2.5° of longitude.
-        if viewSize.width > 0 { worldWidth = viewSize.width * 360 / span }
+        let half = 1.25
+        let midLat = (minLat + maxLat) / 2
+        let midLon = (minLon + maxLon) / 2
+        let topLeft = MKMapPoint(CLLocationCoordinate2D(latitude: midLat + half, longitude: midLon - half))
+        let bottomRight = MKMapPoint(CLLocationCoordinate2D(latitude: midLat - half, longitude: midLon + half))
+        show(MKMapRect(x: topLeft.x, y: topLeft.y, width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y))
     }
 }
 

@@ -146,8 +146,8 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Independent review (prompt P3) | (fixes to follow) | review running |
 | (e) §13.2 Android offline map style (QA O8) | [#14](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/14) | merged 23:15 |
 | (e) §13.5 StrictMode in debug builds (QA T1) | [#15](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/15) | merged 23:25 |
-| (e) §13.6a Compose stability config | this PR | in review |
-| (e) §13.6b iOS sliced observation | next PR | to do |
+| (e) §13.6a Compose stability config | [#16](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/16) | merged 23:45 |
+| (e) §13.6b iOS sliced observation | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -173,6 +173,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.6b iOS sliced observation.**
+  - `ExplorerModel` now mirrors each state field the views read as its own observed property, and assigns it only when its value changed. Each view reads the fields it needs from the model, not the whole `ExplorerState`.
+  - The behaviour is meant to be identical. The full XCUITest suite ran on the branch before merging.
+  - There's no iOS unit-test target, so the compare-then-assign rule has no unit test of its own. There's no new QA item.
 
 ## Decisions
 

@@ -6,11 +6,10 @@ struct SavedView: View {
     let model: ExplorerModel
 
     var body: some View {
-        let state = model.state
         let store = model.store
         NavigationStack {
             Group {
-                if state.saved.isEmpty {
+                if model.saved.isEmpty {
                     EmptyStateView(
                         title: "No saved flights yet",
                         message: "Save a flight from Explore and it stays here, even offline.",
@@ -19,7 +18,7 @@ struct SavedView: View {
                     )
                 } else {
                     ZStack(alignment: .bottom) {
-                        List(state.saved, id: \.flight.id) { saved in
+                        List(model.saved, id: \.flight.id) { saved in
                             HStack {
                                 Button { store.selectSaved(flightId: saved.flight.id) } label: {
                                     FlightRowView(flight: saved.flight, saved: true)
@@ -34,9 +33,9 @@ struct SavedView: View {
                         }
                         .listStyle(.plain)
                         .safeAreaInset(edge: .bottom) {
-                            if state.selectedSaved != nil { Color.clear.frame(height: 300) }
+                            if model.selectedSaved != nil { Color.clear.frame(height: 300) }
                         }
-                        if let selected = state.selectedSaved {
+                        if let selected = model.selectedSaved {
                             FlightCardView(
                                 flight: selected.flight,
                                 status: .saved,

@@ -46,8 +46,19 @@ struct FilterSheetView: View {
                     }
                     Section("Maximum points") {
                         let points = Int(draggedPoints ?? Double(filters.maxPoints))
-                        Text(verbatim: points >= Int(bounds.maxPoints) ? "No limit" : "Up to \(FormattingKt.formatPoints(points: Int32(points)))")
-                            .accessibilityIdentifier(TestIds.shared.filterPointsValue)
+                        HStack {
+                            Text(verbatim: points >= Int(bounds.maxPoints) ? "No limit" : "Up to \(FormattingKt.formatPoints(points: Int32(points)))")
+                                .accessibilityIdentifier(TestIds.shared.filterPointsValue)
+                            Spacer()
+                            // One slider step (500 points) each; a nil action disables that end.
+                            Stepper(
+                                "Maximum points",
+                                onIncrement: points < Int(bounds.maxPoints) ? { store.stepMaxPoints(steps: 1) } : nil,
+                                onDecrement: points > Int(bounds.minPoints) ? { store.stepMaxPoints(steps: -1) } : nil
+                            )
+                            .labelsHidden()
+                            .accessibilityIdentifier(TestIds.shared.filterPointsStepper)
+                        }
                         Slider(
                             value: pointsBinding,
                             in: Double(bounds.minPoints)...Double(bounds.maxPoints),

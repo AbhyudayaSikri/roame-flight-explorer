@@ -112,6 +112,10 @@ object TestIds {
     val filterDates = "filters.dates"
     val filterPoints = "filters.points"
     val filterPointsValue = "filters.pointsValue"
+    /** iOS: the −/+ Stepper. Android has two buttons, below. */
+    val filterPointsStepper = "filters.pointsStepper"
+    val filterPointsDecrease = "filters.points.decrease"
+    val filterPointsIncrease = "filters.points.increase"
     val viewList = "view.list"
     val viewMap = "view.map"
     val tabExplore = "tab.explore"

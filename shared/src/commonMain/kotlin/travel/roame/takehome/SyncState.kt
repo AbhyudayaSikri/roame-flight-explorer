@@ -27,7 +27,7 @@ sealed interface SyncState {
 
     data class Fresh(val lastSuccessAtMillis: Long) : SyncState
 
-    /** The last refresh failed; the cache from [lastSuccessAtMillis] is still shown. */
+    /** The last refresh failed, and a retry may be running; the cache from [lastSuccessAtMillis] is still shown. */
     data class Stale(val lastSuccessAtMillis: Long, val error: RefreshError) : SyncState
 
     /** The server answered 200 with no flights. Not an error. */
@@ -39,15 +39,28 @@ sealed interface SyncState {
 
 internal sealed interface RefreshStatus {
     data object Idle : RefreshStatus
-    data object Running : RefreshStatus
+
+    /** [previousFailure] keeps cached data marked stale while the retry runs. */
+    data class Running(val previousFailure: RefreshError? = null) : RefreshStatus
     data class Failed(val error: RefreshError) : RefreshStatus
 }
 
-internal fun syncStateOf(hasCachedFlights: Boolean, lastSuccessAtMillis: Long?, status: RefreshStatus): SyncState =
-    when {
-        status is RefreshStatus.Failed && lastSuccessAtMillis != null -> SyncState.Stale(lastSuccessAtMillis, status.error)
-        status is RefreshStatus.Failed -> SyncState.FailedNoCache(status.error)
+/** The error of the last refresh that finished, unless a later one succeeded. */
+internal val RefreshStatus.failure: RefreshError?
+    get() = when (this) {
+        RefreshStatus.Idle -> null
+        is RefreshStatus.Running -> previousFailure
+        is RefreshStatus.Failed -> error
+    }
+
+internal fun syncStateOf(hasCachedFlights: Boolean, lastSuccessAtMillis: Long?, status: RefreshStatus): SyncState {
+    val failure = status.failure
+    return when {
+        lastSuccessAtMillis != null && failure != null -> SyncState.Stale(lastSuccessAtMillis, failure)
+        // With nothing cached, Retry shows the loading state rather than the error it's retrying.
+        lastSuccessAtMillis == null && status is RefreshStatus.Failed -> SyncState.FailedNoCache(status.error)
         lastSuccessAtMillis == null -> SyncState.Loading
         !hasCachedFlights -> SyncState.EmptySuccess(lastSuccessAtMillis)
         else -> SyncState.Fresh(lastSuccessAtMillis)
     }
+}

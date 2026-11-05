@@ -61,7 +61,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - "Update saved" re-saves when the cached flight differs from the snapshot.
 - SyncState distinguishes a successful EMPTY response from a FAILED request. A failed refresh keeps the cache and shows Stale.
 - Save/remove return `Result` internally. On failure, the store rolls back optimistic changes and emits a `message`, and the UI must surface it.
-- Never block the main thread: filtering on `Dispatchers.Default`, DB and network on IO, and the latest query wins (`mapLatest`/`flatMapLatest`).
+- Never block the main thread: filtering and decoding the flights response on `Dispatchers.Default`, DB on IO, and the latest query wins (`mapLatest`/`flatMapLatest`).
 - Flight IDs are opaque strings (the fixture has `f101`–`f106`). Never parse them.
 
 ## Swift-facing API rules (SKIE)

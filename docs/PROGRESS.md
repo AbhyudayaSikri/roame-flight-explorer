@@ -178,7 +178,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **(e) §13.1 Review fixes: Android Explore state** (review bug 2 and a nit).
   - The search fields now start from the store's query with plain `remember`, instead of restoring old text with `rememberSaveable`. After the system destroyed the activity, a new store and the restored text disagreed: the field said "jfk", but all 1,000 flights showed with no chip.
   - List/Map mode now lives in `FlightExplorerApp`, so a visit to the Saved tab no longer resets it.
-  - These are UI-only, and there are no Android UI tests. New QA items O9 and M10; checked on the emulator (below).
+  - These are UI-only, and there are no Android UI tests. New QA items O9 and M10.
+  - Emulator check, `roame-smoke` with no API: type `jfk`, press Home, `am kill` the process, relaunch (a cold start that restores saved state).
+    - `main`'s build came back with "jfk" in the field but no "From: jfk" chip, which is the bug.
+    - This branch came back with an empty field and no chip, and still in Map mode.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

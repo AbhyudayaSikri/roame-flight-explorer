@@ -114,7 +114,7 @@ Alternatives considered:
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).
 - **Saved-tab selection** is independent of the discovery filters.
 - **Decoding is strict.** One malformed record makes the whole response `Malformed`, and the cache is kept. Unknown JSON keys are ignored.
-- **Map tiles need the network**, as the brief allows. Markers and the selected route should still render offline; the Android fallback style is a SHOULD.
+- **Map tiles need the network**, as the brief allows. Offline, the pills and the selected route still render. When Android's map style can't load, it falls back to a built-in style that is just a plain background (QA O8). MapKit draws its own placeholder under the annotations.
 - **Shared display formatting is English-only:** "16.5k", "16,500 pts", "Mon, Feb 1, 2027".
 - **Android minSdk goes from 23 (starter) to 26.** kotlinx-datetime's JVM implementation uses `java.time`; the alternative would have been core-library desugaring.
 - **The starter's `iosX64` target is kept.** It's Tier 3 in Kotlin 2.4 but not deprecated, and every chosen library still publishes it.
@@ -155,7 +155,7 @@ Alternatives considered:
 ## 4. Known limitations
 - **iOS has never run on a device or interactively.** It's checked only on the CI simulator (iPhone 17, iOS 26.4) by XCUITest, screenshots and the demo video.
 - **Android was never run against the real API on the Mac.** It's checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
-- **Map tiles need the network**, which the brief allows. The Android offline fallback style (SHOULD) isn't built.
+- **Map tiles need the network**, which the brief allows. Offline, the maps show the pills and route on a plain background, with no coastlines. iOS hasn't been checked offline on the map tab.
 - **Some QA items aren't covered by iOS UI tests:** F1 and F2 (single-day date ranges) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers all three rules, and the iOS store uses it unchanged.
   - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox. It stays on the unmerged branch `test/ios-date-range-f1`.
   - Diagnosis from frames of that run's screen recording: the picker worked, and after February 1 was tapped the sheet read "Show 17 flights".
@@ -168,7 +168,7 @@ Alternatives considered:
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
   - Individually removable chips, −/+ points buttons, skeleton rows, haptics, "Flight Explorer" display names.
-  - StrictMode, the Compose stability config, iOS sliced observation, Android `testTag`s, the Android offline map style.
+  - StrictMode, the Compose stability config, iOS sliced observation, Android `testTag`s.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
 
 ## 5. Checks actually performed

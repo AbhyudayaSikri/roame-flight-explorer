@@ -55,6 +55,10 @@ private const val ROUTE_SOURCE = "selected-route"
 private const val ROUTE_LAYER = "selected-route-layer"
 private const val INITIAL_ZOOM = 0.6
 
+/** A style with nothing to download: just a sea-coloured background for the pills and route. */
+private const val OFFLINE_STYLE =
+    """{"version":8,"name":"offline","sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#D6E4EF"}}]}"""
+
 /** MapLibre's world is 512 dp wide at zoom 0. */
 private const val WORLD_DP_AT_ZOOM_0 = 512.0
 
@@ -113,28 +117,27 @@ fun FlightMap(
     }
 
     DisposableEffect(mapView) {
+        // Offline, or with the tile server down, the style itself can't load, and without a style
+        // nothing is drawn, not even our pills (QA O8). Fall back to a plain background then.
+        var fellBack = false
+        val onStyleFailed = MapView.OnDidFailLoadingMapListener {
+            val loadedMap = map
+            if (style == null && loadedMap != null && !fellBack) {
+                fellBack = true
+                loadedMap.setStyle(Style.Builder().fromJson(OFFLINE_STYLE)) { loaded ->
+                    addFlightLayers(loaded)
+                    style = loaded
+                }
+            }
+        }
+        mapView.addOnDidFailLoadingMapListener(onStyleFailed)
         mapView.getMapAsync { loadedMap ->
             map = loadedMap
             loadedMap.cameraPosition = CameraPosition.Builder().target(LatLng(25.0, 15.0)).zoom(INITIAL_ZOOM).build()
             loadedMap.uiSettings.isRotateGesturesEnabled = false
             loadedMap.addOnCameraIdleListener { zoom = loadedMap.cameraPosition.zoom }
             loadedMap.setStyle(Style.Builder().fromUri(STYLE_URL)) { loaded ->
-                loaded.addSource(GeoJsonSource(ROUTE_SOURCE))
-                loaded.addLayer(
-                    LineLayer(ROUTE_LAYER, ROUTE_SOURCE).withProperties(
-                        PropertyFactory.lineColor("#B3261E"),
-                        PropertyFactory.lineWidth(3f),
-                        PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
-                    ),
-                )
-                loaded.addSource(GeoJsonSource(MARKER_SOURCE))
-                loaded.addLayer(
-                    SymbolLayer(MARKER_LAYER, MARKER_SOURCE).withProperties(
-                        PropertyFactory.iconImage(Expression.get("icon")),
-                        PropertyFactory.iconAllowOverlap(true),
-                        PropertyFactory.iconIgnorePlacement(true),
-                    ),
-                )
+                addFlightLayers(loaded)
                 style = loaded
             }
             loadedMap.addOnMapClickListener { point ->
@@ -146,6 +149,7 @@ fun FlightMap(
             }
         }
         onDispose {
+            mapView.removeOnDidFailLoadingMapListener(onStyleFailed)
             style = null
             map = null
         }
@@ -176,6 +180,26 @@ private fun frameRoute(map: MapLibreMap, view: MapView, route: List<GeoPoint>, b
         bottomInset = bottomInset.value.toDouble(),
     ) ?: return
     map.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(fit.center.latitude, fit.center.longitude), fit.zoom), 600)
+}
+
+/** The selected route under the pills; both use only our own data, so they work offline. */
+private fun addFlightLayers(style: Style) {
+    style.addSource(GeoJsonSource(ROUTE_SOURCE))
+    style.addLayer(
+        LineLayer(ROUTE_LAYER, ROUTE_SOURCE).withProperties(
+            PropertyFactory.lineColor("#B3261E"),
+            PropertyFactory.lineWidth(3f),
+            PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+        ),
+    )
+    style.addSource(GeoJsonSource(MARKER_SOURCE))
+    style.addLayer(
+        SymbolLayer(MARKER_LAYER, MARKER_SOURCE).withProperties(
+            PropertyFactory.iconImage(Expression.get("icon")),
+            PropertyFactory.iconAllowOverlap(true),
+            PropertyFactory.iconIgnorePlacement(true),
+        ),
+    )
 }
 
 /** Frames a merged pill's airports, at least one zoom level closer than now so they split. */

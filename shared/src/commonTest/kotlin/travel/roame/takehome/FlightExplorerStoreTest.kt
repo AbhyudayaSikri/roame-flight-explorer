@@ -357,6 +357,36 @@ class FlightExplorerStoreTest {
     }
 
     @Test
+    fun movingOnlyTheEndDateToTheStartGivesThatSingleDay() = runTest {
+        // What the iOS sheet does for QA F1: the start stays at the data's first day.
+        val (_, store) = loadedStore()
+        val first = store.state.value.filters.bounds!!.firstDate
+        store.setDateRange(first, date("2027-02-01"))
+        advanceUntilIdle()
+        assertEquals(DateRange(date("2027-02-01"), date("2027-02-01")), store.state.value.filters.dateRange)
+        assertEquals(17, store.state.value.resultCount)
+        assertEquals(listOf("Feb 1"), store.state.value.activeFilters.map { it.label })
+
+        // Moving the end back to the last day restores "no date filter"; the pickers then show the
+        // data's full range.
+        store.setDateRange(store.state.value.filters.dateRange!!.start, date("2027-04-01"))
+        advanceUntilIdle()
+        assertFalse(store.state.value.filters.isDateRangeLimited)
+        assertEquals(DateRange(date("2027-02-01"), date("2027-04-01")), store.state.value.filters.dateRange)
+        assertEquals(1000, store.state.value.resultCount)
+        assertEquals(emptyList(), store.state.value.activeFilters)
+    }
+
+    @Test
+    fun anEndBeforeTheStartIsTreatedAsTheSameTwoDays() = runTest {
+        val (_, store) = loadedStore()
+        store.setDateRange(date("2027-02-02"), date("2027-02-01"))
+        advanceUntilIdle()
+        assertEquals(DateRange(date("2027-02-01"), date("2027-02-02")), store.state.value.filters.dateRange)
+        assertEquals(filter(FlightQuery(dateRange = DateRange(date("2027-02-01"), date("2027-02-02")))).size, store.state.value.resultCount)
+    }
+
+    @Test
     fun resetClearsSearchAndEveryFilter() = runTest {
         val (_, store) = loadedStore()
         store.setOriginText("jfk")

@@ -49,6 +49,8 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
     val store = viewModel.store
     val state by store.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(Tab.EXPLORE) }
+    // Held here so List or Map is kept while the Saved tab is open.
+    var exploreMode by rememberSaveable { mutableStateOf(ViewMode.LIST) }
     val snackbar = remember { SnackbarHostState() }
 
     val message = state.message
@@ -96,7 +98,7 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (tab) {
-                Tab.EXPLORE -> ExploreScreen(state, store)
+                Tab.EXPLORE -> ExploreScreen(state, store, exploreMode, onModeChange = { exploreMode = it })
                 Tab.SAVED -> SavedScreen(state, store)
             }
         }

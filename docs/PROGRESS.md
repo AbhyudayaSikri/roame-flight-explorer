@@ -155,6 +155,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Review fixes: sync state | [#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23) | merged after #22 |
 | (e) §13.1 Review fixes: store tests that checked too little | [#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24) | merged after #23 |
 | (e) §13.8 Android `testTag`s (QA T4) | [#21](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/21) | merged after #24 |
+| (e) §13.1 Review fixes: Android Explore state (QA O9, M10) | [#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25) | merged after #21 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -197,6 +198,13 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - `anOutdatedQueryStillBeingComputedNeverReachesTheState` holds the derivation for "jfk" on a new `ManualDispatcher` while "sea" arrives. It fails if `mapLatest` becomes `map`; the old rapid-typing test didn't.
   - `aBadResponseOverACacheKeepsTheCacheAndMarksItStale` covers a malformed response and HTTP 500 over a real cache. The old malformed test is renamed to what it checks, an error with nothing cached.
   - `FileDatabaseRestartTest` closes and reopens an SQLite file between two stores, instead of sharing one in-memory database.
+- **(e) §13.1 Review fixes: Android Explore state** (review bug 2 and a nit).
+  - The search fields now start from the store's query with plain `remember`, instead of restoring old text with `rememberSaveable`. After the system destroyed the activity, a new store and the restored text disagreed: the field said "jfk", but all 1,000 flights showed with no chip.
+  - List/Map mode now lives in `FlightExplorerApp`, so a visit to the Saved tab no longer resets it.
+  - These are UI-only, and there are no Android UI tests. New QA items O9 and M10.
+  - Emulator check, `roame-smoke` with no API: type `jfk`, press Home, `am kill` the process, relaunch (a cold start that restores saved state).
+    - `main`'s build came back with "jfk" in the field but no "From: jfk" chip, which is the bug.
+    - This branch came back with an empty field and no chip, and still in Map mode.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

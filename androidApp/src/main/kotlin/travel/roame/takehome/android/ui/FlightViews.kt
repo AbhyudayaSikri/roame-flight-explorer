@@ -31,17 +31,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.DestinationMarker
 import travel.roame.takehome.Flight
 import travel.roame.takehome.SaveStatus
+import travel.roame.takehome.TestIds
 import travel.roame.takehome.formatPoints
 
 @Composable
-fun FlightRow(flight: Flight, saved: Boolean, selected: Boolean, onClick: () -> Unit) {
+fun FlightRow(flight: Flight, saved: Boolean, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     ListItem(
-        modifier = Modifier.clickable(onClick = onClick),
+        modifier = modifier.clickable(onClick = onClick),
         colors = if (selected) {
             ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.primaryContainer)
         } else {
@@ -87,14 +89,16 @@ fun FlightCard(
     modifier: Modifier = Modifier,
     footnote: String? = null,
 ) {
-    ElevatedCard(modifier.fillMaxWidth().padding(Spacing.m)) {
+    ElevatedCard(modifier.fillMaxWidth().padding(Spacing.m).testTag(TestIds.card)) {
         Column(Modifier.padding(Spacing.l), verticalArrangement = Arrangement.spacedBy(Spacing.s)) {
             Row(verticalAlignment = Alignment.Top) {
                 Column(Modifier.weight(1f)) {
                     Text("${flight.origin} → ${flight.destination}", style = MaterialTheme.typography.headlineSmall)
                     Text("${flight.originCity} to ${flight.destinationCity}", style = MaterialTheme.typography.bodyMedium)
                 }
-                IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "Close") }
+                IconButton(onClick = onClose, modifier = Modifier.testTag(TestIds.cardClose)) {
+                    Icon(Icons.Default.Close, contentDescription = "Close")
+                }
             }
             HorizontalDivider()
             Detail("Departs", flight.dateLabel)
@@ -121,17 +125,17 @@ private fun Detail(label: String, value: String) {
 private fun SaveActions(status: SaveStatus, onSave: () -> Unit, onRemove: () -> Unit) {
     val wide = Modifier.fillMaxWidth()
     when (status) {
-        SaveStatus.NOT_SAVED -> Button(onClick = onSave, modifier = wide) {
+        SaveStatus.NOT_SAVED -> Button(onClick = onSave, modifier = wide.testTag(TestIds.cardSave)) {
             Icon(Icons.Default.FavoriteBorder, contentDescription = null)
             Text("Save", Modifier.padding(start = Spacing.s))
         }
-        SaveStatus.SAVED -> OutlinedButton(onClick = onRemove, modifier = wide) {
+        SaveStatus.SAVED -> OutlinedButton(onClick = onRemove, modifier = wide.testTag(TestIds.cardRemove)) {
             Icon(Icons.Default.Favorite, contentDescription = null)
             Text("Saved · Remove", Modifier.padding(start = Spacing.s))
         }
         SaveStatus.OUTDATED -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            Button(onClick = onSave, modifier = Modifier.weight(1f)) { Text("Update saved") }
-            OutlinedButton(onClick = onRemove, modifier = Modifier.weight(1f)) { Text("Remove") }
+            Button(onClick = onSave, modifier = Modifier.weight(1f).testTag(TestIds.cardUpdate)) { Text("Update saved") }
+            OutlinedButton(onClick = onRemove, modifier = Modifier.weight(1f).testTag(TestIds.cardRemove)) { Text("Remove") }
         }
         SaveStatus.IN_PROGRESS -> Button(onClick = {}, enabled = false, modifier = wide) {
             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -149,7 +153,10 @@ fun DestinationSheet(
     onPick: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.testTag(TestIds.destinationSheet).testTagsAsResourceIds(),
+    ) {
         Column(Modifier.padding(horizontal = Spacing.xl).padding(bottom = Spacing.s)) {
             Text("${marker.city} (${marker.airport})", style = MaterialTheme.typography.titleLarge)
             Text(
@@ -159,7 +166,13 @@ fun DestinationSheet(
         }
         LazyColumn {
             items(flights, key = { it.id }) { flight ->
-                FlightRow(flight, saved = flight.id in savedIds, selected = false, onClick = { onPick(flight.id) })
+                FlightRow(
+                    flight,
+                    saved = flight.id in savedIds,
+                    selected = false,
+                    onClick = { onPick(flight.id) },
+                    modifier = Modifier.testTag(TestIds.flightRow(flight.id)),
+                )
                 HorizontalDivider()
             }
         }

@@ -111,6 +111,9 @@ Alternatives considered:
   - Compiler report: unstable arguments went from 35 to 17, and unknown-stability ones (the lists and sets) from 14 to 6. The ones left are the store, which is one instance for the app's lifetime, so comparing by identity already skips.
 - **iOS sliced observation (2026-11-04).** `ExplorerModel` has one observed property for each state field the views read, instead of one `state` property. It assigns a field only when the value changed, because Observation treats every assignment as a change. A view then redraws only when a field it reads changes: a message banner doesn't redraw the map, and typing a search doesn't redraw the Saved tab.
 - **The apps are called "Flight Explorer" on the home screen (2026-11-04).** Only the display name changed: iOS `CFBundleDisplayName` and Android `android:label`. The project, the `RoameStarter.app` bundle, the bundle ID and the package name keep the starter's names, because the release workflow, QUICKSTART and the UI tests use them.
+- **Android test tags (2026-11-04).** Each control the iOS UI tests find by identifier has the same shared `TestIds` value on Android as a `testTag`, and `testTagsAsResourceId` shows the tags to UiAutomator. A QA script or a future instrumented test can then find controls by id.
+  - The map's pills are MapLibre symbols, not Compose nodes, so they have no tags.
+  - Android has one date-range button where iOS has two pickers, so it has its own id, `filters.dates`.
 - **Release packaging (2026-11-04).**
   - A `v*` tag publishes a GitHub Release (`release.yml`):
     - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
@@ -178,7 +181,6 @@ Alternatives considered:
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
   - Individually removable chips, −/+ points buttons, skeleton rows, haptics.
-  - Android `testTag`s.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary.
 
 ## 5. Checks actually performed

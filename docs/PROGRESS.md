@@ -154,6 +154,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Review fix: decode off the main thread | [#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22) | merged after #19 |
 | (e) §13.1 Review fixes: sync state | [#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23) | merged after #22 |
 | (e) §13.1 Review fixes: store tests that checked too little | [#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24) | merged after #23 |
+| (e) §13.8 Android `testTag`s (QA T4) | [#21](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/21) | merged after #24 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -206,6 +207,17 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **(e) §13.8 Search-rule QA (S6).**
   - The shared `SearchTest` already covered the rule. Now `SearchTests.testAnExactCodeWinsOverCityPrefixes` checks it on iOS too: `dub` gives 29 and `du` 69, then `fra` gives 0 with the no-matches state and `fran` 123.
   - That makes 30 XCUITests. The new test runs in the full suite, not the PR smoke set, so it ran on the branch by dispatch before merging.
+- **(e) §13.8 Android `testTag`s (QA T4).**
+  - Android controls have the shared `TestIds` as `testTag`s, matching iOS: search fields and their clear buttons, the count, chips, Reset, Filters, List/Map, rows, the card and its buttons, the sheets, every filter control, the state views, the Saved rows and Remove buttons, tabs, the snackbar and the debug menu.
+  - `testTagsAsResourceIds()` is set on the `Scaffold` and on each sheet, dialog and menu window, so UiAutomator lists the tags as resource ids.
+  - New shared ids: `filters.dates` (Android's single date-range button) and `saved.empty`. `debug.open` moved from the Server URL menu item to the ⋮ button that opens the menu, as on iOS.
+  - New QA item T4.
+  - Checked on the `roame-smoke` emulator, with no API running, through `uiautomator dump`:
+    - The Explore error screen lists 10 tags as resource ids: the search fields, `results.count`, List/Map, `filters.open`, `error.retry`, both tabs and `debug.open`.
+    - The Server URL dialog, a separate window, lists its 4 tags, plus `debug.serverUrl.problem` once `ftp://x` is typed.
+    - The Saved tab shows `saved.empty`.
+    - The filter sheet, card and destination sheet need data, so QA T4 on Windows covers them.
+  - Same session, StrictMode (#15): `adb logcat -s StrictMode` had 10 violations, all from Google's search and Messaging apps, none from ours. That session had no network and no map, so T1 is still the real check.
 
 ## Decisions
 

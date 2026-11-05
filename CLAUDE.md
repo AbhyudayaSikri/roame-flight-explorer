@@ -103,4 +103,4 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - Keep `gradlew` LF + executable. Never commit `.DS_Store`.
 - **UI identifiers:**
   - iOS: every interactive control gets an `accessibilityIdentifier` from shared `TestIds`. XCUITest depends on them.
-  - Android: there are no Android UI tests. When touching a control, reuse the same `TestIds` as `Modifier.testTag`, for parity with iOS and for manual QA tooling (SHOULD).
+  - Android: every interactive control gets a `Modifier.testTag` from the same `TestIds`, for parity with iOS and for QA tooling. `testTagsAsResourceIds()` shows them to UiAutomator. Each window sets it on its root (the `Scaffold`, every sheet, dialog and menu), because new windows don't inherit it. There are no Android UI tests.

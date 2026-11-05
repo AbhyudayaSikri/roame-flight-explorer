@@ -90,3 +90,6 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
   - An invalid entry (`ftp://x`, `host:70000`) says what's wrong and can't be saved.
   - "Use default" goes back to the build's address.
   - On a physical device, allow Local Network access when asked.
+- T4 [SHOULD] Test tags (Android): run `adb shell uiautomator dump /sdcard/ui.xml` and `adb pull /sdcard/ui.xml`.
+  - On Explore, the file has `resource-id="search.origin"`, `results.count` and `tab.saved`.
+  - With the filter sheet open, it also has `filters.done` and `filters.cabin.any`.

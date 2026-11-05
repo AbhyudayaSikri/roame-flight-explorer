@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import travel.roame.takehome.db.FlightDatabase
 
 private const val LAST_SUCCESS_AT = "last_success_at"
+private const val SERVER_URL = "server_url"
 
 /** SQLDelight access. Every read and write runs on [io], never on the caller's thread. */
 internal class FlightDatabaseStore(driver: SqlDriver, private val io: CoroutineDispatcher) {
@@ -93,6 +94,13 @@ internal class FlightDatabaseStore(driver: SqlDriver, private val io: CoroutineD
         queries.deleteSavedFlight(flightId)
     }
 
+    suspend fun serverUrl(): String? = withContext(io) { queries.selectMeta(SERVER_URL).executeAsOneOrNull() }
+
+    suspend fun setServerUrl(url: String?) = withContext(io) {
+        if (url == null) queries.deleteMetaKey(SERVER_URL) else queries.upsertMeta(SERVER_URL, url)
+    }
+
+    /** Everything, including the saved server address: like a fresh install. */
     suspend fun clearAll() = withContext(io) {
         database.transaction {
             queries.deleteCachedFlights()

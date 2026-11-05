@@ -9,8 +9,8 @@ import io.ktor.http.isSuccess
 import kotlin.coroutines.cancellation.CancellationException
 
 internal interface FlightsSource {
-    /** Throws [RefreshFailure] for every expected failure. */
-    suspend fun fetchFlights(): List<Flight>
+    /** Fetches `<baseUrl>/flights`. Throws [RefreshFailure] for every expected failure. */
+    suspend fun fetchFlights(baseUrl: String): List<Flight>
 }
 
 internal class RefreshFailure(val error: RefreshError, cause: Throwable? = null) : Exception(error.toString(), cause)
@@ -24,12 +24,10 @@ internal fun HttpClientConfig<*>.flightsClientDefaults() {
     }
 }
 
-internal class FlightsApi(private val client: HttpClient, baseUrl: String) : FlightsSource {
-    private val url = baseUrl.trimEnd('/') + "/flights"
-
-    override suspend fun fetchFlights(): List<Flight> {
+internal class FlightsApi(private val client: HttpClient) : FlightsSource {
+    override suspend fun fetchFlights(baseUrl: String): List<Flight> {
         val body = try {
-            val response = client.get(url)
+            val response = client.get(baseUrl.trimEnd('/') + "/flights")
             if (!response.status.isSuccess()) throw RefreshFailure(RefreshError.Http(response.status.value))
             response.bodyAsText()
         } catch (e: CancellationException) {

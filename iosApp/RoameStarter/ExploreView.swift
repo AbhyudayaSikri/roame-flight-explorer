@@ -10,6 +10,7 @@ struct ExploreView: View {
     @State private var destination = ""
     @State private var mode: ViewMode = .list
     @State private var showFilters = false
+    @State private var showDebug = false
 
     private var state: ExplorerState { model.state }
     private var store: FlightExplorerStore { model.store }
@@ -72,9 +73,19 @@ struct ExploreView: View {
                     Button { store.refresh() } label: { Image(systemName: "arrow.clockwise") }
                         .accessibilityLabel("Refresh")
                 }
+                #if DEBUG
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showDebug = true } label: { Image(systemName: "ladybug") }
+                        .accessibilityLabel("Debug options")
+                        .accessibilityIdentifier(TestIds.shared.debugOpen)
+                }
+                #endif
             }
             .sheet(isPresented: $showFilters) {
                 FilterSheetView(model: model, onReset: reset)
+            }
+            .sheet(isPresented: $showDebug) {
+                DebugSheetView(model: model)
             }
         }
     }

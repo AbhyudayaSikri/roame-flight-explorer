@@ -21,6 +21,11 @@ enum ID {
     static let loading = "state.loading"
     static let message = "message"
     static let savedEmpty = "saved.empty"
+    static let debugOpen = "debug.open"
+    static let debugServerUrl = "debug.serverUrl"
+    static let debugServerUrlProblem = "debug.serverUrl.problem"
+    static let debugServerUrlSave = "debug.serverUrl.save"
+    static let debugServerUrlDefault = "debug.serverUrl.default"
     static func clear(_ field: String) -> String { "\(field).clear" }
     static func chip(_ kind: String) -> String { "filters.chip.\(kind)" }
     static func cabin(_ name: String?) -> String { "filters.cabin.\(name ?? "any")" }
@@ -73,9 +78,9 @@ class UITestCase: XCTestCase {
 
     /// Fresh-install launches pass `-resetData`, so each test starts from an empty database.
     @MainActor
-    func launch(resetData: Bool = true, extra: [String] = []) {
+    func launch(resetData: Bool = true, extra: [String] = [], apiBaseUrl: String = "http://localhost:8080") {
         let app = XCUIApplication()
-        app.launchArguments = ["-apiBaseUrl", "http://localhost:8080"] + (resetData ? ["-resetData"] : []) + extra
+        app.launchArguments = ["-apiBaseUrl", apiBaseUrl] + (resetData ? ["-resetData"] : []) + extra
         app.launch()
         self.app = app
     }
@@ -237,10 +242,14 @@ class UITestCase: XCTestCase {
     }
 
     @MainActor
+    /// Review evidence, not an assertion: on a loaded CI runner XCTest can time out capturing the
+    /// screen ("Timed out while requesting screenshot"), which mustn't fail the test.
     func screenshot(_ name: String) {
-        let attachment = XCTAttachment(screenshot: app.screenshot())
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        XCTExpectFailure("Capturing a screenshot can time out on a busy runner", options: .nonStrict()) {
+            let attachment = XCTAttachment(screenshot: app.screenshot())
+            attachment.name = name
+            attachment.lifetime = .keepAlways
+            add(attachment)
+        }
     }
 }

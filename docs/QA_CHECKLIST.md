@@ -80,6 +80,12 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - P4 [COULD] Largest system font size: rows and the card don't truncate the route, date or points.
 - P5 [COULD] TalkBack / VoiceOver read the route, date, points and saved state.
 
-## Tooling (Android debug build)
-- T1 [SHOULD] StrictMode: no disk/network-on-main-thread violations in logcat during a full pass.
-- T2 [COULD] LeakCanary: no leaks after rotating, switching tabs and opening/closing the map.
+## Tooling (debug builds)
+- T1 [SHOULD] StrictMode (Android): no disk or network access on the main thread in logcat during a full pass.
+- T2 [COULD] LeakCanary (Android): no leaks after rotating, switching tabs and opening and closing the map.
+- T3 [SHOULD] Debug menu → Server URL (Android ⋮; iOS ladybug, top left):
+  - Enter the computer's LAN address, such as `http://192.168.1.20:8080`: the flights load from it.
+  - Relaunch: the same address is still used.
+  - An invalid entry (`ftp://x`, `host:70000`) says what's wrong and can't be saved.
+  - "Use default" goes back to the build's address.
+  - On a physical device, allow Local Network access when asked.

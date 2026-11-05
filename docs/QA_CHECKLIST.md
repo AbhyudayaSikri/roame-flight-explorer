@@ -15,6 +15,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - L1 [MUST] Fresh install, server running → loading state, then all 1,000 flights; the count shows 1,000.
 - L2 [MUST] Default filters cover the full date range (Feb 1 – Apr 1, 2027); no filter chips are shown.
 - L3 [MUST] Fling the full 1,000-row list from top to bottom and back → smooth, no blank rows, no stutter.
+- L4 [SHOULD] The first load (fresh install, `--mode=slow`) shows grey placeholder rows in the list's shape instead of a spinner, then the real rows, with no jump in the layout.
 
 ## Search
 - S1 [MUST] Origin `  jfk ` → 113 flights, all departing JFK (trim + case-insensitive).

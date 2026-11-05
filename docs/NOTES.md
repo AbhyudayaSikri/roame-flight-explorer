@@ -53,6 +53,7 @@ Alternatives considered:
 - **Camera fit on a selected route (2026-11-04):**
   - Android frames the route with the shared `fitCamera`, which uses Web Mercator and MapLibre's 512-dp world at zoom 0. It leaves out the card covering the bottom of the map. iOS gets the same result from MapKit (`MKGeodesicPolyline.boundingMapRect` plus a bottom safe-area inset).
   - Android re-frames only when the selected flight changes. iOS also re-frames the markers when the filters change and nothing is selected.
+  - iOS also frames again when the map is resized (the keyboard closing, a rotation), because a frame chosen in a short map stays too zoomed out once the map is tall again.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
 - **`--mode=slow` (2026-11-04)** serves the normal fixture after 3 s, on `/flights` only; `/health` still answers at once. That's long enough to see the loading state, and well inside the apps' 10 s request timeout.
@@ -69,22 +70,52 @@ Alternatives considered:
 - **The repo is public during development**, so macOS CI minutes are free. Visibility is confirmed at submission (PLAN §12).
 
 ## 3. Tradeoffs
-To be finalized at step 10. Planned:
-- MapLibre vs Google Maps: MapLibre needs no API key.
-- SQLDelight vs Room: Room's bundled SQLite has no `iosX64` artifact.
-- SKIE vs a hand-written bridge.
-- XcodeGen vs a hand-edited `project.pbxproj`.
-- Ktor CIO vs Netty for the local API.
-- CI-only iOS verification.
+- **MapLibre with OpenFreeMap tiles on Android, not Google Maps.**
+  - Gain: a reviewer needs no API key or billing account.
+  - Cost: tiles come from a free community server, and the pills are drawn as bitmaps so they don't depend on the style's fonts.
+- **SQLDelight, not Room.**
+  - Gain: Room's bundled SQLite has no `iosX64` artifact, while SQLDelight's drivers are mature on both platforms.
+  - Cost: the SQL is hand-written (`Flights.sq`), and Android's Room tooling isn't available.
+- **SKIE, not a hand-written Swift bridge.**
+  - Gain: Swift gets `for await` over the store's `StateFlow`, exhaustive `switch` over sealed types, and Swift enums, with no glue code.
+  - Cost: a young plugin tied to the Kotlin version (0.10.16 for Kotlin 2.4.21), plus SKIE #208's stale generated files.
+  - The fallback, not needed, was a small hand-written wrapper.
+- **One shared store with one `StateFlow<ExplorerState>`, not a view model per screen in each app.**
+  - Gain: selection, filters and saved state can't drift between the list, the map and the two platforms, and every rule is tested once.
+  - Cost: every change re-derives the whole state. Filtering 1,000 flights takes far less than a frame, and it runs off the main thread.
+- **Marker clustering and camera fitting in shared code, not each map SDK's own.**
+  - Gain: both apps merge the same pills at the same zoom and frame routes the same way, and the rules have tests.
+  - Cost: simple greedy clustering with fixed pill sizes, instead of the SDKs' animated clustering.
+- **XcodeGen, not a hand-edited `project.pbxproj`.**
+  - Gain: the project is reviewable YAML, and CI fails if the committed project drifts from it.
+  - Cost: one more tool, needed only when files are added or removed.
+- **Ktor CIO for the local API.**
+  - Gain: one Gradle command starts it on any OS, it shares the client's HTTP stack, and its failure modes are tested.
+  - Cost: it needs a JDK; the planned Python fallback wasn't built.
+- **iOS verified on the CI simulator with XCUITest, not interactively.**
+  - Gain: every iOS change is tested the same way, with screenshots and a demo video as evidence.
+  - Cost: nothing was tried on a device, and smoothness is judged from recordings.
+- **Strict decoding.**
+  - Gain: one malformed record rejects the whole response and the cache is kept, so flights never silently disappear.
+  - Cost: a single bad record blocks the whole refresh.
 
 ## 4. Known limitations
-To be completed. So far:
-- iOS is never run interactively or on a device.
-- iOS memory leaks aren't checked.
-- Map tiles aren't available offline.
-- The iOS UI tests don't drive the date pickers (QA F1, F2) or set the slider to an exact value such as 60,000 (F6). The shared `FilterTest` covers that logic, and the controls need a manual QA check.
-
-Every item cut under PLAN §0 gets listed here.
+- **iOS has never run on a device or interactively.** It's checked only on the CI simulator (iPhone 17, iOS 26.4) by XCUITest, screenshots and the demo video.
+- **Android was never run against the real API on the Mac.** It's checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
+- **Map tiles need the network**, which the brief allows. The Android offline fallback style (SHOULD) isn't built.
+- **Some QA items aren't covered by iOS UI tests:** F1 and F2 (single-day date ranges) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers all three rules, and the iOS store uses it unchanged.
+  - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox.
+  - The calendar opened and February 1 was tapped, but the sheet then read "Show 10 flights" instead of 17. No single day has 10 flights, so the "tap outside to close the calendar" step most likely also changed another filter.
+  - Finding the cause needs another 30-minute iOS CI run. The test is on the unmerged branch `test/ios-date-range-f1`.
+- **Memory leaks aren't checked** on either platform. LeakCanary is a COULD.
+- **Clustering uses one pill size**, so a merged pill, which is wider than a single airport's, can still touch a neighbour.
+- **In portrait, the world map can't show every destination at once.** iOS frames the markers it can fit; Android starts at a fixed world view.
+- **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
+- **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
+- **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
+  - Individually removable chips, −/+ points buttons, skeleton rows, haptics, "Flight Explorer" display names.
+  - StrictMode, the Compose stability config, iOS sliced observation, Android `testTag`s, the Android offline map style.
+  - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
 
 ## 5. Checks actually performed
 Dates are local (UTC-5).

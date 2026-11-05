@@ -18,7 +18,7 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 - The state never throws. SKIE would turn an exception inside a Flow into a Swift crash, so errors become `sync` (Loading, Fresh, Stale, EmptySuccess, FailedNoCache) or a `message`.
 - The tests drive it through a fake source and an in-memory SQLite database on the test scheduler.
 
-**Swift interop.** SKIE gives Swift `for await` over the `StateFlow`, `onEnum(of:)` for exhaustive switches over sealed types, and Swift enums. The app's `@Observable` model just mirrors the latest state.
+**Swift interop.** SKIE gives Swift `for await` over the `StateFlow`, `onEnum(of:)` for exhaustive switches over sealed types, and Swift enums. The app's `@Observable` model mirrors the latest state one field at a time, so each view redraws only for the fields it reads.
 
 **Local API.**
 - `server/` is a Ktor CIO app: `GET /flights` serves the fixture byte-for-byte, with `--mode=empty|error|updated|slow` for the failure and edge cases, and `POST /control/mode` for the iOS UI tests.
@@ -105,6 +105,7 @@ Alternatives considered:
 - **Compose treats the shared value types as stable (2026-11-04).** `:shared` isn't compiled with the Compose compiler, so on its own Compose compares `ExplorerState`, `Flight`, `FiltersUi` and the rest by identity. Every rebuilt but equal value then recomposes.
   - `androidApp/compose-stability.conf` names each shared value type, plus read-only `List` and `Set` with stable elements. It names them one by one, not with a package wildcard, so the store and repository aren't covered.
   - Compiler report: unstable arguments went from 35 to 17, and unknown-stability ones (the lists and sets) from 14 to 6. The ones left are the store, which is one instance for the app's lifetime, so comparing by identity already skips.
+- **iOS sliced observation (2026-11-04).** `ExplorerModel` has one observed property for each state field the views read, instead of one `state` property. It assigns a field only when the value changed, because Observation treats every assignment as a change. A view then redraws only when a field it reads changes: a message banner doesn't redraw the map, and typing a search doesn't redraw the Saved tab.
 - **The apps are called "Flight Explorer" on the home screen (2026-11-04).** Only the display name changed: iOS `CFBundleDisplayName` and Android `android:label`. The project, the `RoameStarter.app` bundle, the bundle ID and the package name keep the starter's names, because the release workflow, QUICKSTART and the UI tests use them.
 - **Release packaging (2026-11-04).**
   - A `v*` tag publishes a GitHub Release (`release.yml`):
@@ -173,8 +174,8 @@ Alternatives considered:
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
   - Individually removable chips, −/+ points buttons, skeleton rows, haptics.
-  - iOS sliced observation, Android `testTag`s.
-  - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
+  - Android `testTag`s.
+  - Dark mode, Dynamic Type and screen-reader passes, LeakCanary.
 
 ## 5. Checks actually performed
 Dates are local (UTC-5).

@@ -108,6 +108,8 @@ object TestIds {
     val filtersDone = "filters.done"
     val filterDateStart = "filters.dateStart"
     val filterDateEnd = "filters.dateEnd"
+    /** Android's single button for the date range dialog; iOS has the two pickers above. */
+    val filterDates = "filters.dates"
     val filterPoints = "filters.points"
     val filterPointsValue = "filters.pointsValue"
     val viewList = "view.list"
@@ -124,6 +126,7 @@ object TestIds {
     val errorRetry = "error.retry"
     val emptyState = "state.empty"
     val noMatches = "state.noMatches"
+    val savedEmpty = "saved.empty"
     val loading = "state.loading"
     val message = "message"
     val debugOpen = "debug.open"
@@ -134,6 +137,7 @@ object TestIds {
     val debugDone = "debug.done"
 
     fun filterChip(kind: FilterKind) = "filters.chip.${kind.name.lowercase()}"
+    fun filterChipRemove(kind: FilterKind) = "${filterChip(kind)}.remove"
     fun cabinOption(cabin: String?) = "filters.cabin.${cabin ?: "any"}"
     fun programOption(program: String) = "filters.program.$program"
     fun flightRow(flightId: String) = "flight.row.$flightId"

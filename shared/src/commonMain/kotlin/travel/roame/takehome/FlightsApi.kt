@@ -6,6 +6,8 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.cancellation.CancellationException
 
 internal interface FlightsSource {
@@ -24,8 +26,16 @@ internal fun HttpClientConfig<*>.flightsClientDefaults() {
     }
 }
 
-internal class FlightsApi(private val client: HttpClient) : FlightsSource {
-    override suspend fun fetchFlights(baseUrl: String): List<Flight> {
+/**
+ * Reading and decoding the response (432 KB for the fixture) happens on [workDispatcher], never the
+ * UI thread the store runs on.
+ */
+internal class FlightsApi(
+    private val client: HttpClient,
+    private val workDispatcher: CoroutineDispatcher,
+    private val decode: (String) -> List<Flight> = ::decodeFlights,
+) : FlightsSource {
+    override suspend fun fetchFlights(baseUrl: String): List<Flight> = withContext(workDispatcher) {
         val body = try {
             val response = client.get(baseUrl.trimEnd('/') + "/flights")
             if (!response.status.isSuccess()) throw RefreshFailure(RefreshError.Http(response.status.value))
@@ -38,8 +48,8 @@ internal class FlightsApi(private val client: HttpClient) : FlightsSource {
             // Connection refused, DNS, TLS and timeouts all mean the API can't be reached right now.
             throw RefreshFailure(RefreshError.Offline, e)
         }
-        return try {
-            decodeFlights(body)
+        try {
+            decode(body)
         } catch (e: IllegalArgumentException) {
             throw RefreshFailure(RefreshError.Malformed, e)
         }

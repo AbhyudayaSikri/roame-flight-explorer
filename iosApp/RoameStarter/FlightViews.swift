@@ -123,20 +123,20 @@ struct DestinationSheetView: View {
     let model: ExplorerModel
 
     var body: some View {
-        let state = model.state
+        let savedIds = model.savedIds
         NavigationStack {
-            List(state.focusedFlights, id: \.id) { flight in
+            List(model.focusedFlights, id: \.id) { flight in
                 Button {
                     model.store.select(flightId: flight.id)
                     model.store.focusDestination(airportCode: nil)
                 } label: {
-                    FlightRowView(flight: flight, saved: state.savedIds.contains(flight.id))
+                    FlightRowView(flight: flight, saved: savedIds.contains(flight.id))
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier(TestIds.shared.flightRow(flightId: flight.id))
             }
             .listStyle(.plain)
-            .navigationTitle(title(state.focusedDestination))
+            .navigationTitle(title(model.focusedDestination))
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.medium, .large])

@@ -285,8 +285,12 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **01:23–01:26: the last 11 PRs (#26–#36) merged on green Linux CI, at your call (01:15).**
   - They were stacked in merge order, so #36's branch held all of them. Its full iOS run passed at 01:27 on the tree `main` now has: every XCUITest, the demo and the offline relaunch ([41976342016](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41976342016)).
   - The three per-PR smoke runs still going tested parts of the same code, so I cancelled them.
-  - `main`'s own full run on `1545741` ([41980418799](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41980418799)) was still running when this was written.
+  - `main`'s own full run on `1545741` ([41980418799](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41980418799)) failed at 01:38: one shared test raced on Kotlin/Native (below).
 - **01:33: your answers.** The merge gate in Decisions, no new features, an Android emulator smoke job in Linux CI, and a release rehearsal with `v0.9.0-rc.1`. Then `qa` issues as you file them.
+- **01:38: `main` red: `FlightsApiTest` raced on Kotlin/Native.**
+  - `theBodyIsDecodedOnTheWorkDispatcherNotTheCallers` (from #22) failed on `assertFalse(work.isRunning)`, after the fetch had returned. It had passed on #22's PR and on #36's full run of the same tree.
+  - Cause: its recording dispatcher ran each block on whichever thread dispatched it. On Native, Ktor's engine resumes from its own thread, so the test thread could see the result while that thread was still inside the block. The app code was right.
+  - Fix ([#39](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/39)): the dispatcher queues every block on the test's scheduler, so they all run on the test thread, one at a time. Moving the decode out of `withContext(workDispatcher)` still fails the test; I checked by doing it.
 
 ## Night: your third list (from 01:33)
 

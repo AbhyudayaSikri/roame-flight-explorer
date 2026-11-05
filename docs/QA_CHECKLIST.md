@@ -82,7 +82,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - P1 [MUST] Spacing, typography and hierarchy are consistent across list rows, the card, sheets and the Saved tab.
 - P2 [MUST] Every tap gives visible feedback. Save/Remove show progress and can't be double-submitted.
 - P3 [COULD] Dark mode: everything is legible, including the map and markers. Android follows the system setting. iOS follows it too, and debug builds take `-forceDarkMode`, which the full iOS run uses for its "P3 dark" screenshots.
-- P4 [COULD] Largest system font size: rows and the card don't truncate the route, date or points.
+- P4 [COULD] Largest system font size: rows and the card don't truncate the route, date or points. The full iOS run saves "P4 largest text" screenshots at the largest standard and the largest accessibility size. On Android, set Settings → Display → Font size to the largest.
 - P5 [COULD] TalkBack / VoiceOver read the route, date, points and saved state.
 - P6 [SHOULD] The launcher (Android) and home screen (iOS) show the app as "Flight Explorer".
 - P7 [SHOULD] Haptics, on a real phone only (emulators and simulators have none): Save and Update saved give a firm tap, Remove (card or Saved tab) a light one. A failure message, with debug "Fail saves" on, gives an error buzz.

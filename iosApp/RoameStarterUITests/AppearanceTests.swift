@@ -1,7 +1,7 @@
 import XCTest
 
-/// QA P3 (dark mode): screenshots for review. `-forceDarkMode` sets the app's appearance, so the
-/// simulator's own setting doesn't matter.
+/// QA P3 (dark mode) and P4 (largest text): screenshots for review. `-forceDarkMode` and UIKit's
+/// `-UIPreferredContentSizeCategoryName` set them per launch, whatever the simulator's settings.
 final class AppearanceTests: UITestCase {
     @MainActor
     func testDarkModeScreenshots() {
@@ -17,5 +17,18 @@ final class AppearanceTests: UITestCase {
         closeFilters()
         openSaved()
         screenshot("P3 dark saved")
+    }
+
+    /// The largest size in Settings, then the largest with Larger Accessibility Sizes on.
+    @MainActor
+    func testLargestTextScreenshots() {
+        let sizes = [("P4 largest text", "UICTContentSizeCategoryXXXL"), ("P4 largest accessibility text", "UICTContentSizeCategoryAccessibilityXXXL")]
+        for (name, category) in sizes {
+            launchWithAllFlights(extra: ["-UIPreferredContentSizeCategoryName", category])
+            screenshot("\(name) list")
+            selectFirstRow()
+            screenshot("\(name) card")
+            app.terminate()
+        }
     }
 }

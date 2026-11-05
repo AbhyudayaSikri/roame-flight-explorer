@@ -164,6 +164,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.7 Polish: haptics (QA P7) | this PR | in review |
 | (e) §13.1 Review fixes: debug reset race, iOS pull to refresh; review summary | this PR | in review |
 | (e) §13.9 COULD: dark mode (QA P3) | this PR | in review |
+| (e) §13.9 COULD: large text (QA P4) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -214,6 +215,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **(e) §13.9 COULD: dark mode (QA P3).** §13's SHOULD items were all in PRs by then, and no `qa` issues were open.
   - Android: a dark colour scheme, from `isSystemInDarkTheme()`. Emulator in night mode: dark surfaces, light text, readable status bar, Retry button and Server URL dialog.
   - iOS already used system colours. Debug builds take `-forceDarkMode` (`preferredColorScheme`), and the new `AppearanceTests.testDarkModeScreenshots` saves "P3 dark" screenshots of the list, card, map, filters and Saved in the full run.
+- **(e) §13.9 COULD: large text (QA P4).**
+  - At accessibility text sizes, iOS rows put the points under the route, and the card's detail rows stack their label over the value (`AnyLayout`). The points label is `fixedSize`, so it never truncates.
+  - New `AppearanceTests.testLargestTextScreenshots` launches at the largest standard size (`XXXL`) and the largest accessibility size, and saves screenshots of the list and card in the full run.
+  - Android isn't checked here: the emulator has no data for rows. That's QA P4.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

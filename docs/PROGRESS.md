@@ -151,6 +151,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.7 Polish: "Flight Explorer" display names (QA P6) | [#18](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/18) | merged 23:57 |
 | (e) §13.8 `.gitattributes` LF for the fixture | [#20](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/20) | merged 23:30 |
 | (e) §13.8 Search-rule QA (S6) as an XCUITest | [#19](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/19) | merged after #17 |
+| (e) §13.1 Review fix: decode off the main thread | [#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22) | merged after #19 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -180,6 +181,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - `ExplorerModel` now mirrors each state field the views read as its own observed property, and assigns it only when its value changed. Each view reads the fields it needs from the model, not the whole `ExplorerState`.
   - The behaviour is meant to be identical. The full XCUITest suite ran on the branch before merging.
   - There's no iOS unit-test target, so the compare-then-assign rule has no unit test of its own. There's no new QA item.
+- **(e) §13.1 Review fix: decode off the main thread** (review bug 1).
+  - The flights response was read and decoded on the store's main dispatcher. On every launch and refresh, the UI thread turned 432 KB into 1,000 `Flight`s.
+  - `FlightsApi` now does the whole fetch on `Dispatchers.Default`.
+  - The new test `theBodyIsDecodedOnTheWorkDispatcherNotTheCallers` fails if the decode moves back out; I checked that by moving it.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

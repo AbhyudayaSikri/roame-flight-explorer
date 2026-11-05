@@ -3,10 +3,44 @@
 Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are filled in as the work lands (PLAN §10, §12). Every assumption gets a date and a reason when it's made.
 
 ## 1. Approach and architecture
-To be written at step 10. Planned:
-- One shared `FlightExplorerStore` in KMP is the single source of truth. It does networking, persistence, search, filtering, map aggregation, selection, sync state, route geometry and display formatting.
-- The SwiftUI and Compose apps only render `state` and send intents.
-- Library choices and the reasons for them: PLAN §3.1.
+**One shared store, two native UIs.** The rules live once, in Kotlin Multiplatform (`shared/`), and both apps are thin native views of the same state.
+- `FlightExplorerStore` is the single source of truth. It exposes one `StateFlow<ExplorerState>` and intents such as `setOriginText`, `setCabin`, `select`, `save`, `refresh` and `setServerUrl`.
+- The SwiftUI app (iOS 17+, MapKit) and the Compose app (Material 3, MapLibre) render that state and send intents. They hold no business logic: no filtering, no aggregation, no formatting of points or dates.
+- What's shared:
+  - Networking (Ktor) and persistence (SQLDelight): the last successful response as a cache, saved flights as snapshots, sync metadata and the debug server address.
+  - Search, filters, destination markers and their clustering, selection, sync state, great-circle routes, camera fitting, and every display string.
+
+**How the store works.**
+- Three database flows (cache, saved flights, last sync time) are combined with the inputs: query, selection, refresh status, saves and removes in flight, the one-shot message and the server address.
+- Each change re-derives the whole state off the main thread (`mapLatest` on `Dispatchers.Default`), so the latest input always wins. Database and network calls run on IO.
+- Corrections run on each new state. A selection or tapped marker that no longer matches the filters is cleared, and saved-tab selection is independent of the filters.
+- Saves and removes are optimistic: the state changes at once and rolls back, with a message, if the write fails.
+- The state never throws. SKIE would turn an exception inside a Flow into a Swift crash, so errors become `sync` (Loading, Fresh, Stale, EmptySuccess, FailedNoCache) or a `message`.
+- The tests drive it through a fake source and an in-memory SQLite database on the test scheduler.
+
+**Swift interop.** SKIE gives Swift `for await` over the `StateFlow`, `onEnum(of:)` for exhaustive switches over sealed types, and Swift enums. The app's `@Observable` model just mirrors the latest state.
+
+**Local API.**
+- `server/` is a Ktor CIO app: `GET /flights` serves the fixture byte-for-byte, with `--mode=empty|error|updated|slow` for the failure and edge cases, and `POST /control/mode` for the iOS UI tests.
+- It also ships as one jar, and `server/fallback.py` is the same API in standard-library Python.
+
+**Libraries** (versions checked against the pinned toolchain; reasons in PLAN §3.1 and Appendix B):
+
+| Area | Choice | Why |
+|---|---|---|
+| Swift bridge | SKIE 0.10.16 | Native `async` sequences and enums with no glue code |
+| HTTP | Ktor 3.6.1 (OkHttp on Android, Darwin on iOS) | One client for both platforms, testable with `MockEngine` |
+| Database | SQLDelight 2.4.1 | Mature drivers on both platforms; Room's bundled SQLite has no `iosX64` artifact |
+| JSON, async, dates | kotlinx-serialization 1.12.0, kotlinx-coroutines 1.11.0, kotlinx-datetime 0.8.0 | Standard multiplatform libraries |
+| Android UI | Compose BOM 2026.09.00, Material 3 | Current stable |
+| Android map | MapLibre 13.7.1 with OpenFreeMap tiles | No API key for a reviewer to set up |
+| iOS map | MapKit for SwiftUI | Built in; geodesic polylines |
+| iOS project | XcodeGen 2.46.0 | A reviewable `project.yml`; CI fails if the committed project drifts |
+
+**Verification.**
+- The rules have shared tests that run on the JVM in every CI run and on the iOS simulator in every iOS run.
+- iOS is tested end to end by XCUITest in CI, against the real API: on pull requests a smoke set, on `main` the full suite, including the offline relaunch with the API stopped.
+- Android is checked by hand on Windows, against `docs/QA_CHECKLIST.md`.
 
 ## 2. Assumptions
 
@@ -64,9 +98,17 @@ Alternatives considered:
 - **iOS App Transport Security for LAN addresses (2026-11-04).** No new exception was needed.
   - `NSAllowsLocalNetworking`, set since step 8, "enables access to unqualified domains, `.local` domains, and IP addresses" that iOS 17+ would otherwise block (Apple's documentation for the key).
   - So `http://192.168.1.20:8080` works without `NSAllowsArbitraryLoads` or per-address `NSExceptionDomains`.
-  - `DebugMenuTests` checks this in CI against the runner's own LAN address.
+  - `DebugMenuTests` checks this in CI against the runner's own LAN address. It first passed on 2026-11-04, fetching from `http://192.168.64.14:8080`.
   - `NSLocalNetworkUsageDescription` explains the Local Network permission prompt that iOS shows on a device.
 - **Android cleartext for LAN addresses (2026-11-04).** A network security config can't allow an IP range, only named hosts. So debug builds (`src/debug`) allow plain HTTP to any host, and release builds keep `src/main`'s config: 10.0.2.2, localhost and 127.0.0.1 only.
+- **Release packaging (2026-11-04).**
+  - A `v*` tag publishes a GitHub Release (`release.yml`):
+    - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
+    - The server as one jar (fixture embedded, Java 17+).
+    - `fallback.py` with its `flights.json`, and `QUICKSTART.md`.
+  - The simulator `.app` is arm64 only, so it runs in simulators on Apple silicon Macs, not Intel ones.
+  - The jar is a plain Gradle `Jar` with dependencies merged. No dependency shares a `META-INF/services` file, so keeping the first copy of duplicates is safe (checked), and no Shadow plugin is needed. CI runs the jar from an empty directory and compares `/flights` with the fixture.
+- **The Python fallback server is built (2026-11-04)**, a COULD item pulled in because the release ships it. It uses only the standard library, with the same flags and endpoints as the Kotlin server, and 12 `unittest` tests that mirror `FlightsModuleTest`.
 - **`--mode=slow` (2026-11-04)** serves the normal fixture after 3 s, on `/flights` only; `/health` still answers at once. That's long enough to see the loading state, and well inside the apps' 10 s request timeout.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).
@@ -156,6 +198,34 @@ Dates are local (UTC-5).
   - So the offline-relaunch tests run as their own invocation after CI stops the server (PLAN §8.1).
   - ios: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604099
   - ci: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41778604081
+
+### Automated tests (as of 2026-11-04)
+Every pull request and every push to `main` runs these in CI (`.github/workflows/ci.yml`, `ios.yml`).
+
+- **Shared logic, 120 tests** (`shared/src/commonTest`). They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
+  - Rules: decoding (`DecodingTest`), the search rule (`SearchTest`), filters with their date and points boundaries (`FilterTest`), filter chips (`ActiveFiltersTest`), map aggregation (`AggregationTest`) and clustering (`MarkerClusteringTest`), camera fitting (`CameraFitTest`), great-circle routes (`RouteGeometryTest`), display formatting (`FormattingTest`), calendar dates and the iOS picker's conversion in ten time zones (`CalendarDateTest`, `PickerDateTest`), server address validation (`ServerUrlTest`).
+  - Persistence and networking: `FlightDatabaseStoreTest` on in-memory SQLite, and `FlightsApiTest` with Ktor's `MockEngine`.
+  - The store, against a fake API and real SQLite (`FlightExplorerStoreTest`, `StoreRulesTest`, `ServerUrlStoreTest`):
+    - Fresh, stale, empty and failed syncs; the cache surviving a restart; offline search and remove.
+    - Optimistic save and remove with rollback; "Update saved" without duplicates.
+    - Selection and focus rules; the latest query winning; storage failures becoming messages.
+    - The server address: saved, used after a restart, replacing an in-flight refresh.
+- **Local API.** 19 Kotlin tests (`:server:test`): every mode, the control endpoint, argument parsing, and the embedded fixture. Plus 12 Python tests for `fallback.py`. Linux CI also runs the jar from an empty directory and compares `/flights` byte-for-byte with the fixture.
+- **iOS app, 29 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
+  - `LaunchTests`, `SearchTests`, `FilterTests`, `MapSelectionTests`, `SavedTests`, `ErrorStateTests` and `DebugMenuTests`. The server-mode cases switch modes through `POST /control/mode`, and the debug-menu case reaches the API on the runner's LAN IP.
+  - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
+  - Pushes to `main` and manual runs run all 29; pull requests run 5 smoke tests.
+  - Per-QA-item results are in `docs/QA_IOS.md`.
+- **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
+
+### Manual and visual checks
+- **iOS screenshots** from the full runs were reviewed against the brief and the QA list (PLAN 8.4). Fixes that came out of that review: map camera framing, marker overlap, the "Premium Economy" truncation, and the cabin row colour.
+- **iOS failures read from XCTest's screen recordings** (frames pulled with ffmpeg):
+  - The F1 date-picker investigation (§4): the picker was right, and the test's own tap changed the cabin.
+  - The flaky map test: the camera was framing a keyboard-shortened map. Fixed in the app, not in the test.
+- **iOS on a device:** not done (§4).
+- **Android, 2026-11-04 on the Mac:** a local emulator with no API running. The error screen with Retry appeared, with no crash. The Mac never ran the API for Android.
+- **Android QA on Windows** (PLAN §9): in progress. Results arrive as GitHub issues labelled `qa`; none filed as of 2026-11-04, 22:45.
 
 ## 6. How AI was used and verified
 To be completed. So far:

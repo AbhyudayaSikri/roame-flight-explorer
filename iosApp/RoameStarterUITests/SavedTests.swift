@@ -14,7 +14,9 @@ final class SavedTests: UITestCase {
         saveFirstJfkToHaneda()
         XCTAssertTrue(flightRows.firstMatch.label.contains("Saved"), "The list row shows the saved state")
 
+        // Wait for JFK → Paris to apply, so "Saved ignores the filters" is checked against them.
         search(ID.destination, "paris")
+        expectCount("8 flights")
         openSaved()
         XCTAssertEqual(savedRows.count, 1)
         screenshot("V1 V3 saved tab")

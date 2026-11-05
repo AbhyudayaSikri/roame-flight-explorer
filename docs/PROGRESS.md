@@ -156,6 +156,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Review fixes: store tests that checked too little | [#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24) | merged after #23 |
 | (e) §13.8 Android `testTag`s (QA T4) | [#21](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/21) | merged after #24 |
 | (e) §13.1 Review fixes: Android Explore state (QA O9, M10) | [#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25) | merged after #21 |
+| (e) §13.1 Review fixes: iOS UI-test assertions | [#26](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/26) | merged after #25 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -205,6 +206,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - Emulator check, `roame-smoke` with no API: type `jfk`, press Home, `am kill` the process, relaunch (a cold start that restores saved state).
     - `main`'s build came back with "jfk" in the field but no "From: jfk" chip, which is the bug.
     - This branch came back with an empty field and no chip, and still in Map mode.
+- **(e) §13.1 Review fixes: iOS UI-test assertions** (review finding 10).
+  - `SavedTests` now waits for JFK → Paris (8 flights) before checking that the Saved tab ignores the filters.
+  - `MapSelectionTests.testSelectionIsSharedBetweenListAndMap` compares every text on the card before and after each switch. All six results are SFO → NRT, so "a card exists" didn't show it was the same flight.
+  - `OfflineRelaunchTests` is unchanged. With the API stopped, Refresh fails within milliseconds, so the end state (cache kept, marked stale) is the only stable thing to check, and it's what QA O2 asks for.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

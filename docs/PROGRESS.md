@@ -334,7 +334,7 @@ A second independent review runs in another chat; its findings arrive as `review
 |---|---|---|
 | Android UI tests: filters and search (F1–F8, F10–F12, S1–S6) | [#42](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/42) | merged 11:40 |
 | Android UI tests: selection, saved, server states (M5, M6, O1, O3–O5, O7, V2, V4–V6) | [#43](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/43) | merged 11:49 |
-| Android demo video (`android-demo.mp4`) | this PR | in review |
+| Android demo video (`android-demo.mp4`) | [#44](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/44) | merged 12:00 |
 
 - **The `qa` and `review` labels didn't exist**, so filing an issue with either label would have failed. I created both. The repo had no issues at all, so none were missed.
 - **Token scopes (`gh auth status`, 11:00):** `gist`, `read:org`, `repo`. Still no `workflow`.
@@ -352,12 +352,14 @@ A second independent review runs in another chat; its findings arrive as `review
   - Beyond your list: V5 (a saved flight survives an empty response), O3, and O7 (recreating the activity and backgrounding keep the search and selection), because each was one short test with the new helpers.
   - Locally on `roame-smoke` against the jar: all 28 online tests passed in 103 s, and both offline runs passed.
   - CI: green, 28 online tests in 180 s; the whole job took 6.5 minutes.
-- **Android demo video (this PR).**
+- **Android demo video ([#44](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/44)).**
   - `DemoWalkthrough`, slow on purpose like iOS's: a 3 s first load (`--mode=slow`, so the skeleton rows show), typed searches, the filter sheet, the map, the CDG pill, a flight's card, Save and the Saved tab. Then the script stops the API, and `OfflineRelaunchTest` relaunches onto the stale cache, pulls to refresh, searches and removes the saved flight, with pauses.
   - The script records both with `adb shell screenrecord` (720×1600, 3 Mbit/s) into `android-demo.mp4`, its own artifact, `android-demo`.
   - The walkthrough leaves the cache and saved flight the offline run needs, as iOS's does, so the separate "before" seed is gone.
   - The map part uses Paris, not Tokyo: Android opens the map on a fixed world view, which leaves Japan off a phone screen's right edge, so the HND pill was never drawn.
   - Locally: the walkthrough took 38 s and the offline run 13 s, giving a 53 s video (about 3.4 MB). Frames show the skeleton rows at 5 s, "new york" at 113 flights, the JFK → CDG arc with the card, then the offline banner and the Saved tab.
+  - CI: green. The 28 online tests took 165 s, the walkthrough 41 s and the offline run 13 s; the whole job took 7.4 minutes. The video was 57 s (3.1 MB).
+- **12:06: `main` green with all three PRs** on `4232194`: Linux CI and the emulator job ([42070323335](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42070323335), which uploaded `android-demo`). They change no iOS paths, so `ios.yml` didn't run.
 
 ## Decisions
 

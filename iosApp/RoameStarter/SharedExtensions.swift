@@ -8,14 +8,17 @@ extension GeoPoint {
     }
 }
 
+/// DatePicker works with local midnight in the device's time zone; the shared conversions (tested
+/// in `PickerDateTest`) map that instant to the flight's calendar day and back.
 extension CalendarDate {
-    /// Midnight of this day in the user's calendar, which is what DatePicker works with.
     var date: Date {
-        Calendar.current.date(from: DateComponents(year: Int(year), month: Int(month), day: Int(day))) ?? Date()
+        Date(timeIntervalSince1970: Double(startOfDayMillis(timeZoneId: TimeZone.current.identifier)) / 1000)
     }
 
     static func from(_ date: Date) -> CalendarDate {
-        let parts = Calendar.current.dateComponents([.year, .month, .day], from: date)
-        return CalendarDate(year: Int32(parts.year ?? 1970), month: Int32(parts.month ?? 1), day: Int32(parts.day ?? 1))
+        CalendarDate.companion.fromEpochMillis(
+            epochMillis: Int64((date.timeIntervalSince1970 * 1000).rounded(.down)),
+            timeZoneId: TimeZone.current.identifier
+        )
     }
 }

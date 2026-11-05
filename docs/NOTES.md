@@ -104,9 +104,10 @@ Alternatives considered:
 - **Android was never run against the real API on the Mac.** It's checked by the shared tests, compilation and the Windows QA pass (issues labelled `qa`).
 - **Map tiles need the network**, which the brief allows. The Android offline fallback style (SHOULD) isn't built.
 - **Some QA items aren't covered by iOS UI tests:** F1 and F2 (single-day date ranges) and F6 (an exact 60,000-point limit). The shared `FilterTest` covers all three rules, and the iOS store uses it unchanged.
-  - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox.
-  - The calendar opened and February 1 was tapped, but the sheet then read "Show 10 flights" instead of 17. No single day has 10 flights, so the "tap outside to close the calendar" step most likely also changed another filter.
-  - Finding the cause needs another 30-minute iOS CI run. The test is on the unmerged branch `test/ios-date-range-f1`.
+  - An F1 XCUITest through the date picker was tried on 2026-11-04 and dropped at its 45-minute timebox. It stays on the unmerged branch `test/ios-date-range-f1`.
+  - Diagnosis from frames of that run's screen recording: the picker worked, and after February 1 was tapped the sheet read "Show 17 flights".
+  - The calendar then closed by itself, so the test's "close the calendar" step tapped the centre of the screen, which was the Economy cabin row. February 1 in Economy is the 10 flights the test saw. Without that step the test would pass.
+  - The picker → `CalendarDate` conversion is now shared code, tested in ten time zones including +14, −11, +5:45 and three daylight-saving changes (`PickerDateTest`).
 - **Memory leaks aren't checked** on either platform. LeakCanary is a COULD.
 - **Clustering uses one pill size**, so a merged pill, which is wider than a single airport's, can still touch a neighbour.
 - **In portrait, the world map can't show every destination at once.** iOS frames the markers it can fit; Android starts at a fixed world view.

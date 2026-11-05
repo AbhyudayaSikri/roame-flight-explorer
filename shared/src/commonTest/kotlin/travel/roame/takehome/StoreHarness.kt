@@ -103,28 +103,39 @@ internal class GatedRepository(private val delegate: FlightRepository) : FlightR
 internal class TwoFailureStreaksRepository(private val delegate: FlightRepository) : FlightRepository by delegate {
     private var collections = 0
 
-    override val cachedFlights: Flow<List<Flight>> = flow {
+    override val cache: Flow<CachedFlights> = flow {
         collections += 1
         when (collections) {
             1 -> throw IllegalStateException("disk I/O error")
             2 -> {
-                emit(fixtureFlights)
+                emit(CachedFlights(fixtureFlights, lastSuccessAtMillis = 1))
                 throw IllegalStateException("disk I/O error again")
             }
-            else -> emitAll(delegate.cachedFlights)
+            else -> emitAll(delegate.cache)
         }
     }
 }
 
-/** Delegates to [delegate], except that the first collection of cachedFlights fails. */
+/** The cache read waits for [gate], like a slow first read of 1,000 rows. */
+internal class SlowCacheRepository(
+    private val delegate: FlightRepository,
+    private val gate: CompletableDeferred<Unit>,
+) : FlightRepository by delegate {
+    override val cache: Flow<CachedFlights> = flow {
+        gate.await()
+        emitAll(delegate.cache)
+    }
+}
+
+/** Delegates to [delegate], except that the first collection of the cache fails. */
 internal class FlakyCacheRepository(private val delegate: FlightRepository) : FlightRepository by delegate {
     private var failed = false
 
-    override val cachedFlights: Flow<List<Flight>> = flow {
+    override val cache: Flow<CachedFlights> = flow {
         if (!failed) {
             failed = true
             throw IllegalStateException("disk I/O error")
         }
-        emitAll(delegate.cachedFlights)
+        emitAll(delegate.cache)
     }
 }

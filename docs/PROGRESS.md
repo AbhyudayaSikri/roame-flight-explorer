@@ -152,6 +152,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.8 `.gitattributes` LF for the fixture | [#20](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/20) | merged 23:30 |
 | (e) §13.8 Search-rule QA (S6) as an XCUITest | [#19](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/19) | merged after #17 |
 | (e) §13.1 Review fix: decode off the main thread | [#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22) | merged after #19 |
+| (e) §13.1 Review fixes: sync state | [#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23) | merged after #22 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -185,6 +186,11 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - The flights response was read and decoded on the store's main dispatcher. On every launch and refresh, the UI thread turned 432 KB into 1,000 `Flight`s.
   - `FlightsApi` now does the whole fetch on `Dispatchers.Default`.
   - The new test `theBodyIsDecodedOnTheWorkDispatcherNotTheCallers` fails if the decode moves back out; I checked that by moving it.
+- **(e) §13.1 Review fixes: sync state** (review risks 4 and 6).
+  - Loading now lasts until the cache has been read. Before, a refresh that failed first showed "Couldn't load flights" over a valid cache.
+  - The cache and its timestamp come from one transaction (`CachedFlights`), so a first launch can't flash "no flights".
+  - A retry keeps the stale banner up (`RefreshStatus.Running.previousFailure`).
+  - New tests: `aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache`, `aRetryKeepsTheCacheMarkedStaleUntilItSucceeds`, `everyCacheSnapshotPairsTheFlightsWithTheirOwnTimestamp`, and two more `syncStateOf` cases. With the old code, the two store tests fail; I checked by restoring it.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

@@ -90,6 +90,10 @@ Alternatives considered:
   - iOS also frames again when the map is resized (the keyboard closing, a rotation), because a frame chosen in a short map stays too zoomed out once the map is tall again.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
+- **Sync state rules (2026-11-04, from the independent review):**
+  - **Loading lasts until the cache has been read.** A refresh that fails before then can't tell "nothing cached" from "not read yet", so the no-cache error screen only appears once the read shows an empty cache. If the cache can't be read at all, Loading stays up along with "Couldn't read cached flights. Retrying…".
+  - **The cache and its timestamp are read together, in one transaction.** Read separately, a new timestamp could arrive with the old, empty cache, which flashes "The server has no flights" on a first launch.
+  - **Cached data stays marked stale while a retry runs.** The banner goes only when a refresh succeeds.
 - **Server URL at runtime (2026-11-04).** Debug builds can point at another flights server, for a phone on the same Wi-Fi as the computer running the API.
   - Where: Android's debug menu (⋮ → Server URL…) and an iOS Debug sheet (the ladybug, top left). Release builds have neither.
   - Validation is shared (`serverUrlProblem`): http or https, a host or IP (IPv6 in brackets), a port from 1 to 65535, any path, no query, fragment or user name. A missing scheme means http://, and a trailing / is dropped.

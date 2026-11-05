@@ -13,9 +13,9 @@ import org.junit.runner.RunWith
 import travel.roame.takehome.TestIds
 
 /**
- * QA O1–O3 with the API process stopped, in two runs that CI makes with `-e offline before` and, once
- * it has stopped the API, `-e offline after`. Without the argument both tests skip, so a plain run
- * of every class works.
+ * QA O1–O3 with the API process stopped. CI runs it with `-e offline true` after [DemoWalkthrough]
+ * has filled the cache and saved a flight, and the API has been stopped; the recording of both is
+ * `android-demo.mp4`. Without the argument it skips, so a plain run of every class works.
  */
 @RunWith(AndroidJUnit4::class)
 class OfflineRelaunchTest {
@@ -28,26 +28,13 @@ class OfflineRelaunchTest {
     @get:Rule(order = 2)
     val screenshots = ScreenshotOnFailure()
 
-    private val phase: String? = InstrumentationRegistry.getArguments().getString("offline")
-
     @Test
-    fun beforeTheApiStopsCacheTheFlightsAndSaveOne() {
-        assumeTrue(phase == "before")
-        app.launch()
-        compose.waitForCount(1000, LOAD_TIMEOUT)
-        compose.search(TestIds.searchDestination, "dub")
-        compose.waitForCount(29)
-        compose.selectFirstRow()
-        compose.onNodeWithTag(TestIds.cardSave).performClick()
-        compose.waitForTag(TestIds.cardRemove)
-    }
-
-    @Test
-    fun afterTheApiStopsARelaunchShowsTheCacheMarkedStaleAndTheSavedFlight() {
-        assumeTrue(phase == "after")
+    fun aRelaunchWithTheApiStoppedShowsTheCacheMarkedStaleAndTheSavedFlight() {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("offline") == "true")
         app.launch(resetData = false)
         compose.waitForTag(TestIds.staleBanner, LOAD_TIMEOUT)
         compose.waitForCount(1000)
+        pace(2.0)
 
         // O1: pulling to refresh with the API down keeps the cache, still marked stale.
         compose.pullToRefresh()
@@ -55,11 +42,15 @@ class OfflineRelaunchTest {
         compose.waitForCount(1000)
 
         // O3: search the cache offline, then remove the saved flight offline.
-        compose.search(TestIds.searchDestination, "dub")
-        compose.waitForCount(29)
+        compose.typeSlowly(TestIds.searchOrigin, "jfk")
+        compose.waitForCount(113)
+        app.hideKeyboard()
+        pace()
         compose.onNodeWithTag(TestIds.tabSaved).performClick()
         compose.waitUntil(UI_TIMEOUT) { compose.onAllNodes(savedRows).fetchSemanticsNodes().size == 1 }
+        pace()
         compose.onAllNodes(hasTagStartingWith(TestIds.savedRemove(""))).onFirst().performClick()
         compose.waitForTag(TestIds.savedEmpty)
+        pace()
     }
 }

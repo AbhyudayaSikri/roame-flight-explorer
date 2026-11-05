@@ -34,6 +34,22 @@ jobs:
       - name: Server tests, shared JVM tests, Android build
         run: ./gradlew --console=plain :server:test :shared:testAndroidHostTest :androidApp:assembleDebug
 
+      - name: Python fallback server tests
+        run: python3 -m unittest discover -s server -p "test_*.py" -v
+
+      # The release ships this jar; run it the way QUICKSTART.md says, from a directory with no fixture.
+      - name: Server jar smoke test (java -jar)
+        run: |
+          ./gradlew --console=plain :server:fatJar
+          mkdir -p "$RUNNER_TEMP/jar-run" && cd "$RUNNER_TEMP/jar-run"
+          java -jar "$GITHUB_WORKSPACE/server/build/libs/roame-flights-server.jar" --port=8099 > server.log 2>&1 &
+          SERVER=$!
+          for _ in $(seq 1 30); do curl -fsS http://127.0.0.1:8099/health > /dev/null 2>&1 && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8099/flights -o flights.json
+          kill "$SERVER"
+          cmp flights.json "$GITHUB_WORKSPACE/fixtures/flights.json"
+          echo "- \`java -jar roame-flights-server.jar\` served the fixture byte-for-byte from an empty directory" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload test reports
         if: failure()
         uses: actions/upload-artifact@v7

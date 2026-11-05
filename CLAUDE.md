@@ -22,7 +22,9 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - Run: `./gradlew :server:run --args="--mode=normal|empty|error|updated|slow --port=8080"`. `slow` serves the normal fixture 3 s late, to show loading states. In CI, add `--allow-control`, which enables `POST /control/mode?value=…`.
   - Tests: `./gradlew :server:test`.
   - CI binary: `./gradlew :server:installDist`, then `server/build/install/server/bin/server`.
-- Python fallback API (COULD, only if built; Python 3.9+): `python3 server/fallback.py` (Windows: `py server\fallback.py`).
+- Python fallback API (Python 3.9+, standard library only): `python3 server/fallback.py` (Windows: `py server\fallback.py`), with the same flags. Tests: `python3 -m unittest discover -s server -p "test_*.py"`.
+- Server as one jar: `./gradlew :server:fatJar` → `server/build/libs/roame-flights-server.jar` (fixture embedded; `java -jar`, same flags).
+- Releases: `.github/workflows/release.yml` on a `v*` tag publishes the debug APK, the zipped simulator `.app`, the jar, `fallback.py`, `flights.json` and `QUICKSTART.md`. Pull requests that change the workflow and manual runs only build.
 - Android: `./gradlew :androidApp:assembleDebug`. Override the base URL with `-PapiBaseUrl=http://…`.
 - iOS project:
   - App sources live in `iosApp/RoameStarter/`; UI tests in `iosApp/RoameStarterUITests/`.

@@ -56,6 +56,14 @@ Alternatives considered:
   - iOS also frames again when the map is resized (the keyboard closing, a rotation), because a frame chosen in a short map stays too zoomed out once the map is tall again.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
+- **Release packaging (2026-11-04).**
+  - A `v*` tag publishes a GitHub Release (`release.yml`):
+    - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
+    - The server as one jar (fixture embedded, Java 17+).
+    - `fallback.py` with its `flights.json`, and `QUICKSTART.md`.
+  - The simulator `.app` is arm64 only, so it runs in simulators on Apple silicon Macs, not Intel ones.
+  - The jar is a plain Gradle `Jar` with dependencies merged. No dependency shares a `META-INF/services` file, so keeping the first copy of duplicates is safe (checked), and no Shadow plugin is needed. CI runs the jar from an empty directory and compares `/flights` with the fixture.
+- **The Python fallback server is built (2026-11-04)**, a COULD item pulled in because the release ships it. It uses only the standard library, with the same flags and endpoints as the Kotlin server, and 12 `unittest` tests that mirror `FlightsModuleTest`.
 - **`--mode=slow` (2026-11-04)** serves the normal fixture after 3 s, on `/flights` only; `/health` still answers at once. That's long enough to see the loading state, and well inside the apps' 10 s request timeout.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).

@@ -17,7 +17,8 @@ enum class Mode(val cliName: String) {
 data class ServerConfig(
     val port: Int = 8080,
     val mode: Mode = Mode.NORMAL,
-    val fixturePath: String = "fixtures/flights.json",
+    /** null serves the fixture embedded in the server. */
+    val fixturePath: String? = null,
     val allowControl: Boolean = false,
 ) {
     companion object {

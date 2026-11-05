@@ -5,9 +5,13 @@ import UIKit
 struct FlightRowView: View {
     let flight: Flight
     let saved: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        // At accessibility text sizes the points go under the route instead of squeezing beside it.
+        let stacked = typeSize.isAccessibilitySize
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 6)) : AnyLayout(HStackLayout(alignment: .top, spacing: 12))
+        layout {
             VStack(alignment: .leading, spacing: 3) {
                 Text("\(flight.origin) → \(flight.destination)").font(.headline)
                 Text("\(flight.originCity) → \(flight.destinationCity)")
@@ -17,11 +21,12 @@ struct FlightRowView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 4) {
+            if !stacked { Spacer(minLength: 8) }
+            VStack(alignment: stacked ? .leading : .trailing, spacing: 4) {
                 Text(flight.pointsLabel)
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color.accentColor)
+                    .fixedSize()
                 if saved {
                     Image(systemName: "heart.fill")
                         .foregroundStyle(.orange)
@@ -42,6 +47,7 @@ struct FlightCardView: View {
     let onRemove: () -> Void
     let onClose: () -> Void
     var footnote: String? = nil
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -87,10 +93,13 @@ struct FlightCardView: View {
         onRemove()
     }
 
+    /// Label and value side by side, or stacked at accessibility text sizes so neither truncates.
     private func detail(_ label: String, _ value: String) -> some View {
-        HStack {
+        let stacked = typeSize.isAccessibilitySize
+        let layout = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout())
+        return layout {
             Text(label).foregroundStyle(.secondary)
-            Spacer()
+            if !stacked { Spacer() }
             Text(value).fontWeight(.medium)
         }
     }

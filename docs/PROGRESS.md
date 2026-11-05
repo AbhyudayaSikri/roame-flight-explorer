@@ -142,13 +142,15 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (b1) Server URL in both debug menus | [#10](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/10) | merged 22:47, by git (see below) |
 | (b2) Release packaging | [#11](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/11) | merged 23:04, by git |
 | Screenshot timeouts don't fail tests | [#12](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/12) | merged 22:39 |
-| (d) NOTES §1 and §5 | [#13](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/13) | merged after #11 |
-| (e) §13.1 Independent review (prompt P3) | (fixes to follow) | review running |
-| (e) §13.2 Android offline map style (QA O8) | [#14](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/14) | merged 23:15 |
-| (e) §13.5 StrictMode in debug builds (QA T1) | [#15](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/15) | merged 23:25 |
-| (e) §13.6a Compose stability config | this PR | in review |
-| (e) §13.6b iOS sliced observation | next PR | to do |
-| (e) §13.8 Search-rule QA (S6) as an XCUITest | this PR | in review |
+| (d) NOTES §1 and §5 | [#13](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/13) | merged 23:05 |
+| (e) §13.1 Independent review (prompt P3) | fixes in separate PRs | review done 23:15; fixing |
+| (e) §13.2 Android offline map style (QA O8) | [#14](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/14) | merged 23:07 |
+| (e) §13.5 StrictMode in debug builds (QA T1) | [#15](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/15) | merged 23:10 |
+| (e) §13.6a Compose stability config | [#16](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/16) | merged 23:17 |
+| (e) §13.6b iOS sliced observation | [#17](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/17) | merged 00:15 |
+| (e) §13.7 Polish: "Flight Explorer" display names (QA P6) | [#18](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/18) | merged 23:57 |
+| (e) §13.8 `.gitattributes` LF for the fixture | [#20](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/20) | merged 23:30 |
+| (e) §13.8 Search-rule QA (S6) as an XCUITest | [#19](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/19) | merged after #17 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -174,6 +176,17 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.6b iOS sliced observation.**
+  - `ExplorerModel` now mirrors each state field the views read as its own observed property, and assigns it only when its value changed. Each view reads the fields it needs from the model, not the whole `ExplorerState`.
+  - The behaviour is meant to be identical. The full XCUITest suite ran on the branch before merging.
+  - There's no iOS unit-test target, so the compare-then-assign rule has no unit test of its own. There's no new QA item.
+- **(e) §13.7 Polish, part 1: display names.**
+  - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
+  - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.
+- **(e) §13.8 `.gitattributes` LF for the fixture.**
+  - `fixtures/*.json text eol=lf` keeps the fixture byte-identical on every clone. A Windows checkout with `core.autocrlf=true` would otherwise get CRLF, and the server would serve those bytes.
+  - `git add --renormalize .` changed nothing, because the committed fixture was already LF.
+  - Cloned with `core.autocrlf=true`, the fixture was 447,745 bytes with 15,004 CRs before the rule, and exactly 432,741 bytes with none after.
 - **(e) §13.8 Search-rule QA (S6).**
   - The shared `SearchTest` already covered the rule. Now `SearchTests.testAnExactCodeWinsOverCityPrefixes` checks it on iOS too: `dub` gives 29 and `du` 69, then `fra` gives 0 with the no-matches state and `fran` 123.
   - That makes 30 XCUITests. The new test runs in the full suite, not the PR smoke set, so it ran on the branch by dispatch before merging.

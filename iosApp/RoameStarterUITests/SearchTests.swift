@@ -33,6 +33,9 @@ final class SearchTests: UITestCase {
         search(ID.origin, "jfk")
         search(ID.destination, "tokyo")
         expectCount("7 flights")
+        // QA P5: rows are read with words, not "→" and "pts".
+        let label = flightRows.firstMatch.label
+        XCTAssertTrue(label.hasPrefix("JFK to ") && label.contains(" points"), label)
         screenshot("S4 jfk to tokyo")
     }
 

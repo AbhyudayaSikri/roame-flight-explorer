@@ -76,6 +76,7 @@ Alternatives considered:
   - Android has a dark colour scheme with the same hues, chosen from the system setting. Before, it stayed light, and with edge-to-edge the system's light status-bar icons sat on the light app.
   - iOS uses system colours. The map pills, banners and the route keep fixed colours with white text, which read on MapKit's light and dark maps alike. The Android map style stays light.
 - **Large text (2026-11-05).** iOS rows and the card's detail rows stack vertically at accessibility text sizes, and the points label never truncates. Android rows wrap their text in `ListItem`.
+- **Screen-reader labels (2026-11-05).** Flight rows and the card title are read from shared `spokenFlight` / `spokenRoute`: "JFK to HND, New York to Tokyo, …, 16,500 points, saved". Without them, both screen readers read the "→" glyph out ("right arrow") and say "pts". The Android map's pills are MapLibre symbols, which TalkBack can't reach, so TalkBack users browse the same flights in the list.
 - **Haptics (2026-11-05)** come with the tap on Save, Update saved and Remove, because the screen updates at once. Failures give an error buzz when their message appears. Selecting a flight gives none, and nothing fires when saved flights load at launch.
 - **Chips (2026-11-05):** tapping a chip's label opens the filter sheet, and its × removes just that filter (`clearFilter`). Removing From or To also empties that search field, because the fields own their text.
 - **Reset** clears both search fields and every filter. QA F8 expects 1,000 results afterwards.
@@ -188,7 +189,7 @@ Alternatives considered:
 - **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
-  - A screen-reader pass, LeakCanary. Android at the largest font size is only checked by QA P4.
+  - LeakCanary. Android at the largest font size and with TalkBack is only checked by QA P4 and P5.
 
 ## 5. Checks actually performed
 Dates are local (UTC-5).
@@ -221,7 +222,7 @@ Dates are local (UTC-5).
 ### Automated tests (as of 2026-11-05)
 Every pull request and every push to `main` runs these in CI (`.github/workflows/ci.yml`, `ios.yml`).
 
-- **Shared logic, 133 tests** (`shared/src/commonTest`), plus one JVM-only test, `FileDatabaseRestartTest`, that closes and reopens a real database file. They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
+- **Shared logic, 134 tests** (`shared/src/commonTest`), plus one JVM-only test, `FileDatabaseRestartTest`, that closes and reopens a real database file. They run on the JVM (`:shared:testAndroidHostTest`) in every Linux run, and on the iOS simulator (`:shared:iosSimulatorArm64Test`) in every iOS run.
   - Rules: decoding (`DecodingTest`), the search rule (`SearchTest`), filters with their date and points boundaries (`FilterTest`), filter chips (`ActiveFiltersTest`), map aggregation (`AggregationTest`) and clustering (`MarkerClusteringTest`), camera fitting (`CameraFitTest`), great-circle routes (`RouteGeometryTest`), display formatting (`FormattingTest`), calendar dates and the iOS picker's conversion in ten time zones (`CalendarDateTest`, `PickerDateTest`), server address validation (`ServerUrlTest`).
   - Persistence and networking: `FlightDatabaseStoreTest` on in-memory SQLite, and `FlightsApiTest` with Ktor's `MockEngine`.
   - The store, against a fake API and real SQLite (`FlightExplorerStoreTest`, `StoreRulesTest`, `ServerUrlStoreTest`):

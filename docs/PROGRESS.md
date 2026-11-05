@@ -165,6 +165,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Review fixes: debug reset race, iOS pull to refresh; review summary | this PR | in review |
 | (e) §13.9 COULD: dark mode (QA P3) | this PR | in review |
 | (e) §13.9 COULD: large text (QA P4) | this PR | in review |
+| (e) §13.9 COULD: screen-reader labels (QA P5) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -219,6 +220,11 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - At accessibility text sizes, iOS rows put the points under the route, and the card's detail rows stack their label over the value (`AnyLayout`). The points label is `fixedSize`, so it never truncates.
   - New `AppearanceTests.testLargestTextScreenshots` launches at the largest standard size (`XXXL`) and the largest accessibility size, and saves screenshots of the list and card in the full run.
   - Android isn't checked here: the emulator has no data for rows. That's QA P4.
+- **(e) §13.9 COULD: screen-reader labels (QA P5).**
+  - New shared `spokenFlight` and `spokenRoute`, with words instead of "→" and "pts". iOS row buttons and Android `ListItem`s use them as their accessibility label or `contentDescription`, and so do the card titles.
+  - `FormattingTest.screenReadersHearWordsNotSymbols` checks the cheapest flight's label, saved and not.
+  - iOS UI tests now read the new labels, including one assertion in the smoke test `testOriginAndDestinationCombine`.
+  - Android needs data to show rows, so TalkBack is checked by QA P5.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

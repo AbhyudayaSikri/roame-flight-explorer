@@ -224,6 +224,7 @@ private struct FlightListView: View {
                 FlightRowView(flight: flight, saved: savedIds.contains(flight.id))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(FormattingKt.spokenFlight(flight: flight, saved: savedIds.contains(flight.id)))
             .listRowBackground(flight.id == selectedId ? Color.accentColor.opacity(0.12) : Color.clear)
             .accessibilityIdentifier(TestIds.shared.flightRow(flightId: flight.id))
         }

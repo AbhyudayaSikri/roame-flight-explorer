@@ -117,7 +117,19 @@ jobs:
             > build/ci/server.log 2>&1 &
           echo $! > build/ci/server.pid
           for _ in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1; then echo "API is up"; exit 0; fi
+            if curl -fsS http://127.0.0.1:8080/health > /dev/null 2>&1; then
+              # DebugMenuTests point the app at a plain-HTTP IP address, like a phone on the same Wi-Fi.
+              IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)
+              if [ -n "$IP" ] && curl -fsS "http://$IP:8080/health" > /dev/null 2>&1; then
+                echo "TEST_RUNNER_LAN_SERVER_URL=http://$IP:8080" >> "$GITHUB_ENV"
+                echo "- The API also answers on the LAN address http://$IP:8080 (used by DebugMenuTests)" >> "$GITHUB_STEP_SUMMARY"
+              else
+                echo "TEST_RUNNER_LAN_SERVER_URL=http://127.0.0.1:8080" >> "$GITHUB_ENV"
+                echo "::warning::No LAN address answered; DebugMenuTests use http://127.0.0.1:8080"
+              fi
+              echo "API is up"
+              exit 0
+            fi
             sleep 1
           done
           echo "::error::The local API didn't answer /health within 60 s"

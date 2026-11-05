@@ -76,3 +76,6 @@ INSERT OR REPLACE INTO sync_meta(key, value) VALUES (?, ?);
 
 deleteMeta:
 DELETE FROM sync_meta;
+
+deleteMetaKey:
+DELETE FROM sync_meta WHERE key = ?;

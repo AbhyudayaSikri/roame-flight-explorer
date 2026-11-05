@@ -24,7 +24,7 @@ internal fun createExplorerStore(
     val faults = FaultInjection(debug.failSaves, debug.failRemoves)
     val repository = FaultInjectingRepository(
         delegate = DefaultFlightRepository(
-            source = FlightsApi(httpClient, baseUrl),
+            source = FlightsApi(httpClient),
             database = FlightDatabaseStore(driver, ioDispatcher),
             now = ::currentTimeMillis,
         ),
@@ -36,6 +36,7 @@ internal fun createExplorerStore(
         computeDispatcher = Dispatchers.Default,
         faults = faults,
         now = ::currentTimeMillis,
+        defaultServerUrl = baseUrl,
         resetData = debug.resetData,
         onClose = {
             httpClient.close()

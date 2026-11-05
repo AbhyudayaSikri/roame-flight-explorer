@@ -20,6 +20,9 @@ internal class FakeFlightsSource : FlightsSource {
     var calls = 0
         private set
 
+    /** The server each fetch went to, in order. */
+    val baseUrls = mutableListOf<String>()
+
     fun serve(flights: List<Flight>) {
         response = { flights }
     }
@@ -28,8 +31,9 @@ internal class FakeFlightsSource : FlightsSource {
         response = { throw RefreshFailure(error) }
     }
 
-    override suspend fun fetchFlights(): List<Flight> {
+    override suspend fun fetchFlights(baseUrl: String): List<Flight> {
         calls += 1
+        baseUrls += baseUrl
         gate?.await()
         return response()
     }
@@ -48,7 +52,11 @@ internal class StoreHarness(
     var closed = false
         private set
 
-    fun newStore(resetData: Boolean = false, repository: FlightRepository = defaultRepository()): FlightExplorerStore {
+    fun newStore(
+        resetData: Boolean = false,
+        repository: FlightRepository = defaultRepository(),
+        defaultServerUrl: String = "http://localhost:8080",
+    ): FlightExplorerStore {
         // Parented to backgroundScope so it's cancelled when the test ends, but without its context:
         // advanceUntilIdle() skips work marked as background, and the store's work must run.
         val scope = CoroutineScope(SupervisorJob(test.backgroundScope.coroutineContext.job) + dispatcher)
@@ -58,6 +66,7 @@ internal class StoreHarness(
             computeDispatcher = dispatcher,
             faults = faults,
             now = { clock },
+            defaultServerUrl = defaultServerUrl,
             resetData = resetData,
             onClose = { closed = true },
         )

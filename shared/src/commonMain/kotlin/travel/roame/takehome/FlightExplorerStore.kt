@@ -34,10 +34,14 @@ class FlightExplorerStore internal constructor(
     private val computeDispatcher: CoroutineDispatcher,
     private val faults: FaultInjection,
     private val now: () -> Long,
+    /** The build's server address; a debug menu can choose another (see [setServerUrl]). */
+    private val defaultServerUrl: String,
     resetData: Boolean = false,
     private val onClose: () -> Unit = {},
 ) {
     private val query = MutableStateFlow(FlightQuery())
+    private val serverUrl = MutableStateFlow(defaultServerUrl)
+    private var refreshJob: Job? = null
     private val selection = MutableStateFlow(Selection())
     private val refreshStatus = MutableStateFlow<RefreshStatus>(RefreshStatus.Idle)
     private val pending = MutableStateFlow<Map<String, PendingChange>>(emptyMap())
@@ -54,19 +58,24 @@ class FlightExplorerStore internal constructor(
         repository.lastSuccessAtMillis.retryOnError("Couldn't read the last sync time").map { Loaded(it) }.nullUntilLoaded(),
     ) { cached, saved, lastSuccessAt -> Stored(cached, saved, lastSuccessAt) }
 
-    private val inputs: Flow<Inputs> = combine(query, selection, refreshStatus, pending, message) { q, s, r, p, m ->
-        Inputs(q, s, r, p, m)
-    }
+    private val inputs: Flow<Inputs> = combine(
+        query,
+        selection,
+        refreshStatus,
+        pending,
+        combine(message, serverUrl) { m, u -> m to u },
+    ) { q, s, r, p, (m, u) -> Inputs(q, s, r, p, m, u) }
 
     val state: StateFlow<ExplorerState> = combine(stored, inputs) { s, i -> s to i }
         .mapLatest { (s, i) -> withContext(computeDispatcher) { derive(s, i) } }
         .onEach(::applyCorrections)
         .map { it.state }
-        .stateIn(scope, SharingStarted.Eagerly, ExplorerState.Initial)
+        .stateIn(scope, SharingStarted.Eagerly, ExplorerState.initial(defaultServerUrl))
 
     init {
         scope.launch {
             if (resetData && repository.clearAll().isFailure) postMessage("Couldn't reset local data.")
+            repository.savedServerUrl()?.let(::normalizedServerUrl)?.let { serverUrl.value = it }
             refresh()
         }
     }
@@ -158,9 +167,37 @@ class FlightExplorerStore internal constructor(
     /** Fetches the latest flights; ignored while a refresh is already running. */
     fun refresh() {
         if (refreshStatus.value == RefreshStatus.Running) return
-        refreshStatus.value = RefreshStatus.Running
+        startRefresh()
+    }
+
+    /**
+     * Debug menus: fetch from [text] from now on, and remember it across launches. An address that
+     * [serverUrlProblem] rejects changes nothing and posts that problem as a message.
+     */
+    fun setServerUrl(text: String) {
+        val url = normalizedServerUrl(text) ?: return postMessage(serverUrlProblem(text) ?: "That isn't a server address.")
+        useServerUrl(url)
+    }
+
+    /** Debug menus: go back to the build's address and forget the one chosen before. */
+    fun useDefaultServerUrl() = useServerUrl(defaultServerUrl)
+
+    private fun useServerUrl(url: String) {
+        serverUrl.value = url
         scope.launch {
-            refreshStatus.value = when (val result = repository.refresh()) {
+            val saved = url.takeUnless { it == defaultServerUrl }
+            if (repository.saveServerUrl(saved).isFailure) postMessage("Couldn't save the server address.")
+        }
+        // A refresh still waiting on the old server would report on the wrong one.
+        refreshJob?.cancel()
+        startRefresh()
+    }
+
+    private fun startRefresh() {
+        refreshStatus.value = RefreshStatus.Running
+        val url = serverUrl.value
+        refreshJob = scope.launch {
+            refreshStatus.value = when (val result = repository.refresh(url)) {
                 is RefreshResult.Success -> RefreshStatus.Idle
                 is RefreshResult.Failure -> RefreshStatus.Failed(result.error)
             }
@@ -258,6 +295,9 @@ class FlightExplorerStore internal constructor(
             savedIds = savedIds,
             selectedSaved = inputs.selection.selectedSavedId?.let { id -> saved.firstOrNull { it.flight.id == id } },
             message = inputs.message,
+            serverUrl = inputs.serverUrl,
+            defaultServerUrl = defaultServerUrl,
+            isDefaultServerUrl = inputs.serverUrl == defaultServerUrl,
         )
         // Until every read has arrived, a missing flight may just not be loaded yet: clear nothing.
         val loaded = stored.isLoaded
@@ -330,6 +370,7 @@ private data class Inputs(
     val refreshStatus: RefreshStatus,
     val pending: Map<String, PendingChange>,
     val message: UserMessage?,
+    val serverUrl: String,
 )
 
 private class Derived(

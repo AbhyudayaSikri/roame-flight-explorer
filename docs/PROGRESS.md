@@ -160,6 +160,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Review fix: the points slider during a drag | this PR | in review |
 | (e) §13.7 Polish: individually removable chips (QA F11) | this PR | in review |
 | (e) §13.7 Polish: −/+ points buttons (QA F12) | this PR | in review |
+| (e) §13.7 Polish: skeleton rows (QA L4) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -194,6 +195,11 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - iOS uses a `Stepper` beside the value, and Android two tonal buttons. Each calls the new `stepMaxPoints(±1)`, one 500-point slider step. Reaching the highest price means no limit, and each end disables its button.
   - `stepMaxPoints` updates the query directly instead of reading the derived state, so quick taps each count. `quickTapsOnMinusEachCount` fails with the naive version; I checked by trying it.
   - Shared tests also cover one step each way, stopping at both ends, and doing nothing before there's data. New iOS UI test `testMinusAndPlusStepThePointsLimit`, the F12 steps.
+- **(e) §13.7 Polish: skeleton rows (QA L4).**
+  - The first load shows eight grey rows in `FlightRow`'s shape instead of a spinner: iOS redacts sample rows, Android draws bars. Both keep the `state.loading` id and read as "Loading flights".
+  - There's no pulse animation, because XCUITest waits for animations to finish before it acts.
+  - Android check: a debug Server URL that never answers (`http://10.255.255.1:8080`) held the loading state for the 5 s connect timeout. The dump showed `state.loading` with the placeholder rows, then the error screen.
+  - iOS: `LaunchTests.testASlowAPIShowsTheLoadingStateUntilTheFlightsArrive` still finds `state.loading` and saves its "O6 loading" screenshot.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only. The debug menu's Server URL can point at any computer on the network, such
+     as http://192.168.1.20:8080. Android can't allow cleartext for an IP range, so debug builds
+     allow it to every host. Release builds use src/main's config: the emulator's host and
+     localhost only. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

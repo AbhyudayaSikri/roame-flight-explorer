@@ -56,6 +56,17 @@ Alternatives considered:
   - iOS also frames again when the map is resized (the keyboard closing, a rotation), because a frame chosen in a short map stays too zoomed out once the map is tall again.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
+- **Server URL at runtime (2026-11-04).** Debug builds can point at another flights server, for a phone on the same Wi-Fi as the computer running the API.
+  - Where: Android's debug menu (⋮ → Server URL…) and an iOS Debug sheet (the ladybug, top left). Release builds have neither.
+  - Validation is shared (`serverUrlProblem`): http or https, a host or IP (IPv6 in brackets), a port from 1 to 65535, any path, no query, fragment or user name. A missing scheme means http://, and a trailing / is dropped.
+  - Saving fetches again at once and cancels a refresh still waiting on the old server.
+  - The address is kept in the shared database and survives restarts. Resetting local data clears it. Choosing the build's own address forgets the override, so a new build default takes effect.
+- **iOS App Transport Security for LAN addresses (2026-11-04).** No new exception was needed.
+  - `NSAllowsLocalNetworking`, set since step 8, "enables access to unqualified domains, `.local` domains, and IP addresses" that iOS 17+ would otherwise block (Apple's documentation for the key).
+  - So `http://192.168.1.20:8080` works without `NSAllowsArbitraryLoads` or per-address `NSExceptionDomains`.
+  - `DebugMenuTests` checks this in CI against the runner's own LAN address.
+  - `NSLocalNetworkUsageDescription` explains the Local Network permission prompt that iOS shows on a device.
+- **Android cleartext for LAN addresses (2026-11-04).** A network security config can't allow an IP range, only named hosts. So debug builds (`src/debug`) allow plain HTTP to any host, and release builds keep `src/main`'s config: 10.0.2.2, localhost and 127.0.0.1 only.
 - **`--mode=slow` (2026-11-04)** serves the normal fixture after 3 s, on `/flights` only; `/health` still answers at once. That's long enough to see the loading state, and well inside the apps' 10 s request timeout.
 - **Saved flights are snapshots**, updated only by an explicit save. When the cached flight differs from its saved snapshot, the card offers "Update saved", which upserts the snapshot with no duplicate.
   - The server's `--mode=updated` adds 500 points to every flight, so this can be exercised (QA V2).

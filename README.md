@@ -59,6 +59,13 @@ For example: `./gradlew :server:run --args="--mode=slow"`. On Windows, allow Jav
    - On a physical iPhone, choose a signing team, use `-apiBaseUrl http://<your-mac>.local:8080` with both devices on the same network, and allow Local Network access when asked.
 3. XcodeGen 2.46.0 is needed only after adding, removing or renaming files under `iosApp/`: run `xcodegen generate --spec iosApp/project.yml`, and commit the result.
 
+## Use another server address
+Debug builds of both apps can switch the flights server at runtime, for example to run on a phone on the same Wi-Fi as the computer running the API.
+- **Android:** the debug menu (⋮ in the top bar) → Server URL….
+- **iOS:** the ladybug button, top left.
+
+Enter the computer's address, such as `http://192.168.1.20:8080`. The apps check it as you type, fetch from it on Save, and keep it across launches. "Use default" goes back to the build's address. On a device, allow Local Network access when asked.
+
 ## Tests
 
 | What | Command |

@@ -14,7 +14,11 @@ import kotlin.test.assertFailsWith
 class FlightsApiTest {
     private val json = headersOf(HttpHeaders.ContentType, "application/json")
 
-    private fun api(engine: MockEngine) = FlightsApi(HttpClient(engine) { flightsClientDefaults() }, "http://localhost:8080/")
+    private class Api(private val api: FlightsApi) {
+        suspend fun fetchFlights() = api.fetchFlights("http://localhost:8080/")
+    }
+
+    private fun api(engine: MockEngine) = Api(FlightsApi(HttpClient(engine) { flightsClientDefaults() }))
 
     @Test
     fun fetchesAndDecodesTheFlights() = runTest {

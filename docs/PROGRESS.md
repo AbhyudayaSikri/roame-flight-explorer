@@ -384,6 +384,25 @@ After these two items, only `qa` and `review` fixes.
   - Corrected here while checking: #1's opening time, the merge times of #2, #3, #4 and #6 in the daytime table (GitHub's times), and the "online tests" totals for #42–#46, which included the 2 tests that skip themselves in that pass.
   - Not logged before: on #9's dispatched full run ([41957681937](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41957681937)), the demo walkthrough lost keyboard focus while typing; every other UI test passed, and it hasn't recurred.
 
+## Evening: Windows QA (from 15:36)
+
+| Item | PR | State |
+|---|---|---|
+| Android reaches the API through `adb reverse` with a `localhost` `apiBaseUrl` (your 16:23 request) | this PR | in review |
+
+- **15:36–16:23: the Windows emulator couldn't reach the API.**
+  - The first start failed: `--args="--allow-control".` passed `--allow-control.`, with the trailing period, which the server rejected. My guide had put that command at the end of a sentence.
+  - With the API running, Chrome on the laptop got `GET /health -> 200`. But the app's Retry added no `GET /flights` line, so its requests to `10.0.2.2:8080` never arrived.
+  - `adb reverse tcp:8080 tcp:8080` with the debug Server URL `http://localhost:8080` worked.
+  - On the Mac, the same steps loaded 1,000 flights through `10.0.2.2`. With the API stopped, the app showed "Couldn't load flights" and "Can't reach the flights server", as on Windows.
+- **The fix (this PR).** With `apiBaseUrl=http://localhost:8080`, in `~/.gradle/gradle.properties` or as `-P`, debug builds default to it, and every `assembleDebug` or `installDebug` runs `adb reverse` on each connected device (`adbReverse`). Without the property, nothing changes.
+  - Checked on `roame-smoke`, against `:server:run --args="--allow-control"`:
+    - The default build has no `adbReverse` in its task graph, and the APK has `http://10.0.2.2:8080`.
+    - Localhost with no device: the build succeeds and says no device is connected.
+    - Localhost, fresh install: `adb reverse --list` went from empty to `tcp:8080 tcp:8080`, and the app loaded 1,000 flights (`GET /flights mode=normal -> 200`).
+    - With the forward removed, as after an emulator restart, the app said "Can't reach the flights server". Building `assembleDebug` again restored the forward, and Retry loaded 1,000 flights.
+- **Seen, not changed:** Android shows "0 flights" above the error screen, while iOS hides the count until there's data. It waits for a `qa` issue.
+
 ## Decisions
 
 - **Lighter iOS job on pull requests (Nov 4, evening, your call).**

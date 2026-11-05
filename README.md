@@ -54,7 +54,9 @@ The same API also runs on its own:
 2. Open the repository in Android Studio and run `androidApp` on an emulator, or run `./gradlew :androidApp:installDebug`.
    - The app's default base URL is `http://10.0.2.2:8080`, which is how the emulator reaches the computer running it.
    - For another address, build with `-PapiBaseUrl=http://<host>:8080`.
-   - For a physical device, run `adb reverse tcp:8080 tcp:8080` and build with `-PapiBaseUrl=http://localhost:8080`.
+   - For a phone on USB, or an emulator that can't reach `10.0.2.2`, use `http://localhost:8080`. Build with `-PapiBaseUrl=http://localhost:8080`, or add `apiBaseUrl=http://localhost:8080` to `~/.gradle/gradle.properties` (Windows: `%USERPROFILE%\.gradle\gradle.properties`) so Android Studio's Run uses it too.
+     - Each debug build then runs `adb reverse tcp:8080 tcp:8080` on every connected device, so the device's `localhost:8080` reaches this computer.
+     - The forward lasts until the device restarts. After that, build or Run again.
 3. Debug builds have a menu (⋮ in the top bar) that simulates save and remove failures.
 
 ## Run the iOS app
@@ -93,7 +95,10 @@ CI runs all of it on pull requests and pushes to `main` that change code (docs-o
   - Its `ios-ui-tests` artifact has the result bundles and screenshots, and on full runs a demo video.
 
 ## Troubleshooting
-- **Android says "Couldn't load flights".** Either the API isn't running, or the app can't reach it. From the emulator, use `10.0.2.2`, not `localhost`. Plain HTTP is allowed only to `10.0.2.2`, `localhost` and `127.0.0.1` (`androidApp/src/main/res/xml/network_security_config.xml`).
+- **Android says "Couldn't load flights".** Either the API isn't running, or the app can't reach it.
+  - The API logs every request. If Retry adds no `GET /flights` line, the app's requests aren't reaching it.
+  - The emulator reaches the computer as `10.0.2.2`, the default. If it can't, while `http://localhost:8080/health` works on the computer, use the `localhost` setup in "Run the Android app".
+  - Release builds allow plain HTTP only to `10.0.2.2`, `localhost` and `127.0.0.1` (`androidApp/src/main/res/xml/network_security_config.xml`). Debug builds allow it to any host.
 - **iOS can't connect.** Plain HTTP works because `Info.plist` sets `NSAllowsLocalNetworking`, which covers `localhost` and `.local` names. Any other host needs its own App Transport Security exception.
 - **Xcode shows "No such module 'Shared'" before the first build.** Build once (⌘B). The error clears once Gradle has produced the framework.
 - **The iOS link fails on files under `shared/build/skie/…/swift-generated-sources`.** Delete `shared/build/skie` and build again (SKIE issue #208).

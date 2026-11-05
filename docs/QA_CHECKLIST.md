@@ -38,6 +38,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - F9 [MUST] Typing fast or changing filters quickly → the final results match the last input; no jank. Drag the points slider fast back and forth: the thumb follows the finger and never jumps back.
 - F10 [MUST] Select a program, then deselect it → all programs are included again (1,000). "Mileage Plan" (203) and "MileagePlus" (199) are separate options.
 - F11 [SHOULD] Each chip's × removes only its own filter. From `jfk` + Business gives 35. × on Business gives 113, and From still says jfk. × on From empties the field, and all 1,000 show.
+- F12 [SHOULD] −/+ beside the points value move the limit 500 at a time. From "No limit", − gives "Up to 132,500 pts" (999 flights), and + gives "No limit" again (1,000). At 9,000, − is disabled.
 
 ## List / map / selection
 - M1 [MUST] The map shows one marker per destination airport with count + lowest points, matching the current filters.

@@ -101,6 +101,20 @@ class FlightExplorerStore internal constructor(
 
     fun clearMaxPoints() = query.update { it.copy(maxPoints = null) }
 
+    /**
+     * The −/+ buttons: moves the limit [steps] slider steps from where it is, within the data's
+     * prices; reaching the highest price means no limit. Updates the query directly, so quick
+     * taps each count before the state catches up.
+     */
+    fun stepMaxPoints(steps: Int) {
+        val bounds = state.value.filters.bounds ?: return
+        query.update {
+            val current = (it.maxPoints ?: bounds.maxPoints).coerceAtMost(bounds.maxPoints)
+            val next = (current + steps * POINTS_STEP).coerceIn(bounds.minPoints, bounds.maxPoints)
+            it.copy(maxPoints = next.takeUnless { next >= bounds.maxPoints })
+        }
+    }
+
     fun toggleProgram(program: String) = query.update {
         it.copy(programs = if (program in it.programs) it.programs - program else it.programs + program)
     }

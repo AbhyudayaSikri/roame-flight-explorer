@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,8 +37,11 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.CalendarDate
@@ -159,11 +163,24 @@ private fun PointsSlider(filters: FiltersUi, bounds: DataBounds, store: FlightEx
     }
     val points = value.roundToInt()
 
-    Text(
-        if (points >= max) "No limit" else "Up to ${formatPoints(points)}",
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.testTag(TestIds.filterPointsValue),
-    )
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
+        Text(
+            if (points >= max) "No limit" else "Up to ${formatPoints(points)}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f).testTag(TestIds.filterPointsValue),
+        )
+        // One slider step (500 points) each, through the store.
+        FilledTonalIconButton(
+            onClick = { store.stepMaxPoints(-1) },
+            enabled = points > min,
+            modifier = Modifier.testTag(TestIds.filterPointsDecrease).semantics { contentDescription = "Lower the points limit" },
+        ) { Text("−", style = MaterialTheme.typography.titleLarge) }
+        FilledTonalIconButton(
+            onClick = { store.stepMaxPoints(1) },
+            enabled = points < max,
+            modifier = Modifier.testTag(TestIds.filterPointsIncrease).semantics { contentDescription = "Raise the points limit" },
+        ) { Text("+", style = MaterialTheme.typography.titleLarge) }
+    }
     Slider(
         value = value,
         onValueChange = {

@@ -182,7 +182,7 @@ Alternatives considered:
 - **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
-  - −/+ points buttons, skeleton rows, haptics.
+  - Skeleton rows, haptics.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary.
 
 ## 5. Checks actually performed

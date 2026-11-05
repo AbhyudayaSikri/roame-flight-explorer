@@ -159,6 +159,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.1 Review fixes: iOS UI-test assertions | [#26](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/26) | merged after #25 |
 | (e) §13.1 Review fix: the points slider during a drag | this PR | in review |
 | (e) §13.7 Polish: individually removable chips (QA F11) | this PR | in review |
+| (e) §13.7 Polish: −/+ points buttons (QA F12) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -189,6 +190,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - New shared test `removingOneChipClearsOnlyThatFilter`: with all six filters set (2 flights), removing each one in turn leaves exactly the other five chips, with the count the fixture gives without it.
   - New iOS UI test `FilterTests.testEachChipRemovesOnlyItsOwnFilter`, the F11 steps. New id `filterChipRemove(kind)`.
   - Emulator check, no API: typing `jfk` shows the "From: jfk" chip with a × read as "Remove From: jfk". Tapping the × removes the chip and empties the field.
+- **(e) §13.7 Polish: −/+ points buttons (QA F12).**
+  - iOS uses a `Stepper` beside the value, and Android two tonal buttons. Each calls the new `stepMaxPoints(±1)`, one 500-point slider step. Reaching the highest price means no limit, and each end disables its button.
+  - `stepMaxPoints` updates the query directly instead of reading the derived state, so quick taps each count. `quickTapsOnMinusEachCount` fails with the naive version; I checked by trying it.
+  - Shared tests also cover one step each way, stopping at both ends, and doing nothing before there's data. New iOS UI test `testMinusAndPlusStepThePointsLimit`, the F12 steps.
 - **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
   - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
   - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.

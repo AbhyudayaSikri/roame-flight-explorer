@@ -81,7 +81,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - P5 [COULD] TalkBack / VoiceOver read the route, date, points and saved state.
 
 ## Tooling (debug builds)
-- T1 [SHOULD] StrictMode (Android): no disk or network access on the main thread in logcat during a full pass.
+- T1 [SHOULD] StrictMode (Android): no disk or network access on the main thread in logcat during a full pass. Debug builds enable it at startup (`FlightExplorerApplication`) and only log. Watch `adb logcat -s StrictMode`, and file `qa` issues for stack traces in `travel.roame.takehome`; ones only inside MapLibre or the framework are worth a note.
 - T2 [COULD] LeakCanary (Android): no leaks after rotating, switching tabs and opening and closing the map.
 - T3 [SHOULD] Debug menu → Server URL (Android ⋮; iOS ladybug, top left):
   - Enter the computer's LAN address, such as `http://192.168.1.20:8080`: the flights load from it.

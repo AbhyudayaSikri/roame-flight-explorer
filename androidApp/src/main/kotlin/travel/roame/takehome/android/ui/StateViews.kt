@@ -21,15 +21,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.RefreshError
 import travel.roame.takehome.SyncState
+import travel.roame.takehome.TestIds
 import java.util.Date
 
 @Composable
 fun LoadingView() {
-    CenteredMessage {
+    CenteredMessage(Modifier.testTag(TestIds.loading)) {
         CircularProgressIndicator()
         Text("Loading flights…", style = MaterialTheme.typography.bodyLarge)
     }
@@ -45,13 +47,13 @@ fun ErrorView(message: String, onRetry: () -> Unit) {
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Button(onClick = onRetry) { Text("Retry") }
+        Button(onClick = onRetry, modifier = Modifier.testTag(TestIds.errorRetry)) { Text("Retry") }
     }
 }
 
 @Composable
-fun EmptyView(title: String, body: String, onRefresh: () -> Unit) {
-    CenteredMessage {
+fun EmptyView(title: String, body: String, testTag: String, onRefresh: () -> Unit) {
+    CenteredMessage(Modifier.testTag(testTag)) {
         Text(title, style = MaterialTheme.typography.titleMedium)
         Text(body, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
         OutlinedButton(onClick = onRefresh) { Text("Refresh") }
@@ -60,7 +62,7 @@ fun EmptyView(title: String, body: String, onRefresh: () -> Unit) {
 
 @Composable
 fun NoMatchesView(onReset: () -> Unit) {
-    CenteredMessage {
+    CenteredMessage(Modifier.testTag(TestIds.noMatches)) {
         Text("No flights match these filters", style = MaterialTheme.typography.titleMedium)
         Text(
             "Try a different city or airport, or widen the dates and points.",
@@ -77,7 +79,11 @@ fun StaleBanner(sync: SyncState.Stale) {
     val time = DateFormat.getTimeFormat(LocalContext.current).format(Date(sync.lastSuccessAtMillis))
     val reason = if (sync.error == RefreshError.Offline) "Offline" else "Couldn't refresh"
     Row(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.tertiary).padding(horizontal = Spacing.l, vertical = Spacing.s),
+        Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.tertiary)
+            .padding(horizontal = Spacing.l, vertical = Spacing.s)
+            .testTag(TestIds.staleBanner),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.s),
     ) {
@@ -87,9 +93,9 @@ fun StaleBanner(sync: SyncState.Stale) {
 }
 
 @Composable
-private fun CenteredMessage(content: @Composable () -> Unit) {
+private fun CenteredMessage(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
-        Modifier.fillMaxSize().padding(Spacing.xl),
+        modifier.fillMaxSize().padding(Spacing.xl),
         verticalArrangement = Arrangement.spacedBy(Spacing.m, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) { content() }

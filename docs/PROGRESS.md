@@ -148,6 +148,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.5 StrictMode in debug builds (QA T1) | [#15](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/15) | merged 23:25 |
 | (e) §13.6a Compose stability config | this PR | in review |
 | (e) §13.6b iOS sliced observation | next PR | to do |
+| (e) §13.8 Android `testTag`s (QA T4) | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -173,6 +174,17 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.8 Android `testTag`s (QA T4).**
+  - Android controls have the shared `TestIds` as `testTag`s, matching iOS: search fields and their clear buttons, the count, chips, Reset, Filters, List/Map, rows, the card and its buttons, the sheets, every filter control, the state views, the Saved rows and Remove buttons, tabs, the snackbar and the debug menu.
+  - `testTagsAsResourceIds()` is set on the `Scaffold` and on each sheet, dialog and menu window, so UiAutomator lists the tags as resource ids.
+  - New shared ids: `filters.dates` (Android's single date-range button) and `saved.empty`. `debug.open` moved from the Server URL menu item to the ⋮ button that opens the menu, as on iOS.
+  - New QA item T4.
+  - Checked on the `roame-smoke` emulator, with no API running, through `uiautomator dump`:
+    - The Explore error screen lists 10 tags as resource ids: the search fields, `results.count`, List/Map, `filters.open`, `error.retry`, both tabs and `debug.open`.
+    - The Server URL dialog, a separate window, lists its 4 tags, plus `debug.serverUrl.problem` once `ftp://x` is typed.
+    - The Saved tab shows `saved.empty`.
+    - The filter sheet, card and destination sheet need data, so QA T4 on Windows covers them.
+  - Same session, StrictMode (#15): `adb logcat -s StrictMode` had 10 violations, all from Google's search and Messaging apps, none from ours. That session had no network and no map, so T1 is still the real check.
 
 ## Decisions
 

@@ -30,6 +30,7 @@ fun ServerUrlDialog(state: ExplorerState, store: FlightExplorerStore, onDismiss:
     val problem = serverUrlProblem(text)
     AlertDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.testTagsAsResourceIds(),
         title = { Text("Server URL") },
         text = {
             Column {
@@ -39,7 +40,13 @@ fun ServerUrlDialog(state: ExplorerState, store: FlightExplorerStore, onDismiss:
                     singleLine = true,
                     isError = problem != null,
                     label = { Text("Flights server") },
-                    supportingText = { Text(problem ?: "The build's default is ${state.defaultServerUrl}.") },
+                    supportingText = {
+                        if (problem != null) {
+                            Text(problem, Modifier.testTag(TestIds.debugServerUrlProblem))
+                        } else {
+                            Text("The build's default is ${state.defaultServerUrl}.")
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, autoCorrectEnabled = false, imeAction = ImeAction.Done),
                     modifier = Modifier.fillMaxWidth().testTag(TestIds.debugServerUrl),
                 )
@@ -69,7 +76,7 @@ fun ServerUrlDialog(state: ExplorerState, store: FlightExplorerStore, onDismiss:
                     enabled = !state.isDefaultServerUrl,
                     modifier = Modifier.testTag(TestIds.debugServerUrlDefault),
                 ) { Text("Use default") }
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag(TestIds.debugDone)) { Text("Cancel") }
             }
         },
     )

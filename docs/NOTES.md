@@ -105,6 +105,9 @@ Alternatives considered:
 - **Compose treats the shared value types as stable (2026-11-04).** `:shared` isn't compiled with the Compose compiler, so on its own Compose compares `ExplorerState`, `Flight`, `FiltersUi` and the rest by identity. Every rebuilt but equal value then recomposes.
   - `androidApp/compose-stability.conf` names each shared value type, plus read-only `List` and `Set` with stable elements. It names them one by one, not with a package wildcard, so the store and repository aren't covered.
   - Compiler report: unstable arguments went from 35 to 17, and unknown-stability ones (the lists and sets) from 14 to 6. The ones left are the store, which is one instance for the app's lifetime, so comparing by identity already skips.
+- **Android test tags (2026-11-04).** Each control the iOS UI tests find by identifier has the same shared `TestIds` value on Android as a `testTag`, and `testTagsAsResourceId` shows the tags to UiAutomator. A QA script or a future instrumented test can then find controls by id.
+  - The map's pills are MapLibre symbols, not Compose nodes, so they have no tags.
+  - Android has one date-range button where iOS has two pickers, so it has its own id, `filters.dates`.
 - **Release packaging (2026-11-04).**
   - A `v*` tag publishes a GitHub Release (`release.yml`):
     - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
@@ -172,7 +175,7 @@ Alternatives considered:
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
   - Individually removable chips, −/+ points buttons, skeleton rows, haptics, "Flight Explorer" display names.
-  - iOS sliced observation, Android `testTag`s.
+  - iOS sliced observation.
   - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
 
 ## 5. Checks actually performed

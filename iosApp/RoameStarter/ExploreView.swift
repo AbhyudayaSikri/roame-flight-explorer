@@ -228,7 +228,7 @@ private struct FlightListView: View {
             .accessibilityIdentifier(TestIds.shared.flightRow(flightId: flight.id))
         }
         .listStyle(.plain)
-        .refreshable { model.store.refresh() }
+        .refreshable { try? await model.store.refreshAndWait() }
         .safeAreaInset(edge: .bottom) {
             if selectedId != nil { Color.clear.frame(height: 280) }
         }

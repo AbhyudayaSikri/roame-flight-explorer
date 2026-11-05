@@ -74,6 +74,47 @@ class FlightExplorerStoreTest {
     }
 
     @Test
+    fun aDebugResetNeverShowsThePreviousRunsCache() = runTest {
+        val harness = StoreHarness(this)
+        harness.database.replaceCache(fixtureFlights, atMillis = 5)
+        val reset = CompletableDeferred<Unit>()
+        val fetch = CompletableDeferred<Unit>().also { harness.source.gate = it }
+        val store = harness.newStore(resetData = true, repository = SlowResetRepository(harness.defaultRepository(), reset))
+        val totals = mutableListOf<Int>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { store.state.collect { totals += it.totalCount } }
+
+        // While the reset is still running, nothing may read the data it's about to clear.
+        advanceUntilIdle()
+        reset.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(listOf(0), totals.distinct(), "the cleared cache showed: $totals")
+        assertEquals(SyncState.Loading, store.state.value.sync)
+
+        fetch.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(1000, store.state.value.totalCount)
+    }
+
+    @Test
+    fun refreshAndWaitReturnsOnlyOnceTheRefreshHasFinished() = runTest {
+        val (harness, store) = loadedStore()
+        val gate = CompletableDeferred<Unit>().also { harness.source.gate = it }
+        var returned = false
+        launch {
+            store.refreshAndWait()
+            returned = true
+        }
+        runCurrent()
+        assertTrue(store.state.value.isRefreshing)
+        assertFalse(returned)
+
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(returned)
+        assertFalse(store.state.value.isRefreshing)
+    }
+
+    @Test
     fun aRetryKeepsTheCacheMarkedStaleUntilItSucceeds() = runTest {
         val (harness, store) = loadedStore()
         val loadedAt = harness.clock

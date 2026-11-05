@@ -134,6 +134,17 @@ internal class TwoFailureStreaksRepository(private val delegate: FlightRepositor
     }
 }
 
+/** clearAll waits for [gate], like a slow reset: reads that don't wait for it would see the old data. */
+internal class SlowResetRepository(
+    private val delegate: FlightRepository,
+    private val gate: CompletableDeferred<Unit>,
+) : FlightRepository by delegate {
+    override suspend fun clearAll(): Result<Unit> {
+        gate.await()
+        return delegate.clearAll()
+    }
+}
+
 /** The cache read waits for [gate], like a slow first read of 1,000 rows. */
 internal class SlowCacheRepository(
     private val delegate: FlightRepository,

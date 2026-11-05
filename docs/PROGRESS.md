@@ -175,6 +175,10 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.1 Review fixes: iOS UI-test assertions** (review finding 10).
+  - `SavedTests` now waits for JFK → Paris (8 flights) before checking that the Saved tab ignores the filters.
+  - `MapSelectionTests.testSelectionIsSharedBetweenListAndMap` compares every text on the card before and after each switch. All six results are SFO → NRT, so "a card exists" didn't show it was the same flight.
+  - `OfflineRelaunchTests` is unchanged. With the API stopped, Refresh fails within milliseconds, so the end state (cache kept, marked stale) is the only stable thing to check, and it's what QA O2 asks for.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

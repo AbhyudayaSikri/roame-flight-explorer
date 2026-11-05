@@ -135,21 +135,39 @@ jobs:
             | tee build/ci/build-for-testing.log | xcbeautify --renderer github-actions
 
       # Server-mode cases switch the mode themselves through POST /control/mode.
+      # Pull requests run five smoke tests; main and manual runs run the whole suite, which must
+      # stay green on main.
       - name: UI tests
         env:
           UDID: ${{ steps.sim.outputs.udid }}
+          EVENT: ${{ github.event_name }}
         run: |
           set -o pipefail
+          if [ "$EVENT" = "pull_request" ]; then
+            SELECTION=(
+              -only-testing:RoameStarterUITests/LaunchTests/testFreshInstallLoadsEveryFlightWithNoFiltersActive
+              -only-testing:RoameStarterUITests/SearchTests/testOriginAndDestinationCombine
+              -only-testing:RoameStarterUITests/MapSelectionTests/testMarkerSheetPicksAFlightAndShowsTheCard
+              -only-testing:RoameStarterUITests/SavedTests/testSavedFlightShowsEverywhereIgnoresFiltersAndRemovesFromTheCard
+              -only-testing:RoameStarterUITests/ErrorStateTests/testNoCacheErrorOffersRetryThatLoadsOnceTheServerRecovers
+            )
+            echo "- UI tests: 5 smoke tests (pull request). The full suite runs on main and on workflow_dispatch." >> "$GITHUB_STEP_SUMMARY"
+          else
+            SELECTION=(
+              -skip-testing:RoameStarterUITests/DemoWalkthrough
+              -skip-testing:RoameStarterUITests/OfflineRelaunchTests
+            )
+            echo "- UI tests: full suite, then the demo walkthrough and the offline relaunch." >> "$GITHUB_STEP_SUMMARY"
+          fi
           xcodebuild test-without-building -project iosApp/RoameStarter.xcodeproj -scheme RoameStarter \
             -destination "id=$UDID" -derivedDataPath build/dd \
-            -skip-testing:RoameStarterUITests/DemoWalkthrough \
-            -skip-testing:RoameStarterUITests/OfflineRelaunchTests \
+            "${SELECTION[@]}" \
             -resultBundlePath build/ci/ui-tests.xcresult \
             | tee build/ci/ui-tests.log | xcbeautify --renderer github-actions
 
       # The demo video covers the walkthrough and the offline relaunch that follows it.
       - name: Start recording the demo
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name != 'pull_request' }}
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
@@ -161,7 +179,7 @@ jobs:
       # App data survives separate test-without-building runs (docs/NOTES.md, persistence probe),
       # so the offline case reuses the cache and saved flight this walkthrough leaves behind.
       - name: Demo walkthrough (also seeds the offline run)
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name != 'pull_request' }}
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |
@@ -174,7 +192,7 @@ jobs:
             | tee build/ci/demo-walkthrough.log | xcbeautify --renderer github-actions
 
       - name: Stop the local API
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name != 'pull_request' }}
         run: |
           kill "$(cat build/ci/server.pid)"
           for _ in $(seq 1 30); do
@@ -185,7 +203,7 @@ jobs:
           exit 1
 
       - name: Offline relaunch tests (API stopped)
-        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.build.outcome == 'success' && github.event_name != 'pull_request' }}
         env:
           UDID: ${{ steps.sim.outputs.udid }}
         run: |

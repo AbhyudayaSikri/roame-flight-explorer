@@ -33,7 +33,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - CI fails if the committed `.xcodeproj` differs.
 - iOS build and tests: CI only (`.github/workflows/ios.yml`).
   - Pull requests: the build, `iosSimulatorArm64Test` and 5 smoke XCUITests (about 15 min).
-  - Pushes to `main` and workflow_dispatch: the full suite, the demo and the offline relaunch (about 30 min). `main` must stay green on the full suite.
+  - Pushes to `main` and workflow_dispatch: the full suite, the demo and the offline relaunch (about 30 min).
   - Loop: push → `gh run watch <run-id> --exit-status` → `gh run view --log-failed` → fix → push.
   - Screenshots and raw logs: `gh run download <run-id> -n ios-ui-tests`.
   - `print()` output from tests appears only in the raw `*.log` files; the console shows xcbeautify's summary.
@@ -99,6 +99,11 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - **Commits:**
   - Small and logical, with conventional messages.
   - Every commit must leave both apps building. iOS is only confirmed by CI after the push, so a red iOS run is fixed before anything else.
+- **Merging (2026-11-05):**
+  - Everything merges through a PR, with a merge commit. Never push to `main`.
+  - PRs that only touch `androidApp/`, `server/`, `fixtures/` or docs merge on green Linux CI (`ci.yml`).
+  - PRs touching `shared/` or `iosApp/` also need the PR iOS job green. Gradle build files (`gradle/`, `*.gradle.kts`) count as shared, because they can break the iOS build.
+  - A green full iOS run on `main` is required before "final". If `main`'s full run goes red, fixing it comes first.
 - Record every assumption in `docs/NOTES.md` when you make it.
 - Keep `gradlew` LF + executable. Never commit `.DS_Store`.
 - **UI identifiers:**

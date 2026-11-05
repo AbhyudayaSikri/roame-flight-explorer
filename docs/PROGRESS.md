@@ -143,30 +143,30 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (b2) Release packaging | [#11](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/11) | merged 23:04, by git |
 | Screenshot timeouts don't fail tests | [#12](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/12) | merged 22:39 |
 | (d) NOTES §1 and §5 | [#13](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/13) | merged 23:05 |
-| (e) §13.1 Independent review (prompt P3) | fixes in #22–#27 and this PR | review done 23:15; summary in NOTES §5 |
+| (e) §13.1 Independent review (prompt P3) | fixes in #22–#27 and [#32](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/32) | review done 23:15; summary in NOTES §5 |
 | (e) §13.2 Android offline map style (QA O8) | [#14](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/14) | merged 23:07 |
 | (e) §13.5 StrictMode in debug builds (QA T1) | [#15](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/15) | merged 23:10 |
 | (e) §13.6a Compose stability config | [#16](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/16) | merged 23:17 |
 | (e) §13.6b iOS sliced observation | [#17](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/17) | merged 00:15 |
 | (e) §13.7 Polish: "Flight Explorer" display names (QA P6) | [#18](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/18) | merged 23:57 |
 | (e) §13.8 `.gitattributes` LF for the fixture | [#20](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/20) | merged 23:30 |
-| (e) §13.8 Search-rule QA (S6) as an XCUITest | [#19](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/19) | merged after #17 |
-| (e) §13.1 Review fix: decode off the main thread | [#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22) | merged after #19 |
-| (e) §13.1 Review fixes: sync state | [#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23) | merged after #22 |
-| (e) §13.1 Review fixes: store tests that checked too little | [#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24) | merged after #23 |
-| (e) §13.8 Android `testTag`s (QA T4) | [#21](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/21) | merged after #24 |
-| (e) §13.1 Review fixes: Android Explore state (QA O9, M10) | [#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25) | merged after #21 |
-| (e) §13.1 Review fixes: iOS UI-test assertions | [#26](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/26) | merged after #25 |
-| (e) §13.1 Review fix: the points slider during a drag | this PR | in review |
-| (e) §13.7 Polish: individually removable chips (QA F11) | this PR | in review |
-| (e) §13.7 Polish: −/+ points buttons (QA F12) | this PR | in review |
-| (e) §13.7 Polish: skeleton rows (QA L4) | this PR | in review |
-| (e) §13.7 Polish: haptics (QA P7) | this PR | in review |
-| (e) §13.1 Review fixes: debug reset race, iOS pull to refresh; review summary | this PR | in review |
-| (e) §13.9 COULD: dark mode (QA P3) | this PR | in review |
-| (e) §13.9 COULD: large text (QA P4) | this PR | in review |
-| (e) §13.9 COULD: screen-reader labels (QA P5) | this PR | in review |
-| (e) §13.9 COULD: LeakCanary in debug builds (QA T2) | this PR | in review |
+| (e) §13.8 Search-rule QA (S6) as an XCUITest | [#19](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/19) | merged 00:37 |
+| (e) §13.1 Review fix: decode off the main thread | [#22](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/22) | merged 00:41 |
+| (e) §13.1 Review fixes: sync state | [#23](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/23) | merged 00:54 |
+| (e) §13.1 Review fixes: store tests that checked too little | [#24](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/24) | merged 00:56 |
+| (e) §13.8 Android `testTag`s (QA T4) | [#21](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/21) | merged 00:56 |
+| (e) §13.1 Review fixes: Android Explore state (QA O9, M10) | [#25](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/25) | merged 00:56 |
+| (e) §13.1 Review fixes: iOS UI-test assertions | [#26](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/26) | merged 01:23 |
+| (e) §13.1 Review fix: the points slider during a drag | [#27](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/27) | merged 01:23 |
+| (e) §13.7 Polish: individually removable chips (QA F11) | [#28](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/28) | merged 01:23 |
+| (e) §13.7 Polish: −/+ points buttons (QA F12) | [#29](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/29) | merged 01:24 |
+| (e) §13.7 Polish: skeleton rows (QA L4) | [#30](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/30) | merged 01:24 |
+| (e) §13.7 Polish: haptics (QA P7) | [#31](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/31) | merged 01:24 |
+| (e) §13.1 Review fixes: debug reset race, iOS pull to refresh; review summary | [#32](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/32) | merged 01:25 |
+| (e) §13.9 COULD: dark mode (QA P3) | [#33](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/33) | merged 01:25 |
+| (e) §13.9 COULD: large text (QA P4) | [#34](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/34) | merged 01:25 |
+| (e) §13.9 COULD: screen-reader labels (QA P5) | [#35](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/35) | merged 01:26 |
+| (e) §13.9 COULD: LeakCanary in debug builds (QA T2) | [#36](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/36) | merged 01:26 |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -192,6 +192,59 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.6b iOS sliced observation.**
+  - `ExplorerModel` now mirrors each state field the views read as its own observed property, and assigns it only when its value changed. Each view reads the fields it needs from the model, not the whole `ExplorerState`.
+  - The behaviour is meant to be identical. The full XCUITest suite ran on the branch before merging.
+  - There's no iOS unit-test target, so the compare-then-assign rule has no unit test of its own. There's no new QA item.
+- **(e) §13.7 Polish, part 1: display names.**
+  - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
+  - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.
+- **(e) §13.8 `.gitattributes` LF for the fixture.**
+  - `fixtures/*.json text eol=lf` keeps the fixture byte-identical on every clone. A Windows checkout with `core.autocrlf=true` would otherwise get CRLF, and the server would serve those bytes.
+  - `git add --renormalize .` changed nothing, because the committed fixture was already LF.
+  - Cloned with `core.autocrlf=true`, the fixture was 447,745 bytes with 15,004 CRs before the rule, and exactly 432,741 bytes with none after.
+- **(e) §13.8 Search-rule QA (S6).**
+  - The shared `SearchTest` already covered the rule. Now `SearchTests.testAnExactCodeWinsOverCityPrefixes` checks it on iOS too: `dub` gives 29 and `du` 69, then `fra` gives 0 with the no-matches state and `fran` 123.
+  - That makes 30 XCUITests. The new test runs in the full suite, not the PR smoke set, so it ran on the branch by dispatch before merging.
+- **(e) §13.1 Review fix: decode off the main thread** (review bug 1).
+  - The flights response was read and decoded on the store's main dispatcher. On every launch and refresh, the UI thread turned 432 KB into 1,000 `Flight`s.
+  - `FlightsApi` now does the whole fetch on `Dispatchers.Default`.
+  - The new test `theBodyIsDecodedOnTheWorkDispatcherNotTheCallers` fails if the decode moves back out; I checked that by moving it.
+- **(e) §13.1 Review fixes: sync state** (review risks 4 and 6).
+  - Loading now lasts until the cache has been read. Before, a refresh that failed first showed "Couldn't load flights" over a valid cache.
+  - The cache and its timestamp come from one transaction (`CachedFlights`), so a first launch can't flash "no flights".
+  - A retry keeps the stale banner up (`RefreshStatus.Running.previousFailure`).
+  - New tests: `aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache`, `aRetryKeepsTheCacheMarkedStaleUntilItSucceeds`, `everyCacheSnapshotPairsTheFlightsWithTheirOwnTimestamp`, and two more `syncStateOf` cases. With the old code, the two store tests fail; I checked by restoring it.
+- **(e) §13.1 Review fixes: tests that checked less than their names said** (review findings 7 to 9).
+  - `anOutdatedQueryStillBeingComputedNeverReachesTheState` holds the derivation for "jfk" on a new `ManualDispatcher` while "sea" arrives. It fails if `mapLatest` becomes `map`; the old rapid-typing test didn't.
+  - `aBadResponseOverACacheKeepsTheCacheAndMarksItStale` covers a malformed response and HTTP 500 over a real cache. The old malformed test is renamed to what it checks, an error with nothing cached.
+  - `FileDatabaseRestartTest` closes and reopens an SQLite file between two stores, instead of sharing one in-memory database.
+- **(e) §13.8 Android `testTag`s (QA T4).**
+  - Android controls have the shared `TestIds` as `testTag`s, matching iOS: search fields and their clear buttons, the count, chips, Reset, Filters, List/Map, rows, the card and its buttons, the sheets, every filter control, the state views, the Saved rows and Remove buttons, tabs, the snackbar and the debug menu.
+  - `testTagsAsResourceIds()` is set on the `Scaffold` and on each sheet, dialog and menu window, so UiAutomator lists the tags as resource ids.
+  - New shared ids: `filters.dates` (Android's single date-range button) and `saved.empty`. `debug.open` moved from the Server URL menu item to the ⋮ button that opens the menu, as on iOS.
+  - New QA item T4.
+  - Checked on the `roame-smoke` emulator, with no API running, through `uiautomator dump`:
+    - The Explore error screen lists 10 tags as resource ids: the search fields, `results.count`, List/Map, `filters.open`, `error.retry`, both tabs and `debug.open`.
+    - The Server URL dialog, a separate window, lists its 4 tags, plus `debug.serverUrl.problem` once `ftp://x` is typed.
+    - The Saved tab shows `saved.empty`.
+    - The filter sheet, card and destination sheet need data, so QA T4 on Windows covers them.
+  - Same session, StrictMode (#15): `adb logcat -s StrictMode` had 10 violations, all from Google's search and Messaging apps, none from ours. That session had no network and no map, so T1 is still the real check.
+- **(e) §13.1 Review fixes: Android Explore state** (review bug 2 and a nit).
+  - The search fields now start from the store's query with plain `remember`, instead of restoring old text with `rememberSaveable`. After the system destroyed the activity, a new store and the restored text disagreed: the field said "jfk", but all 1,000 flights showed with no chip.
+  - List/Map mode now lives in `FlightExplorerApp`, so a visit to the Saved tab no longer resets it.
+  - These are UI-only, and there are no Android UI tests. New QA items O9 and M10.
+  - Emulator check, `roame-smoke` with no API: type `jfk`, press Home, `am kill` the process, relaunch (a cold start that restores saved state).
+    - `main`'s build came back with "jfk" in the field but no "From: jfk" chip, which is the bug.
+    - This branch came back with an empty field and no chip, and still in Map mode.
+- **(e) §13.1 Review fixes: iOS UI-test assertions** (review finding 10).
+  - `SavedTests` now waits for JFK → Paris (8 flights) before checking that the Saved tab ignores the filters.
+  - `MapSelectionTests.testSelectionIsSharedBetweenListAndMap` compares every text on the card before and after each switch. All six results are SFO → NRT, so "a card exists" didn't show it was the same flight.
+  - `OfflineRelaunchTests` is unchanged. With the API stopped, Refresh fails within milliseconds, so the end state (cache kept, marked stale) is the only stable thing to check, and it's what QA O2 asks for.
+- **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
+  - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
+  - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.
+  - QA F9 now includes a fast drag. This is UI-only. The iOS slider test (`testLowestPointsLimitLeavesTheSingleCheapestFlight`) ran in the full suite on the branch.
 - **(e) §13.7 Polish: individually removable chips (QA F11).**
   - Each chip has a × that removes just its filter, through the store's existing `clearFilter`. The label still opens the filter sheet. Removing From or To also empties the field, because the fields own their text.
   - New shared test `removingOneChipClearsOnlyThatFilter`: with all six filters set (2 flights), removing each one in turn leaves exactly the other five chips, with the count the fixture gives without it.
@@ -229,81 +282,50 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 - **(e) §13.9 COULD: LeakCanary (QA T2).** This is the last §13 item; the Python fallback (also §13.9) shipped with the release packaging.
   - `debugImplementation` LeakCanary 2.14, the latest stable (3.0 is alpha). The merged manifest has 15 LeakCanary entries in debug and none in release.
   - Emulator, no API: four rotations plus tab switches. LeakCanary watched 8 destroyed objects (4 activities, 4 `ReportFragment`s) and found none retained.
-- **(e) §13.1 Review fix: the points slider during a drag** (review risk 5).
-  - Each drag step updates the store, but the slider read its value back from the store, which arrives a moment later. A value from an earlier step could pull the thumb back mid-drag.
-  - Both sliders now follow a local value during the drag (iOS `draggedPoints`, Android `dragging`), then follow the store again afterwards, including Reset.
-  - QA F9 now includes a fast drag. This is UI-only. The iOS slider test (`testLowestPointsLimitLeavesTheSingleCheapestFlight`) ran in the full suite on the branch.
-- **(e) §13.6b iOS sliced observation.**
-  - `ExplorerModel` now mirrors each state field the views read as its own observed property, and assigns it only when its value changed. Each view reads the fields it needs from the model, not the whole `ExplorerState`.
-  - The behaviour is meant to be identical. The full XCUITest suite ran on the branch before merging.
-  - There's no iOS unit-test target, so the compare-then-assign rule has no unit test of its own. There's no new QA item.
-- **(e) §13.1 Review fix: decode off the main thread** (review bug 1).
-  - The flights response was read and decoded on the store's main dispatcher. On every launch and refresh, the UI thread turned 432 KB into 1,000 `Flight`s.
-  - `FlightsApi` now does the whole fetch on `Dispatchers.Default`.
-  - The new test `theBodyIsDecodedOnTheWorkDispatcherNotTheCallers` fails if the decode moves back out; I checked that by moving it.
-- **(e) §13.1 Review fixes: sync state** (review risks 4 and 6).
-  - Loading now lasts until the cache has been read. Before, a refresh that failed first showed "Couldn't load flights" over a valid cache.
-  - The cache and its timestamp come from one transaction (`CachedFlights`), so a first launch can't flash "no flights".
-  - A retry keeps the stale banner up (`RefreshStatus.Running.previousFailure`).
-  - New tests: `aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache`, `aRetryKeepsTheCacheMarkedStaleUntilItSucceeds`, `everyCacheSnapshotPairsTheFlightsWithTheirOwnTimestamp`, and two more `syncStateOf` cases. With the old code, the two store tests fail; I checked by restoring it.
-- **(e) §13.1 Review fixes: tests that checked less than their names said** (review findings 7 to 9).
-  - `anOutdatedQueryStillBeingComputedNeverReachesTheState` holds the derivation for "jfk" on a new `ManualDispatcher` while "sea" arrives. It fails if `mapLatest` becomes `map`; the old rapid-typing test didn't.
-  - `aBadResponseOverACacheKeepsTheCacheAndMarksItStale` covers a malformed response and HTTP 500 over a real cache. The old malformed test is renamed to what it checks, an error with nothing cached.
-  - `FileDatabaseRestartTest` closes and reopens an SQLite file between two stores, instead of sharing one in-memory database.
-- **(e) §13.1 Review fixes: Android Explore state** (review bug 2 and a nit).
-  - The search fields now start from the store's query with plain `remember`, instead of restoring old text with `rememberSaveable`. After the system destroyed the activity, a new store and the restored text disagreed: the field said "jfk", but all 1,000 flights showed with no chip.
-  - List/Map mode now lives in `FlightExplorerApp`, so a visit to the Saved tab no longer resets it.
-  - These are UI-only, and there are no Android UI tests. New QA items O9 and M10.
-  - Emulator check, `roame-smoke` with no API: type `jfk`, press Home, `am kill` the process, relaunch (a cold start that restores saved state).
-    - `main`'s build came back with "jfk" in the field but no "From: jfk" chip, which is the bug.
-    - This branch came back with an empty field and no chip, and still in Map mode.
-- **(e) §13.1 Review fixes: iOS UI-test assertions** (review finding 10).
-  - `SavedTests` now waits for JFK → Paris (8 flights) before checking that the Saved tab ignores the filters.
-  - `MapSelectionTests.testSelectionIsSharedBetweenListAndMap` compares every text on the card before and after each switch. All six results are SFO → NRT, so "a card exists" didn't show it was the same flight.
-  - `OfflineRelaunchTests` is unchanged. With the API stopped, Refresh fails within milliseconds, so the end state (cache kept, marked stale) is the only stable thing to check, and it's what QA O2 asks for.
-- **(e) §13.7 Polish, part 1: display names.**
-  - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
-  - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.
-- **(e) §13.8 `.gitattributes` LF for the fixture.**
-  - `fixtures/*.json text eol=lf` keeps the fixture byte-identical on every clone. A Windows checkout with `core.autocrlf=true` would otherwise get CRLF, and the server would serve those bytes.
-  - `git add --renormalize .` changed nothing, because the committed fixture was already LF.
-  - Cloned with `core.autocrlf=true`, the fixture was 447,745 bytes with 15,004 CRs before the rule, and exactly 432,741 bytes with none after.
-- **(e) §13.8 Search-rule QA (S6).**
-  - The shared `SearchTest` already covered the rule. Now `SearchTests.testAnExactCodeWinsOverCityPrefixes` checks it on iOS too: `dub` gives 29 and `du` 69, then `fra` gives 0 with the no-matches state and `fran` 123.
-  - That makes 30 XCUITests. The new test runs in the full suite, not the PR smoke set, so it ran on the branch by dispatch before merging.
-- **(e) §13.8 Android `testTag`s (QA T4).**
-  - Android controls have the shared `TestIds` as `testTag`s, matching iOS: search fields and their clear buttons, the count, chips, Reset, Filters, List/Map, rows, the card and its buttons, the sheets, every filter control, the state views, the Saved rows and Remove buttons, tabs, the snackbar and the debug menu.
-  - `testTagsAsResourceIds()` is set on the `Scaffold` and on each sheet, dialog and menu window, so UiAutomator lists the tags as resource ids.
-  - New shared ids: `filters.dates` (Android's single date-range button) and `saved.empty`. `debug.open` moved from the Server URL menu item to the ⋮ button that opens the menu, as on iOS.
-  - New QA item T4.
-  - Checked on the `roame-smoke` emulator, with no API running, through `uiautomator dump`:
-    - The Explore error screen lists 10 tags as resource ids: the search fields, `results.count`, List/Map, `filters.open`, `error.retry`, both tabs and `debug.open`.
-    - The Server URL dialog, a separate window, lists its 4 tags, plus `debug.serverUrl.problem` once `ftp://x` is typed.
-    - The Saved tab shows `saved.empty`.
-    - The filter sheet, card and destination sheet need data, so QA T4 on Windows covers them.
-  - Same session, StrictMode (#15): `adb logcat -s StrictMode` had 10 violations, all from Google's search and Messaging apps, none from ours. That session had no network and no map, so T1 is still the real check.
+- **01:23–01:26: the last 11 PRs (#26–#36) merged on green Linux CI, at your call (01:15).**
+  - They were stacked in merge order, so #36's branch held all of them. Its full iOS run passed at 01:27 on the tree `main` now has: every XCUITest, the demo and the offline relaunch ([41976342016](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41976342016)).
+  - The three per-PR smoke runs still going tested parts of the same code, so I cancelled them.
+  - `main`'s own full run on `1545741` ([41980418799](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41980418799)) was still running when this was written.
+- **01:33: your answers.** The merge gate in Decisions, no new features, an Android emulator smoke job in Linux CI, and a release rehearsal with `v0.9.0-rc.1`. Then `qa` issues as you file them.
+
+## Night: your third list (from 01:33)
+
+Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release rehearsal and the Android emulator job.
+
+| Item | PR | State |
+|---|---|---|
+| Docs: merge gate, tonight's log in merge order | this PR | in review |
+| Release rehearsal: `v0.9.0-rc.1` as a pre-release | | not started |
+| Android emulator smoke job in Linux CI | | not started |
 
 ## Decisions
 
 - **Lighter iOS job on pull requests (Nov 4, evening, your call).**
   - PRs run the build, the shared tests on the simulator and 5 smoke XCUITests: launch, search, map selection, save, error state.
   - Pushes to `main` and workflow_dispatch run the full suite, the demo and the offline relaunch. A red full run on `main` is fixed first.
+- **Merge gate (Nov 5, 01:15 and 01:33, your call).**
+  - PRs that only touch `androidApp/`, `server/`, `fixtures/` or docs merge on green Linux CI.
+  - PRs touching `shared/` or `iosApp/` also need the PR iOS job green. I count the Gradle build files (`gradle/`, `*.gradle.kts`) with them, because they can break the iOS build.
+  - Once it exists, the Android emulator job is also required for PRs touching `androidApp/` or `shared/`.
+  - A green full iOS run on `main` is required before "final".
+  - Everything merges through PRs: no more local merge commits pushed to `main`. CLAUDE.md has the same rules.
 - **CI triggers:** added `overnight` to the `push` branches of `ci.yml` and `ios.yml` instead of opening the PR early, so every push gets CI. Reverted before merging (Nov 4, 08:00); PRs and pushes to `main` still run both workflows.
 - **First push carries three commits:** setup, version catalog and server. The mandated pre-push check (`:server:test :shared:testAndroidHostTest :androidApp:assembleDebug`) can't pass until `:server` and the shared host-test task exist.
 - **Version catalog in step 4, not 5.0:** `gradle/libs.versions.toml` now holds every §3.1 version, and all build files use it. The server was the first module to need new versions.
 - **Host tests enabled in step 4:** `withHostTest {}` went in early so `:shared:testAndroidHostTest` exists for the pre-push check. With no test sources it reports NO-SOURCE.
-- **Tier skips (`:server`):** the Python fallback server (COULD) isn't built. `--mode=slow` (SHOULD) was built on Nov 4 as item (b).
+- **Tier skips (`:server`):** the Python fallback server (COULD) isn't built. `--mode=slow` (SHOULD) was built on Nov 4 as item (b). The fallback was built later, with the release packaging (#11).
 - **Server bytecode targets JVM 17**, so it also runs on Android Studio's bundled JDK on Windows. `slf4j-simple` is there only so Ktor's startup lines print instead of an SLF4J warning.
 - **Working ahead:** while a step's CI runs, I draft the next step in the working tree. It's only committed and pushed once the current step is green.
 - **Android tier skips:**
   - Built without these SHOULD/COULD items: camera fit, the offline fallback map style, individually removable chips (chips open the filter sheet instead), −/+ points buttons, skeleton rows, haptics, StrictMode, the Compose stability config, `testTag`s and the "Flight Explorer" app label.
   - Polish items P1 (consistent spacing via one `Spacing` scale) and P2 (pressed and progress states on Save/Remove) are MUST and are built.
+  - All of the skipped items were built later, on Nov 4 and 5 (Daytime and Evening sections).
 - **Android pull-to-refresh is on the list only.** On the map, a vertical drag would fight panning. The top bar's refresh button works on every screen.
 - **Search fields own their text.** Typing never waits on the store, which derives asynchronously. Reset clears both the fields and the store.
 - **The iOS demo video is recorded on every iOS CI run**, rather than by a manual `demo.yml`. A `workflow_dispatch` workflow can't be run until it exists on `main`, which this run doesn't touch.
   - CI records the simulator while `DemoWalkthrough` runs (slow-paced: search → filters → map marker → select → save → Saved tab) and while `OfflineRelaunchTests` runs after the API is stopped.
   - The walkthrough also seeds the offline run. The mp4 is in the `ios-ui-tests` artifact.
-- **iOS tier choices:** fitting the camera to the selected route (SHOULD) is built, because QA M8 is judged from the screenshot. Not built: re-rendering only the changed slices, haptics, the "Flight Explorer" display name, dark mode and Dynamic Type passes.
+- **iOS tier choices:** fitting the camera to the selected route (SHOULD) is built, because QA M8 is judged from the screenshot. Not built: re-rendering only the changed slices, haptics, the "Flight Explorer" display name, dark mode and Dynamic Type passes. All of them were built later (Evening section).
 
 ## Step 6 review findings (skeptical re-read of BRIEF.md and the step-6 diff)
 

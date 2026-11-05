@@ -34,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,8 +56,11 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
     val snackbar = remember { SnackbarHostState() }
 
     val message = state.message
+    val haptics = LocalHapticFeedback.current
     LaunchedEffect(message?.id) {
         if (message != null) {
+            // Messages are failures ("Couldn't save…"); Save and Remove give their own feedback on tap.
+            haptics.performHapticFeedback(HapticFeedbackType.Reject)
             snackbar.showSnackbar(message.text, withDismissAction = true)
             store.messageShown(message.id)
         }

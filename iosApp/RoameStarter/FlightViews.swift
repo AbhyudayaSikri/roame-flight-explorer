@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 @preconcurrency import Shared
 
 struct FlightRowView: View {
@@ -75,6 +76,17 @@ struct FlightCardView: View {
         .accessibilityIdentifier(TestIds.shared.card)
     }
 
+    // The screen updates at once (optimistic), so the feedback comes with the tap.
+    private func save() {
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        onSave()
+    }
+
+    private func remove() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        onRemove()
+    }
+
     private func detail(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label).foregroundStyle(.secondary)
@@ -87,23 +99,23 @@ struct FlightCardView: View {
     private var actions: some View {
         switch status {
         case .notSaved:
-            Button(action: onSave) {
+            Button(action: save) {
                 Label("Save", systemImage: "heart").frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .accessibilityIdentifier(TestIds.shared.cardSave)
         case .saved:
-            Button(role: .destructive, action: onRemove) {
+            Button(role: .destructive, action: remove) {
                 Label("Saved · Remove", systemImage: "heart.fill").frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
             .accessibilityIdentifier(TestIds.shared.cardRemove)
         case .outdated:
             HStack {
-                Button(action: onSave) { Text("Update saved").frame(maxWidth: .infinity) }
+                Button(action: save) { Text("Update saved").frame(maxWidth: .infinity) }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier(TestIds.shared.cardUpdate)
-                Button(role: .destructive, action: onRemove) { Text("Remove").frame(maxWidth: .infinity) }
+                Button(role: .destructive, action: remove) { Text("Remove").frame(maxWidth: .infinity) }
                     .buttonStyle(.bordered)
                     .accessibilityIdentifier(TestIds.shared.cardRemove)
             }

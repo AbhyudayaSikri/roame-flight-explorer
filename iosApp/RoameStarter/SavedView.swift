@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 @preconcurrency import Shared
 
 /// Saved snapshots, newest first. Independent of Explore's filters, and works offline.
@@ -25,7 +26,10 @@ struct SavedView: View {
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityIdentifier(TestIds.shared.savedRow(flightId: saved.flight.id))
-                                Button("Remove", role: .destructive) { store.remove(flightId: saved.flight.id) }
+                                Button("Remove", role: .destructive) {
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    store.remove(flightId: saved.flight.id)
+                                }
                                     .buttonStyle(.borderless)
                                     .font(.subheadline)
                                     .accessibilityIdentifier(TestIds.shared.savedRemove(flightId: saved.flight.id))

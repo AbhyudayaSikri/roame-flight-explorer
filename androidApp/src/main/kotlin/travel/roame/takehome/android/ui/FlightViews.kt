@@ -31,6 +31,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -124,18 +126,28 @@ private fun Detail(label: String, value: String) {
 @Composable
 private fun SaveActions(status: SaveStatus, onSave: () -> Unit, onRemove: () -> Unit) {
     val wide = Modifier.fillMaxWidth()
+    // The screen updates at once (optimistic), so the feedback comes with the tap.
+    val haptics = LocalHapticFeedback.current
+    val save = {
+        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
+        onSave()
+    }
+    val remove = {
+        haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+        onRemove()
+    }
     when (status) {
-        SaveStatus.NOT_SAVED -> Button(onClick = onSave, modifier = wide.testTag(TestIds.cardSave)) {
+        SaveStatus.NOT_SAVED -> Button(onClick = save, modifier = wide.testTag(TestIds.cardSave)) {
             Icon(Icons.Default.FavoriteBorder, contentDescription = null)
             Text("Save", Modifier.padding(start = Spacing.s))
         }
-        SaveStatus.SAVED -> OutlinedButton(onClick = onRemove, modifier = wide.testTag(TestIds.cardRemove)) {
+        SaveStatus.SAVED -> OutlinedButton(onClick = remove, modifier = wide.testTag(TestIds.cardRemove)) {
             Icon(Icons.Default.Favorite, contentDescription = null)
             Text("Saved · Remove", Modifier.padding(start = Spacing.s))
         }
         SaveStatus.OUTDATED -> Row(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-            Button(onClick = onSave, modifier = Modifier.weight(1f).testTag(TestIds.cardUpdate)) { Text("Update saved") }
-            OutlinedButton(onClick = onRemove, modifier = Modifier.weight(1f).testTag(TestIds.cardRemove)) { Text("Remove") }
+            Button(onClick = save, modifier = Modifier.weight(1f).testTag(TestIds.cardUpdate)) { Text("Update saved") }
+            OutlinedButton(onClick = remove, modifier = Modifier.weight(1f).testTag(TestIds.cardRemove)) { Text("Remove") }
         }
         SaveStatus.IN_PROGRESS -> Button(onClick = {}, enabled = false, modifier = wide) {
             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)

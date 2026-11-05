@@ -12,13 +12,13 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 
 **How the store works.**
 - Three database flows (cache, saved flights, last sync time) are combined with the inputs: query, selection, refresh status, saves and removes in flight, the one-shot message and the server address.
-- Each change re-derives the whole state off the main thread (`mapLatest` on `Dispatchers.Default`), so the latest input always wins. Database and network calls run on IO.
+- Each change re-derives the whole state off the main thread (`mapLatest` on `Dispatchers.Default`), so the latest input always wins. Database calls run on IO. The network fetch, including reading and decoding the response, runs on `Dispatchers.Default`.
 - Corrections run on each new state. A selection or tapped marker that no longer matches the filters is cleared, and saved-tab selection is independent of the filters.
 - Saves and removes are optimistic: the state changes at once and rolls back, with a message, if the write fails.
 - The state never throws. SKIE would turn an exception inside a Flow into a Swift crash, so errors become `sync` (Loading, Fresh, Stale, EmptySuccess, FailedNoCache) or a `message`.
 - The tests drive it through a fake source and an in-memory SQLite database on the test scheduler.
 
-**Swift interop.** SKIE gives Swift `for await` over the `StateFlow`, `onEnum(of:)` for exhaustive switches over sealed types, and Swift enums. The app's `@Observable` model just mirrors the latest state.
+**Swift interop.** SKIE gives Swift `for await` over the `StateFlow`, `onEnum(of:)` for exhaustive switches over sealed types, and Swift enums. The app's `@Observable` model mirrors the latest state one field at a time, so each view redraws only for the fields it reads.
 
 **Local API.**
 - `server/` is a Ktor CIO app: `GET /flights` serves the fixture byte-for-byte, with `--mode=empty|error|updated|slow` for the failure and edge cases, and `POST /control/mode` for the iOS UI tests.
@@ -90,6 +90,10 @@ Alternatives considered:
   - iOS also frames again when the map is resized (the keyboard closing, a rotation), because a frame chosen in a short map stays too zoomed out once the map is tall again.
 - **Long routes near the pole (2026-11-04):** six routes, such as Toronto to Bangkok, pass within 4° of the North Pole. Their great-circle paths swing quickly in longitude there, which is real geometry rather than an antimeridian wrap. On a Web Mercator map they run along the top edge.
 - **An empty successful response replaces the cache.** It is "the last successful result". Saved flights are unaffected.
+- **Sync state rules (2026-11-04, from the independent review):**
+  - **Loading lasts until the cache has been read.** A refresh that fails before then can't tell "nothing cached" from "not read yet", so the no-cache error screen only appears once the read shows an empty cache. If the cache can't be read at all, Loading stays up along with "Couldn't read cached flights. Retrying…".
+  - **The cache and its timestamp are read together, in one transaction.** Read separately, a new timestamp could arrive with the old, empty cache, which flashes "The server has no flights" on a first launch.
+  - **Cached data stays marked stale while a retry runs.** The banner goes only when a refresh succeeds.
 - **Server URL at runtime (2026-11-04).** Debug builds can point at another flights server, for a phone on the same Wi-Fi as the computer running the API.
   - Where: Android's debug menu (⋮ → Server URL…) and an iOS Debug sheet (the ladybug, top left). Release builds have neither.
   - Validation is shared (`serverUrlProblem`): http or https, a host or IP (IPv6 in brackets), a port from 1 to 65535, any path, no query, fragment or user name. A missing scheme means http://, and a trailing / is dropped.
@@ -101,11 +105,16 @@ Alternatives considered:
   - `DebugMenuTests` checks this in CI against the runner's own LAN address. It first passed on 2026-11-04, fetching from `http://192.168.64.14:8080`.
   - `NSLocalNetworkUsageDescription` explains the Local Network permission prompt that iOS shows on a device.
 - **Android cleartext for LAN addresses (2026-11-04).** A network security config can't allow an IP range, only named hosts. So debug builds (`src/debug`) allow plain HTTP to any host, and release builds keep `src/main`'s config: 10.0.2.2, localhost and 127.0.0.1 only.
+- **What Android restores after the system recreates the app (2026-11-04).** The search and filters live in the store, in memory. When the system destroys the activity in the background, a new store starts empty, and so do the search fields. Before, they restored their old text, which the new store wasn't using (review bug 2). The Explore/Saved tab and List/Map mode are pure UI state, so they are restored.
 - **StrictMode in Android debug builds (2026-11-04)** only logs, so a library's own violation can't crash a QA pass. Release builds don't enable it.
 - **Compose treats the shared value types as stable (2026-11-04).** `:shared` isn't compiled with the Compose compiler, so on its own Compose compares `ExplorerState`, `Flight`, `FiltersUi` and the rest by identity. Every rebuilt but equal value then recomposes.
   - `androidApp/compose-stability.conf` names each shared value type, plus read-only `List` and `Set` with stable elements. It names them one by one, not with a package wildcard, so the store and repository aren't covered.
   - Compiler report: unstable arguments went from 35 to 17, and unknown-stability ones (the lists and sets) from 14 to 6. The ones left are the store, which is one instance for the app's lifetime, so comparing by identity already skips.
+- **iOS sliced observation (2026-11-04).** `ExplorerModel` has one observed property for each state field the views read, instead of one `state` property. It assigns a field only when the value changed, because Observation treats every assignment as a change. A view then redraws only when a field it reads changes: a message banner doesn't redraw the map, and typing a search doesn't redraw the Saved tab.
 - **The apps are called "Flight Explorer" on the home screen (2026-11-04).** Only the display name changed: iOS `CFBundleDisplayName` and Android `android:label`. The project, the `RoameStarter.app` bundle, the bundle ID and the package name keep the starter's names, because the release workflow, QUICKSTART and the UI tests use them.
+- **Android test tags (2026-11-04).** Each control the iOS UI tests find by identifier has the same shared `TestIds` value on Android as a `testTag`, and `testTagsAsResourceId` shows the tags to UiAutomator. A QA script or a future instrumented test can then find controls by id.
+  - The map's pills are MapLibre symbols, not Compose nodes, so they have no tags.
+  - Android has one date-range button where iOS has two pickers, so it has its own id, `filters.dates`.
 - **Release packaging (2026-11-04).**
   - A `v*` tag publishes a GitHub Release (`release.yml`):
     - The Android **debug** APK and a **Debug** iOS simulator build, so testers get the debug menu's Server URL.
@@ -173,8 +182,7 @@ Alternatives considered:
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
 - **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
   - Individually removable chips, −/+ points buttons, skeleton rows, haptics.
-  - iOS sliced observation, Android `testTag`s.
-  - Dark mode, Dynamic Type and screen-reader passes, LeakCanary, the Python fallback server.
+  - Dark mode, Dynamic Type and screen-reader passes, LeakCanary.
 
 ## 5. Checks actually performed
 Dates are local (UTC-5).
@@ -216,10 +224,10 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
     - Selection and focus rules; the latest query winning; storage failures becoming messages.
     - The server address: saved, used after a restart, replacing an in-flight refresh.
 - **Local API.** 19 Kotlin tests (`:server:test`): every mode, the control endpoint, argument parsing, and the embedded fixture. Plus 12 Python tests for `fallback.py`. Linux CI also runs the jar from an empty directory and compares `/flights` byte-for-byte with the fixture.
-- **iOS app, 29 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
+- **iOS app, 30 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
   - `LaunchTests`, `SearchTests`, `FilterTests`, `MapSelectionTests`, `SavedTests`, `ErrorStateTests` and `DebugMenuTests`. The server-mode cases switch modes through `POST /control/mode`, and the debug-menu case reaches the API on the runner's LAN IP.
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
-  - Pushes to `main` and manual runs run all 29; pull requests run 5 smoke tests.
+  - Pushes to `main` and manual runs run all 30; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
 - **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
 

@@ -2,10 +2,11 @@ package travel.roame.takehome
 
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
-import app.cash.sqldelight.coroutines.mapToOneOrNull
 import app.cash.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import travel.roame.takehome.db.FlightDatabase
@@ -18,7 +19,7 @@ internal class FlightDatabaseStore(driver: SqlDriver, private val io: CoroutineD
     private val database = FlightDatabase(driver)
     private val queries = database.flightsQueries
 
-    val cachedFlights: Flow<List<Flight>> = queries
+    private val cachedFlightsQuery = queries
         .selectCachedFlights { id, origin, destination, originCity, destinationCity, departureDate, program, points, cabin,
                                originLatitude, originLongitude, destinationLatitude, destinationLongitude ->
             Flight(
@@ -35,8 +36,22 @@ internal class FlightDatabaseStore(driver: SqlDriver, private val io: CoroutineD
                 destinationPoint = GeoPoint(destinationLatitude, destinationLongitude),
             )
         }
-        .asFlow()
-        .mapToList(io)
+    private val lastSuccessQuery = queries.selectMeta(LAST_SUCCESS_AT)
+
+    /**
+     * Re-read after every change to either table, both in one transaction. Two separate reads after
+     * [replaceCache] could land in either order, and a new timestamp with the old, empty cache looks
+     * like "the server has no flights".
+     */
+    val cache: Flow<CachedFlights> = combine(cachedFlightsQuery.asFlow(), lastSuccessQuery.asFlow()) { _, _ -> }
+        .conflate()
+        .map {
+            withContext(io) {
+                database.transactionWithResult {
+                    CachedFlights(cachedFlightsQuery.executeAsList(), lastSuccessQuery.executeAsOneOrNull()?.toLongOrNull())
+                }
+            }
+        }
 
     val savedFlights: Flow<List<SavedFlight>> = queries
         .selectSavedFlights { id, origin, destination, originCity, destinationCity, departureDate, program, points, cabin,
@@ -60,11 +75,6 @@ internal class FlightDatabaseStore(driver: SqlDriver, private val io: CoroutineD
         }
         .asFlow()
         .mapToList(io)
-
-    val lastSuccessAtMillis: Flow<Long?> = queries.selectMeta(LAST_SUCCESS_AT)
-        .asFlow()
-        .mapToOneOrNull(io)
-        .map { it?.toLongOrNull() }
 
     /** The latest successful response replaces the whole cache, even when it's empty. */
     suspend fun replaceCache(flights: List<Flight>, atMillis: Long) = withContext(io) {

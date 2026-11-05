@@ -2,7 +2,9 @@ package travel.roame.takehome
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
@@ -10,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -71,6 +74,45 @@ class FlightExplorerStoreTest {
     }
 
     @Test
+    fun aRetryKeepsTheCacheMarkedStaleUntilItSucceeds() = runTest {
+        val (harness, store) = loadedStore()
+        val loadedAt = harness.clock
+        harness.source.fail(RefreshError.Offline)
+        store.refresh()
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>().also { harness.source.gate = it }
+        store.refresh()
+        runCurrent()
+        assertTrue(store.state.value.isRefreshing)
+        assertEquals(SyncState.Stale(loadedAt, RefreshError.Offline), store.state.value.sync)
+
+        harness.clock += 60_000
+        harness.source.serve(fixtureFlights)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(SyncState.Fresh(harness.clock), store.state.value.sync)
+    }
+
+    @Test
+    fun aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache() = runTest {
+        val harness = StoreHarness(this)
+        harness.database.replaceCache(fixtureFlights, atMillis = 5)
+        harness.source.fail(RefreshError.Offline)
+        val cacheRead = CompletableDeferred<Unit>()
+        val store = harness.newStore(repository = SlowCacheRepository(harness.defaultRepository(), cacheRead))
+        advanceUntilIdle()
+
+        // The refresh has failed and the cache hasn't been read: that's still loading.
+        assertEquals(SyncState.Loading, store.state.value.sync)
+
+        cacheRead.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(SyncState.Stale(5, RefreshError.Offline), store.state.value.sync)
+        assertEquals(1000, store.state.value.totalCount)
+    }
+
+    @Test
     fun anEmptySuccessIsNotAFailureAndReplacesTheCache() = runTest {
         val (harness, store) = loadedStore()
 
@@ -105,7 +147,7 @@ class FlightExplorerStoreTest {
     }
 
     @Test
-    fun aMalformedResponseIsReportedAndNotCached() = runTest {
+    fun aMalformedFirstResponseIsAnErrorWithNothingCached() = runTest {
         val harness = StoreHarness(this)
         harness.source.fail(RefreshError.Malformed)
         val store = harness.newStore()
@@ -113,6 +155,22 @@ class FlightExplorerStoreTest {
 
         assertEquals(SyncState.FailedNoCache(RefreshError.Malformed), store.state.value.sync)
         assertEquals(0, store.state.value.totalCount)
+    }
+
+    @Test
+    fun aBadResponseOverACacheKeepsTheCacheAndMarksItStale() = runTest {
+        listOf(RefreshError.Malformed, RefreshError.Http(500)).forEach { error ->
+            val (harness, store) = loadedStore()
+            val loadedAt = harness.clock
+            harness.clock += 60_000
+            harness.source.fail(error)
+            store.refresh()
+            advanceUntilIdle()
+
+            assertEquals(SyncState.Stale(loadedAt, error), store.state.value.sync, "$error")
+            assertEquals(1000, store.state.value.totalCount, "$error")
+            store.close()
+        }
     }
 
     @Test
@@ -317,6 +375,32 @@ class FlightExplorerStoreTest {
         assertEquals("  sea ", store.state.value.filters.originText)
         assertTrue(store.state.value.results.all { it.origin == "SEA" })
         assertEquals(fixtureFlights.count { it.origin == "SEA" }, store.state.value.resultCount)
+    }
+
+    @Test
+    fun anOutdatedQueryStillBeingComputedNeverReachesTheState() = runTest {
+        val compute = ManualDispatcher()
+        val store = StoreHarness(this).newStore(computeDispatcher = compute)
+        fun settle() = repeat(10) {
+            advanceUntilIdle()
+            compute.runAll()
+        }
+        settle()
+        assertEquals(1000, store.state.value.resultCount)
+        val shown = mutableListOf<Int>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { store.state.collect { shown += it.resultCount } }
+
+        // "jfk" (113 flights) is still being computed when "sea" arrives.
+        store.setOriginText("jfk")
+        advanceUntilIdle()
+        assertTrue(compute.hasPendingWork)
+        store.setOriginText("sea")
+        settle()
+
+        val sea = filter(FlightQuery(originText = "sea")).size
+        assertNotEquals(113, sea)
+        assertEquals(sea, store.state.value.resultCount)
+        assertFalse(113 in shown, "jfk's results were shown after a newer query: $shown")
     }
 
     @Test

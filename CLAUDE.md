@@ -25,7 +25,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
 - Python fallback API (Python 3.9+, standard library only): `python3 server/fallback.py` (Windows: `py server\fallback.py`), with the same flags. Tests: `python3 -m unittest discover -s server -p "test_*.py"`.
 - Server as one jar: `./gradlew :server:fatJar` → `server/build/libs/roame-flights-server.jar` (fixture embedded; `java -jar`, same flags).
 - Releases: `.github/workflows/release.yml` on a `v*` tag publishes the debug APK, the zipped simulator `.app`, the jar, `fallback.py`, `flights.json` and `QUICKSTART.md`. A tag with a suffix (`v0.9.0-rc.1`) is published as a pre-release. Pull requests that change the workflow and manual runs only build.
-- Android: `./gradlew :androidApp:assembleDebug`. Override the base URL with `-PapiBaseUrl=http://…`.
+- Android: `./gradlew :androidApp:assembleDebug`. Override the base URL with `-PapiBaseUrl=http://…`. A `localhost` URL also makes debug builds run `adb reverse` for its port on every connected device (`adbReverse` in `androidApp/build.gradle.kts`).
 - Compose stability reports: `./gradlew :androidApp:compileDebugKotlin --rerun -PcomposeReports` → `androidApp/build/compose-reports`. New shared types the UI takes as parameters go in `androidApp/compose-stability.conf`.
 - iOS project:
   - App sources live in `iosApp/RoameStarter/`; UI tests in `iosApp/RoameStarterUITests/`.
@@ -45,7 +45,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - Results, logcat and failure screenshots: `gh run download <run-id> -n android-ui-tests`. The video: `-n android-demo`.
 
 ## Base URLs
-- Android emulator: `http://10.0.2.2:8080` (or `adb reverse tcp:8080 tcp:8080` + `http://localhost:8080`)
+- Android emulator: `http://10.0.2.2:8080` (or `apiBaseUrl=http://localhost:8080`, whose debug builds set up `adb reverse tcp:8080 tcp:8080`)
 - iOS simulator: `http://localhost:8080`
 - Configured via BuildConfig `API_BASE_URL` on Android (`-PapiBaseUrl`), and via the Info.plist key `API_BASE_URL` on iOS (launch argument `-apiBaseUrl`). Never hard-code it in shared.
 

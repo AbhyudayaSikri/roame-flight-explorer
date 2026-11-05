@@ -27,6 +27,10 @@ On Windows, allow Java or Python through the firewall (private networks) if aske
 1. Start an emulator in Android Studio (Device Manager).
 2. Drag `FlightExplorer-android-debug.apk` onto the emulator window, or run `adb install FlightExplorer-android-debug.apk`.
 3. Open Flight Explorer. The emulator reaches your computer as `10.0.2.2`, which is the app's default address, so the flights load.
+4. If it says it can't reach the flights server, while `http://localhost:8080/health` opens on your computer, the emulator isn't reaching `10.0.2.2`:
+   1. Run `adb reverse tcp:8080 tcp:8080`.
+   2. In the app: ⋮ → **Server URL…** → `http://localhost:8080` → **Save**.
+   3. Run the `adb reverse` command again after the emulator restarts.
 
 ## 2b. Android phone
 1. Copy the APK to the phone and open it. Allow installing apps from that source when asked.

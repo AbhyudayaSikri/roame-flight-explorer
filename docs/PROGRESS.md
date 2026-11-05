@@ -326,6 +326,26 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
   - The token still had no `workflow` scope, and GitHub allowed both merges anyway. It refused #10 on Nov 4, which merged a workflow file that `main` had also changed. Probably the difference: these merges only brought in workflow files exactly as the PRs had pushed them.
   - On `31ffcac`, the emulator job's first run on `main` ([42047127064](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42047127064)) and Linux CI passed. The full iOS run was still going when this was written.
 
+## Day: your fourth list (from 10:55)
+
+A second independent review runs in another chat; its findings arrive as `review` issues, handled like `qa` ones. Meanwhile the Android UI suite grows towards parity with iOS, and the emulator job records an Android demo.
+
+| Item | PR | State |
+|---|---|---|
+| Android UI tests: filters and search (F1–F8, F10–F12, S1–S6) | this PR | in review |
+| Android UI tests: selection, saved, server states (M5, M6, V2, V4, V6, O1, O4, O5) | | not started |
+| Android demo video (`android-demo.mp4`) | | not started |
+
+- **The `qa` and `review` labels didn't exist**, so filing an issue with either label would have failed. I created both. The repo had no issues at all, so none were missed.
+- **Token scopes (`gh auth status`, 11:00):** `gist`, `read:org`, `repo`. Still no `workflow`.
+- **Android UI tests, part 1: filters and search (this PR).**
+  - Debug builds take boolean intent extras, like iOS's launch arguments: `resetData`, `failSaves` and `failRemoves`. `ExplorerViewModel` reads them as `DebugOptions`, and drops `resetData` once used, so an activity recreated after process death doesn't wipe the data again.
+  - Every test launches through `ExplorerApp` with `resetData`, so each starts from an empty database and the order doesn't matter.
+  - New: `FilterTests` (7 tests) and `SearchTests` (3). QA_CHECKLIST.md now marks each automated item by platform.
+  - The date picker is Material's `DateRangePicker`. Its month list tells test tools it can't scroll, so the test scrolls by month and taps the day once it's on screen. One tap and Apply give a single-day range.
+  - `OfflineRelaunchTest` now seeds its own cache and saved flight in a run before the API stops (`-e offline before`), because every other test resets the database.
+  - Locally on `roame-smoke` (API 35) against the jar: all 16 online tests passed in 67 s, and both offline runs passed. Before the last fix, the date test timed out waiting for 21: it had tapped April 1 while that day was still below the visible part of the list.
+
 ## Decisions
 
 - **Lighter iOS job on pull requests (Nov 4, evening, your call).**

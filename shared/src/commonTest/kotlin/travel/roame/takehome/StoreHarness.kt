@@ -2,8 +2,10 @@ package travel.roame.takehome
 
 import app.cash.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.Flow
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlin.coroutines.CoroutineContext
 
 /** A FlightsSource that answers with whatever the test sets, optionally held open by [gate]. */
 internal class FakeFlightsSource : FlightsSource {
@@ -56,6 +59,7 @@ internal class StoreHarness(
         resetData: Boolean = false,
         repository: FlightRepository = defaultRepository(),
         defaultServerUrl: String = "http://localhost:8080",
+        computeDispatcher: CoroutineDispatcher = dispatcher,
     ): FlightExplorerStore {
         // Parented to backgroundScope so it's cancelled when the test ends, but without its context:
         // advanceUntilIdle() skips work marked as background, and the store's work must run.
@@ -63,7 +67,7 @@ internal class StoreHarness(
         return FlightExplorerStore(
             repository = repository,
             scope = scope,
-            computeDispatcher = dispatcher,
+            computeDispatcher = computeDispatcher,
             faults = faults,
             now = { clock },
             defaultServerUrl = defaultServerUrl,
@@ -74,6 +78,20 @@ internal class StoreHarness(
 
     fun defaultRepository(): FlightRepository =
         FaultInjectingRepository(DefaultFlightRepository(source, database) { clock }, faults)
+}
+
+/** Holds every task until the test calls [runAll], so a derivation can be caught half-way. */
+internal class ManualDispatcher : CoroutineDispatcher() {
+    private val queue = ArrayDeque<Runnable>()
+    val hasPendingWork get() = queue.isNotEmpty()
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) {
+        queue.addLast(block)
+    }
+
+    fun runAll() {
+        while (queue.isNotEmpty()) queue.removeFirst().run()
+    }
 }
 
 /** Holds saves and removes open until the test completes [writeGate], so in-flight states are observable. */

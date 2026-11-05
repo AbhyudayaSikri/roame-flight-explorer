@@ -71,7 +71,10 @@ For example: `./gradlew :server:run --args="--mode=slow"`. On Windows, allow Jav
 
 CI runs all of it on pull requests and pushes to `main` that change code (docs-only changes skip it):
 - `.github/workflows/ci.yml` (Linux): server tests, shared tests, Android build.
-- `.github/workflows/ios.yml` (macOS): shared tests on the simulator, then the XCUITests against the running API, then the offline relaunch with the API stopped. Its `ios-ui-tests` artifact has the result bundles, screenshots and a demo video.
+- `.github/workflows/ios.yml` (macOS): the build and the shared tests on the simulator, then XCUITests against the running API.
+  - Pull requests run 5 smoke tests: launch, search, map selection, save, error state.
+  - Pushes to `main` and manual runs (workflow_dispatch) run the full suite, then the offline relaunch with the API stopped.
+  - Its `ios-ui-tests` artifact has the result bundles and screenshots, and on full runs a demo video.
 
 ## Troubleshooting
 - **Android says "Couldn't load flights".** Either the API isn't running, or the app can't reach it. From the emulator, use `10.0.2.2`, not `localhost`. Plain HTTP is allowed only to `10.0.2.2`, `localhost` and `127.0.0.1` (`androidApp/src/main/res/xml/network_security_config.xml`).

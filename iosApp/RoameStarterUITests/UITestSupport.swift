@@ -180,6 +180,12 @@ class UITestCase: XCTestCase {
         XCTAssertTrue(element(ID.card).waitForExistence(timeout: 10), "No flight card", file: file, line: line)
     }
 
+    /// Every text on the flight card, which together identify the selected flight.
+    @MainActor
+    func cardTexts() -> [String] {
+        element(ID.card).staticTexts.allElementsBoundByIndex.map(\.label)
+    }
+
     /// Searches JFK → HND, selects the first flight and saves it.
     @MainActor
     func saveFirstJfkToHaneda() {

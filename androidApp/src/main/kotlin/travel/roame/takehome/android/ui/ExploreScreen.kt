@@ -42,22 +42,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.ExplorerState
 import travel.roame.takehome.FlightExplorerStore
 import travel.roame.takehome.SyncState
+import travel.roame.takehome.TestIds
 import travel.roame.takehome.formatFlightCount
 
-private enum class ViewMode { LIST, MAP }
+enum class ViewMode { LIST, MAP }
 
 @Composable
-fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
-    var mode by rememberSaveable { mutableStateOf(ViewMode.LIST) }
+fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore, mode: ViewMode, onModeChange: (ViewMode) -> Unit) {
     var showFilters by rememberSaveable { mutableStateOf(false) }
     // The fields own their text so typing never waits on the store; Reset clears both.
-    var origin by rememberSaveable { mutableStateOf(state.filters.originText) }
-    var destination by rememberSaveable { mutableStateOf(state.filters.destinationText) }
+    // Plain remember, started from the store: after the system recreates the activity with a new
+    // store, restored text would show a search the store isn't running.
+    var origin by remember { mutableStateOf(state.filters.originText) }
+    var destination by remember { mutableStateOf(state.filters.destinationText) }
     val reset = {
         origin = ""
         destination = ""
@@ -69,11 +72,11 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
             Modifier.fillMaxWidth().padding(horizontal = Spacing.l, vertical = Spacing.s),
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
-            SearchField("From", "City or airport", origin, Modifier.weight(1f)) {
+            SearchField("From", "City or airport", origin, TestIds.searchOrigin, Modifier.weight(1f)) {
                 origin = it
                 store.setOriginText(it)
             }
-            SearchField("To", "City or airport", destination, Modifier.weight(1f)) {
+            SearchField("To", "City or airport", destination, TestIds.searchDestination, Modifier.weight(1f)) {
                 destination = it
                 store.setDestinationText(it)
             }
@@ -83,8 +86,9 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
             ViewMode.entries.forEachIndexed { index, item ->
                 SegmentedButton(
                     selected = mode == item,
-                    onClick = { mode = item },
+                    onClick = { onModeChange(item) },
                     shape = SegmentedButtonDefaults.itemShape(index, ViewMode.entries.size),
+                    modifier = Modifier.testTag(if (item == ViewMode.LIST) TestIds.viewList else TestIds.viewMap),
                 ) { Text(if (item == ViewMode.LIST) "List" else "Map") }
             }
         }
@@ -101,6 +105,7 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
                 state.totalCount == 0 -> EmptyView(
                     title = "No flights available",
                     body = "The server has no flights right now. Pull down or tap refresh to check again.",
+                    testTag = TestIds.emptyState,
                     onRefresh = store::refresh,
                 )
                 state.resultCount == 0 -> NoMatchesView(onReset = reset)
@@ -115,6 +120,7 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
                                 saved = flight.id in state.savedIds,
                                 selected = flight.id == state.selected?.id,
                                 onClick = { store.select(flight.id) },
+                                modifier = Modifier.testTag(TestIds.flightRow(flight.id)),
                             )
                             HorizontalDivider()
                         }
@@ -169,18 +175,20 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
 }
 
 @Composable
-private fun SearchField(label: String, placeholder: String, value: String, modifier: Modifier, onChange: (String) -> Unit) {
+private fun SearchField(label: String, placeholder: String, value: String, tag: String, modifier: Modifier, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = onChange,
-        modifier = modifier,
+        modifier = modifier.testTag(tag),
         label = { Text(label) },
         placeholder = { Text(placeholder) },
         singleLine = true,
         leadingIcon = { Icon(Icons.Default.Place, contentDescription = null) },
         trailingIcon = {
             if (value.isNotEmpty()) {
-                IconButton(onClick = { onChange("") }) { Icon(Icons.Default.Clear, contentDescription = "Clear $label") }
+                IconButton(onClick = { onChange("") }, modifier = Modifier.testTag("$tag.clear")) {
+                    Icon(Icons.Default.Clear, contentDescription = "Clear $label")
+                }
             }
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
@@ -196,17 +204,24 @@ private fun SummaryRow(state: ExplorerState, onOpenFilters: () -> Unit, onReset:
         Text(
             text = formatFlightCount(state.resultCount),
             style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.testTag(TestIds.resultCount),
         )
         LazyRow(
             Modifier.weight(1f).padding(horizontal = Spacing.s),
             horizontalArrangement = Arrangement.spacedBy(Spacing.s),
         ) {
             items(state.activeFilters, key = { it.kind.name }) { filter ->
-                AssistChip(onClick = onOpenFilters, label = { Text(filter.label, maxLines = 1) })
+                AssistChip(
+                    onClick = onOpenFilters,
+                    label = { Text(filter.label, maxLines = 1) },
+                    modifier = Modifier.testTag(TestIds.filterChip(filter.kind)),
+                )
             }
         }
-        if (state.activeFilters.isNotEmpty()) TextButton(onClick = onReset) { Text("Reset") }
-        IconButton(onClick = onOpenFilters, enabled = state.filters.bounds != null) {
+        if (state.activeFilters.isNotEmpty()) {
+            TextButton(onClick = onReset, modifier = Modifier.testTag(TestIds.filtersReset)) { Text("Reset") }
+        }
+        IconButton(onClick = onOpenFilters, enabled = state.filters.bounds != null, modifier = Modifier.testTag(TestIds.filtersOpen)) {
             Icon(Icons.Default.Settings, contentDescription = "Filters")
         }
     }

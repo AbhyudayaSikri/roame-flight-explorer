@@ -35,7 +35,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - F6 [MUST] Cabin Business + program Avios + max 60,000 → 32 flights (AND across all three).
 - F7 [MUST] Active filters are visible as chips/summary; the result count updates with every change.
 - F8 [MUST] Reset → search fields and every filter back to defaults; count 1,000.
-- F9 [MUST] Typing fast or changing filters quickly → the final results match the last input; no jank.
+- F9 [MUST] Typing fast or changing filters quickly → the final results match the last input; no jank. Drag the points slider fast back and forth: the thumb follows the finger and never jumps back.
 - F10 [MUST] Select a program, then deselect it → all programs are included again (1,000). "Mileage Plan" (203) and "MileagePlus" (199) are separate options.
 
 ## List / map / selection
@@ -50,6 +50,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - M7 [MUST] The list and the map always agree on the result set (marker counts add up to the result count).
 - M8 [MUST] Select a trans-Pacific flight (e.g. SFO → NRT or JFK → SYD) → one continuous arc over the Pacific, never a line across the whole map.
 - M9 [SHOULD] After selecting, the camera frames the whole route, including M8's routes.
+- M10 [SHOULD] Switch to Map, open the Saved tab, come back to Explore: it's still on Map.
 
 ## Saved
 - V1 [MUST] Save from the card → it appears in the Saved tab; the saved state shows on list rows and on the map.
@@ -72,6 +73,7 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
 - O6 [SHOULD] `--mode=slow` → the loading indicator shows for ~3 s; the UI stays responsive.
 - O7 [MUST] Rotate the device / background and foreground the app → no crash, state preserved.
 - O8 [SHOULD] Offline, Map tab → markers and the selected route still render. A blank background is fine; tiles aren't required.
+- O9 [SHOULD] Android, Developer options → "Don't keep activities" on. Search From `jfk`, press Home, then return. The From field and the results agree: the field is empty and all flights show. Turn the option off afterwards.
 
 ## Polish
 - P1 [MUST] Spacing, typography and hierarchy are consistent across list rows, the card, sheets and the Saved tab.
@@ -90,3 +92,6 @@ Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | 
   - An invalid entry (`ftp://x`, `host:70000`) says what's wrong and can't be saved.
   - "Use default" goes back to the build's address.
   - On a physical device, allow Local Network access when asked.
+- T4 [SHOULD] Test tags (Android): run `adb shell uiautomator dump /sdcard/ui.xml` and `adb pull /sdcard/ui.xml`.
+  - On Explore, the file has `resource-id="search.origin"`, `results.count` and `tab.saved`.
+  - With the filter sheet open, it also has `filters.done` and `filters.cabin.any`.

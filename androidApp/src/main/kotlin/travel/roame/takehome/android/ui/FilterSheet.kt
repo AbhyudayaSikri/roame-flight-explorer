@@ -30,12 +30,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import travel.roame.takehome.CalendarDate
@@ -43,6 +45,7 @@ import travel.roame.takehome.DataBounds
 import travel.roame.takehome.DateRange
 import travel.roame.takehome.FiltersUi
 import travel.roame.takehome.FlightExplorerStore
+import travel.roame.takehome.TestIds
 import travel.roame.takehome.formatDateRange
 import travel.roame.takehome.formatFlightCount
 import travel.roame.takehome.formatPoints
@@ -60,7 +63,11 @@ fun FilterSheet(
     var showDates by remember { mutableStateOf(false) }
     val range = filters.dateRange ?: bounds.dateRange
 
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        modifier = Modifier.testTagsAsResourceIds(),
+    ) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.xl).padding(bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.xl),
@@ -68,7 +75,7 @@ fun FilterSheet(
             Text("Filters", style = MaterialTheme.typography.titleLarge)
 
             Section("Departure dates") {
-                OutlinedButton(onClick = { showDates = true }) {
+                OutlinedButton(onClick = { showDates = true }, modifier = Modifier.testTag(TestIds.filterDates)) {
                     Icon(Icons.Default.DateRange, contentDescription = null)
                     Text(formatDateRange(range), Modifier.padding(start = Spacing.s))
                 }
@@ -76,9 +83,13 @@ fun FilterSheet(
 
             Section("Cabin") {
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(Spacing.s)) {
-                    FilterChip(selected = filters.cabin == null, onClick = { store.setCabin(null) }, label = { Text("Any") })
-                    bounds.cabins.forEach { cabin ->
-                        FilterChip(selected = filters.cabin == cabin, onClick = { store.setCabin(cabin) }, label = { Text(cabin) })
+                    (listOf(null) + bounds.cabins).forEach { cabin ->
+                        FilterChip(
+                            selected = filters.cabin == cabin,
+                            onClick = { store.setCabin(cabin) },
+                            label = { Text(cabin ?: "Any") },
+                            modifier = Modifier.testTag(TestIds.cabinOption(cabin)),
+                        )
                     }
                 }
             }
@@ -92,6 +103,7 @@ fun FilterSheet(
                             selected = program in filters.programs,
                             onClick = { store.toggleProgram(program) },
                             label = { Text(program) },
+                            modifier = Modifier.testTag(TestIds.programOption(program)),
                         )
                     }
                 }
@@ -105,7 +117,9 @@ fun FilterSheet(
             Row(Modifier.fillMaxWidth()) {
                 TextButton(onClick = onReset) { Text("Reset all") }
                 Spacer(Modifier.weight(1f))
-                Button(onClick = onDismiss) { Text("Show ${formatFlightCount(resultCount)}") }
+                Button(onClick = onDismiss, modifier = Modifier.testTag(TestIds.filtersDone)) {
+                    Text("Show ${formatFlightCount(resultCount)}")
+                }
             }
         }
     }
@@ -136,21 +150,31 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 private fun PointsSlider(filters: FiltersUi, bounds: DataBounds, store: FlightExplorerStore) {
     val min = bounds.minPoints
     val max = bounds.maxPoints
-    var value by remember(filters.maxPoints, min, max) { mutableFloatStateOf(filters.maxPoints.coerceIn(min, max).toFloat()) }
+    var dragging by remember { mutableStateOf(false) }
+    var value by remember { mutableFloatStateOf(filters.maxPoints.coerceIn(min, max).toFloat()) }
+    // Follow the store (Reset, new data) except mid-drag: its value arrives a moment after each
+    // step, and following it then would pull the thumb back.
+    LaunchedEffect(filters.maxPoints, min, max) {
+        if (!dragging) value = filters.maxPoints.coerceIn(min, max).toFloat()
+    }
     val points = value.roundToInt()
 
     Text(
         if (points >= max) "No limit" else "Up to ${formatPoints(points)}",
         style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.testTag(TestIds.filterPointsValue),
     )
     Slider(
         value = value,
         onValueChange = {
+            dragging = true
             value = it
             store.setMaxPoints(it.roundToInt())
         },
+        onValueChangeFinished = { dragging = false },
         valueRange = min.toFloat()..max.toFloat(),
         steps = ((max - min) / filters.pointsStep - 1).coerceAtLeast(0),
+        modifier = Modifier.testTag(TestIds.filterPoints),
     )
 }
 
@@ -177,6 +201,7 @@ private fun DateRangeDialog(
     )
     DatePickerDialog(
         onDismissRequest = onDismiss,
+        modifier = Modifier.testTagsAsResourceIds(),
         confirmButton = {
             TextButton(
                 enabled = picker.selectedStartDateMillis != null,

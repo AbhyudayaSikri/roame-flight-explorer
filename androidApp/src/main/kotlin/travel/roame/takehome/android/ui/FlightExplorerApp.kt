@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -48,6 +49,8 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
     val store = viewModel.store
     val state by store.state.collectAsStateWithLifecycle()
     var tab by rememberSaveable { mutableStateOf(Tab.EXPLORE) }
+    // Held here so List or Map is kept while the Saved tab is open.
+    var exploreMode by rememberSaveable { mutableStateOf(ViewMode.LIST) }
     val snackbar = remember { SnackbarHostState() }
 
     val message = state.message
@@ -59,6 +62,7 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
     }
 
     Scaffold(
+        modifier = Modifier.testTagsAsResourceIds(),
         topBar = {
             TopAppBar(
                 title = { Text(if (tab == Tab.EXPLORE) "Explore flights" else "Saved flights") },
@@ -75,6 +79,7 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
                     onClick = { tab = Tab.EXPLORE },
                     icon = { Icon(Icons.Default.Search, contentDescription = null) },
                     label = { Text("Explore") },
+                    modifier = Modifier.testTag(TestIds.tabExplore),
                 )
                 NavigationBarItem(
                     selected = tab == Tab.SAVED,
@@ -85,14 +90,15 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
                         }
                     },
                     label = { Text("Saved") },
+                    modifier = Modifier.testTag(TestIds.tabSaved),
                 )
             }
         },
-        snackbarHost = { SnackbarHost(snackbar) },
+        snackbarHost = { SnackbarHost(snackbar) { Snackbar(it, Modifier.testTag(TestIds.message)) } },
     ) { padding ->
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (tab) {
-                Tab.EXPLORE -> ExploreScreen(state, store)
+                Tab.EXPLORE -> ExploreScreen(state, store, exploreMode, onModeChange = { exploreMode = it })
                 Tab.SAVED -> SavedScreen(state, store)
             }
         }
@@ -103,16 +109,17 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
 private fun DebugMenu(viewModel: ExplorerViewModel, state: ExplorerState) {
     var open by remember { mutableStateOf(false) }
     var editingServerUrl by remember { mutableStateOf(false) }
-    IconButton(onClick = { open = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Debug options") }
+    IconButton(onClick = { open = true }, modifier = Modifier.testTag(TestIds.debugOpen)) {
+        Icon(Icons.Default.MoreVert, contentDescription = "Debug options")
+    }
     if (editingServerUrl) ServerUrlDialog(state, viewModel.store, onDismiss = { editingServerUrl = false })
-    DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+    DropdownMenu(expanded = open, onDismissRequest = { open = false }, modifier = Modifier.testTagsAsResourceIds()) {
         DropdownMenuItem(
             text = { Text("Server URL…") },
             onClick = {
                 open = false
                 editingServerUrl = true
             },
-            modifier = Modifier.testTag(TestIds.debugOpen),
         )
         DropdownMenuItem(
             text = { Text("Fail saves") },

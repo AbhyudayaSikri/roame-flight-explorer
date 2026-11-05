@@ -53,10 +53,9 @@ class FlightExplorerStore internal constructor(
     // Each source starts as null ("not read yet"), so the state, and any storage error message,
     // shows up without waiting for every database read to succeed.
     private val stored: Flow<Stored> = combine(
-        repository.cachedFlights.retryOnError("Couldn't read cached flights").nullUntilLoaded(),
+        repository.cache.retryOnError("Couldn't read cached flights").nullUntilLoaded(),
         repository.savedFlights.retryOnError("Couldn't read saved flights").nullUntilLoaded(),
-        repository.lastSuccessAtMillis.retryOnError("Couldn't read the last sync time").map { Loaded(it) }.nullUntilLoaded(),
-    ) { cached, saved, lastSuccessAt -> Stored(cached, saved, lastSuccessAt) }
+    ) { cache, saved -> Stored(cache, saved) }
 
     private val inputs: Flow<Inputs> = combine(
         query,
@@ -101,6 +100,20 @@ class FlightExplorerStore internal constructor(
     }
 
     fun clearMaxPoints() = query.update { it.copy(maxPoints = null) }
+
+    /**
+     * The −/+ buttons: moves the limit [steps] slider steps from where it is, within the data's
+     * prices; reaching the highest price means no limit. Updates the query directly, so quick
+     * taps each count before the state catches up.
+     */
+    fun stepMaxPoints(steps: Int) {
+        val bounds = state.value.filters.bounds ?: return
+        query.update {
+            val current = (it.maxPoints ?: bounds.maxPoints).coerceAtMost(bounds.maxPoints)
+            val next = (current + steps * POINTS_STEP).coerceIn(bounds.minPoints, bounds.maxPoints)
+            it.copy(maxPoints = next.takeUnless { next >= bounds.maxPoints })
+        }
+    }
 
     fun toggleProgram(program: String) = query.update {
         it.copy(programs = if (program in it.programs) it.programs - program else it.programs + program)
@@ -166,7 +179,7 @@ class FlightExplorerStore internal constructor(
 
     /** Fetches the latest flights; ignored while a refresh is already running. */
     fun refresh() {
-        if (refreshStatus.value == RefreshStatus.Running) return
+        if (refreshStatus.value is RefreshStatus.Running) return
         startRefresh()
     }
 
@@ -194,7 +207,7 @@ class FlightExplorerStore internal constructor(
     }
 
     private fun startRefresh() {
-        refreshStatus.value = RefreshStatus.Running
+        refreshStatus.value = RefreshStatus.Running(previousFailure = refreshStatus.value.failure)
         val url = serverUrl.value
         refreshJob = scope.launch {
             refreshStatus.value = when (val result = repository.refresh(url)) {
@@ -250,7 +263,7 @@ class FlightExplorerStore internal constructor(
 
     /** Pure: everything the UIs show, computed off the main thread. */
     private fun derive(stored: Stored, inputs: Inputs): Derived {
-        val cached = stored.cached.orEmpty()
+        val cached = stored.cache?.flights.orEmpty()
         val bounds = DataBounds.of(cached)
         val q = inputs.query
         val results = filterFlights(cached, q, bounds?.airportCodes.orEmpty())
@@ -260,15 +273,14 @@ class FlightExplorerStore internal constructor(
         val focused = inputs.selection.focusedAirport?.let { code -> markers.firstOrNull { it.airport == code } }
         val selected = inputs.selection.selectedId?.let { id -> results.firstOrNull { it.id == id } }
         val storedSavedById = stored.saved.orEmpty().associateBy { it.flight.id }
-        val sync = if (!stored.isLoaded && inputs.refreshStatus !is RefreshStatus.Failed) {
-            SyncState.Loading
-        } else {
-            syncStateOf(cached.isNotEmpty(), stored.lastSuccessAtMillis?.value, inputs.refreshStatus)
-        }
+        // Until the cache has been read, "nothing cached" and "not read yet" look the same, so a
+        // failed refresh mustn't claim there's no cache.
+        val sync = stored.cache?.let { syncStateOf(it.flights.isNotEmpty(), it.lastSuccessAtMillis, inputs.refreshStatus) }
+            ?: SyncState.Loading
 
         val state = ExplorerState(
             sync = sync,
-            isRefreshing = inputs.refreshStatus == RefreshStatus.Running,
+            isRefreshing = inputs.refreshStatus is RefreshStatus.Running,
             filters = FiltersUi(
                 originText = q.originText,
                 destinationText = q.destinationText,
@@ -303,7 +315,7 @@ class FlightExplorerStore internal constructor(
         val loaded = stored.isLoaded
         return Derived(
             state = state,
-            cachedById = stored.cached?.associateBy { it.id },
+            cachedById = stored.cache?.flights?.associateBy { it.id },
             savedById = stored.saved?.let { storedSavedById },
             staleSelection = loaded && inputs.selection.selectedId != null && selected == null,
             staleFocus = loaded && inputs.selection.focusedAirport != null && focused == null,
@@ -352,16 +364,9 @@ private data class Selection(
     val selectedSavedId: String? = null,
 )
 
-/** Wraps a value that may itself be null, so "not read yet" (a null Loaded) stays distinct. */
-private class Loaded<T>(val value: T)
-
 /** What the database has shown so far; a null field hasn't been read yet. */
-private class Stored(
-    val cached: List<Flight>?,
-    val saved: List<SavedFlight>?,
-    val lastSuccessAtMillis: Loaded<Long?>?,
-) {
-    val isLoaded: Boolean get() = cached != null && saved != null && lastSuccessAtMillis != null
+private class Stored(val cache: CachedFlights?, val saved: List<SavedFlight>?) {
+    val isLoaded: Boolean get() = cache != null && saved != null
 }
 
 private data class Inputs(

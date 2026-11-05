@@ -1,11 +1,40 @@
 import SwiftUI
 @preconcurrency import Shared
 
+/// The first load: grey rows in the shape of the list, so the layout doesn't jump when flights
+/// arrive. No pulsing: XCUITest waits for animations to finish before it acts.
 struct LoadingStateView: View {
     var body: some View {
-        ProgressView("Loading flights…")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .accessibilityIdentifier(TestIds.shared.loading)
+        VStack(spacing: 0) {
+            ForEach(0..<8, id: \.self) { _ in
+                PlaceholderRow()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                Divider().padding(.leading, 16)
+            }
+            Spacer(minLength: 0)
+        }
+        .redacted(reason: .placeholder)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading flights")
+        .accessibilityIdentifier(TestIds.shared.loading)
+    }
+}
+
+/// `FlightRowView`'s layout with sample text; redacted, only its shape shows.
+private struct PlaceholderRow: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(verbatim: "JFK → HND").font(.headline)
+                Text(verbatim: "New York → Tokyo").font(.subheadline)
+                Text(verbatim: "Mon, Feb 1, 2027 · Economy · Avios").font(.caption)
+            }
+            Spacer(minLength: 8)
+            Text(verbatim: "16,500 pts").font(.subheadline.weight(.bold))
+        }
+        .padding(.vertical, 4)
     }
 }
 

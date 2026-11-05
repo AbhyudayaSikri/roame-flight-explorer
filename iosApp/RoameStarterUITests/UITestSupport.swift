@@ -10,6 +10,8 @@ enum ID {
     static let filtersReset = "filters.reset"
     static let filtersDone = "filters.done"
     static let points = "filters.points"
+    static let pointsValue = "filters.pointsValue"
+    static let pointsStepper = "filters.pointsStepper"
     static let card = "card"
     static let cardSave = "card.save"
     static let cardRemove = "card.remove"
@@ -28,6 +30,7 @@ enum ID {
     static let debugServerUrlDefault = "debug.serverUrl.default"
     static func clear(_ field: String) -> String { "\(field).clear" }
     static func chip(_ kind: String) -> String { "filters.chip.\(kind)" }
+    static func chipRemove(_ kind: String) -> String { "filters.chip.\(kind).remove" }
     static func cabin(_ name: String?) -> String { "filters.cabin.\(name ?? "any")" }
     static func program(_ name: String) -> String { "filters.program.\(name)" }
     static func marker(_ airport: String) -> String { "marker.\(airport)" }
@@ -177,6 +180,12 @@ class UITestCase: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 10), "No result rows", file: file, line: line)
         row.tap()
         XCTAssertTrue(element(ID.card).waitForExistence(timeout: 10), "No flight card", file: file, line: line)
+    }
+
+    /// Every text on the flight card, which together identify the selected flight.
+    @MainActor
+    func cardTexts() -> [String] {
+        element(ID.card).staticTexts.allElementsBoundByIndex.map(\.label)
     }
 
     /// Searches JFK → HND, selects the first flight and saves it.

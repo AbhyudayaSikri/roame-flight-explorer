@@ -1,6 +1,6 @@
 import XCTest
 
-/// QA F3, F4, F5, F7, F8, F10. Date ranges (F1, F2) and the combined F6 case are covered by the
+/// QA F3, F4, F5, F7, F8, F10, F11, F12. Date ranges (F1, F2) and the combined F6 case are covered by the
 /// shared `FilterTest`, which the store uses unchanged.
 final class FilterTests: UITestCase {
     @MainActor
@@ -67,6 +67,50 @@ final class FilterTests: UITestCase {
         app.buttons[ID.filtersReset].tap()
         waitForAllFlights()
         XCTAssertFalse(app.buttons[ID.clear(ID.origin)].exists, "The origin field is empty again")
+        XCTAssertFalse(app.buttons[ID.filtersReset].exists)
+    }
+
+    /// F12: −/+ move the points limit one step; back up to the highest price is no limit again.
+    @MainActor
+    func testMinusAndPlusStepThePointsLimit() {
+        launchWithAllFlights()
+        openFilters()
+        let stepper = app.steppers[ID.pointsStepper]
+        reveal(stepper)
+        let value = app.staticTexts[ID.pointsValue]
+        expectLabel(value, "No limit")
+
+        stepper.buttons.element(boundBy: 0).tap()
+        expectLabel(value, "Up to 132,500 pts")
+        expectDone("Show 999 flights")
+        screenshot("F12 one step below the highest price")
+
+        stepper.buttons.element(boundBy: 1).tap()
+        expectLabel(value, "No limit")
+        expectDone("Show 1,000 flights")
+        closeFilters()
+    }
+
+    /// F11: a chip's × removes only its own filter; removing From also empties the From field.
+    @MainActor
+    func testEachChipRemovesOnlyItsOwnFilter() {
+        launchWithAllFlights()
+        search(ID.origin, "jfk")
+        expectCount("113 flights")
+        openFilters()
+        selectCabin("Business")
+        closeFilters()
+        expectCount("35 flights")
+
+        app.buttons[ID.chipRemove("cabin")].tap()
+        expectCount("113 flights")
+        XCTAssertTrue(app.buttons[ID.chip("cabin")].waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.buttons[ID.clear(ID.origin)].exists, "The From field still says jfk")
+        screenshot("F11 cabin chip removed")
+
+        app.buttons[ID.chipRemove("origin")].tap()
+        waitForAllFlights()
+        XCTAssertFalse(app.buttons[ID.clear(ID.origin)].exists, "The From field is empty again")
         XCTAssertFalse(app.buttons[ID.filtersReset].exists)
     }
 }

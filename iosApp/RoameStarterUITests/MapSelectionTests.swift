@@ -68,11 +68,15 @@ final class MapSelectionTests: UITestCase {
         search(ID.destination, "nrt")
         expectCount("6 flights")
         selectFirstRow()
+        // All six flights are SFO → NRT, so compare the whole card: date, cabin, points and program.
+        let selected = cardTexts()
         showMap()
         XCTAssertTrue(element(ID.card).waitForExistence(timeout: 5))
+        XCTAssertEqual(cardTexts(), selected, "The map shows the flight selected on the list")
         screenshot("M5 M8 SFO to NRT route on the map")
         showList()
         XCTAssertTrue(element(ID.card).waitForExistence(timeout: 5))
+        XCTAssertEqual(cardTexts(), selected, "Back on the list, the same flight is still selected")
     }
 
     @MainActor

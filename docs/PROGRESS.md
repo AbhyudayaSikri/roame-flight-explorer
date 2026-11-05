@@ -132,6 +132,9 @@ Your order: (a) Android camera fit, (b) `--mode=slow`, (c) polish (iOS cabin tru
 
 ## Decisions
 
+- **Lighter iOS job on pull requests (Nov 4, evening, your call).**
+  - PRs run the build, the shared tests on the simulator and 5 smoke XCUITests: launch, search, map selection, save, error state.
+  - Pushes to `main` and workflow_dispatch run the full suite, the demo and the offline relaunch. A red full run on `main` is fixed first.
 - **CI triggers:** added `overnight` to the `push` branches of `ci.yml` and `ios.yml` instead of opening the PR early, so every push gets CI. Reverted before merging (Nov 4, 08:00); PRs and pushes to `main` still run both workflows.
 - **First push carries three commits:** setup, version catalog and server. The mandated pre-push check (`:server:test :shared:testAndroidHostTest :androidApp:assembleDebug`) can't pass until `:server` and the shared host-test task exist.
 - **Version catalog in step 4, not 5.0:** `gradle/libs.versions.toml` now holds every §3.1 version, and all build files use it. The server was the first module to need new versions.

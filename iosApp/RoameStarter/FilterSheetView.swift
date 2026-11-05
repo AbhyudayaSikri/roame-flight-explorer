@@ -5,6 +5,10 @@ struct FilterSheetView: View {
     let model: ExplorerModel
     let onReset: () -> Void
     @Environment(\.dismiss) private var dismiss
+    /// The thumb's value from the start of a drag until the store catches up. The store's value
+    /// arrives a moment after each step, and following it mid-drag would pull the thumb back.
+    @State private var draggedPoints: Double?
+    @State private var isDragging = false
 
     private var filters: FiltersUi { model.filters }
     private var store: FlightExplorerStore { model.store }
@@ -41,15 +45,25 @@ struct FilterSheetView: View {
                         }
                     }
                     Section("Maximum points") {
-                        let points = Int(filters.maxPoints)
+                        let points = Int(draggedPoints ?? Double(filters.maxPoints))
                         Text(verbatim: points >= Int(bounds.maxPoints) ? "No limit" : "Up to \(FormattingKt.formatPoints(points: Int32(points)))")
                             .accessibilityIdentifier(TestIds.shared.filterPointsValue)
                         Slider(
                             value: pointsBinding,
                             in: Double(bounds.minPoints)...Double(bounds.maxPoints),
-                            step: Double(filters.pointsStep)
+                            step: Double(filters.pointsStep),
+                            onEditingChanged: { editing in
+                                isDragging = editing
+                                if !editing, let dragged = draggedPoints, Int32(dragged.rounded()) == model.filters.maxPoints {
+                                    draggedPoints = nil
+                                }
+                            }
                         )
                         .accessibilityIdentifier(TestIds.shared.filterPoints)
+                        // After the drag, the store is the source again: its next value, or Reset.
+                        .onChange(of: model.filters.maxPoints) {
+                            if !isDragging { draggedPoints = nil }
+                        }
                     }
                     Section {
                         ForEach(bounds.programs, id: \.self) { program in
@@ -95,8 +109,11 @@ struct FilterSheetView: View {
 
     private var pointsBinding: Binding<Double> {
         Binding(
-            get: { Double(model.filters.maxPoints) },
-            set: { store.setMaxPoints(points: Int32($0.rounded())) }
+            get: { draggedPoints ?? Double(model.filters.maxPoints) },
+            set: {
+                draggedPoints = $0
+                store.setMaxPoints(points: Int32($0.rounded()))
+            }
         )
     }
 

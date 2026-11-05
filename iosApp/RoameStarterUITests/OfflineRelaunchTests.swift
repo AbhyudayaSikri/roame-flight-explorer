@@ -4,9 +4,19 @@ import XCTest
 /// `OfflineRelaunchTests` runs after it with the server stopped. It also leaves the cache and one
 /// saved flight that the offline run relies on.
 final class DemoWalkthrough: UITestCase {
+    override func tearDownWithError() throws {
+        _ = ServerControl.setMode("normal")
+        try super.tearDownWithError()
+    }
+
     @MainActor
     func testSearchFilterMapSelectSave() {
-        launchWithAllFlights()
+        // A 3 s first load, so the recording shows the loading state.
+        XCTAssertTrue(ServerControl.setMode("slow"))
+        launch()
+        XCTAssertTrue(element(ID.loading).waitForExistence(timeout: 5))
+        waitForAllFlights()
+        XCTAssertTrue(ServerControl.setMode("normal"))
         pace()
         search(ID.origin, "new york")
         expectCount("113 flights")

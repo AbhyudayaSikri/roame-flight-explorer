@@ -81,10 +81,12 @@ Enter the computer's address, such as `http://192.168.1.20:8080`. The apps check
 | Shared logic on the JVM: filters, search, date and points boundaries, map aggregation and clustering, camera fit, persistence, sync and failure handling | `./gradlew :shared:testAndroidHostTest` |
 | Shared logic on the iOS simulator (Mac with Xcode) | `./gradlew :shared:iosSimulatorArm64Test --device "<simulator UDID>"` |
 | Android build | `./gradlew :androidApp:assembleDebug` |
+| Android UI tests on an emulator: launch, search, map selection, save, then a relaunch with the API stopped | Build `:androidApp:assembleDebug :androidApp:assembleDebugAndroidTest :server:fatJar`, start the jar as in `.github/workflows/android-ui.yml`, then run `.github/scripts/android-ui-tests.sh` (see the comment at its top) |
 | iOS UI tests (XCUITest) | Start the API with `--allow-control`, then Product → Test in Xcode. `DemoWalkthrough` and `OfflineRelaunchTests` expect the API to be stopped between them, as in `.github/workflows/ios.yml`, so skip them in a local run |
 
 CI runs all of it on pull requests and pushes to `main` that change code (docs-only changes skip it):
 - `.github/workflows/ci.yml` (Linux): server tests, shared tests, Android build.
+- `.github/workflows/android-ui.yml` (Linux): the Android UI tests on an API 36 emulator, against the running API. Its `android-ui-tests` artifact has the results, logcat and any failure screenshots.
 - `.github/workflows/ios.yml` (macOS): the build and the shared tests on the simulator, then XCUITests against the running API.
   - Pull requests run 5 smoke tests: launch, search, map selection, save, error state.
   - Pushes to `main` and manual runs (workflow_dispatch) run the full suite, then the offline relaunch with the API stopped.

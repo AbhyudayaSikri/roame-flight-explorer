@@ -1,6 +1,6 @@
 # QA checklist
 
-Run on Android (Windows emulator, by hand) and iOS (CI XCUITest plus screenshots; PLAN §8.3 maps test classes to IDs).
+Run on Android (Windows emulator, by hand; CI's emulator job also checks L1, S3, M3, V1 and O2) and iOS (CI XCUITest plus screenshots; PLAN §8.3 maps test classes to IDs).
 Record results in `docs/QA_ANDROID.md` / `docs/QA_IOS.md` as: `ID | pass/fail | commit | note`.
 
 **Tiers.** Every MUST item has to pass on both apps before any SHOULD or COULD work starts (PLAN §0). SHOULD and COULD items are checked only if they were built.

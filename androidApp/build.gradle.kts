@@ -17,6 +17,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
         compose = true
@@ -47,4 +48,10 @@ dependencies {
     implementation(libs.maplibre.android)
     // Debug builds only: watches for leaked activities, fragments, views and view models (QA T2).
     debugImplementation(libs.leakcanary.android)
+
+    // Emulator UI tests against the real local API (.github/workflows/android-ui.yml).
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
 }

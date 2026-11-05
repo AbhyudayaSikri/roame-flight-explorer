@@ -49,15 +49,16 @@ import travel.roame.takehome.FlightExplorerStore
 import travel.roame.takehome.SyncState
 import travel.roame.takehome.formatFlightCount
 
-private enum class ViewMode { LIST, MAP }
+enum class ViewMode { LIST, MAP }
 
 @Composable
-fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
-    var mode by rememberSaveable { mutableStateOf(ViewMode.LIST) }
+fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore, mode: ViewMode, onModeChange: (ViewMode) -> Unit) {
     var showFilters by rememberSaveable { mutableStateOf(false) }
     // The fields own their text so typing never waits on the store; Reset clears both.
-    var origin by rememberSaveable { mutableStateOf(state.filters.originText) }
-    var destination by rememberSaveable { mutableStateOf(state.filters.destinationText) }
+    // Plain remember, started from the store: after the system recreates the activity with a new
+    // store, restored text would show a search the store isn't running.
+    var origin by remember { mutableStateOf(state.filters.originText) }
+    var destination by remember { mutableStateOf(state.filters.destinationText) }
     val reset = {
         origin = ""
         destination = ""
@@ -83,7 +84,7 @@ fun ExploreScreen(state: ExplorerState, store: FlightExplorerStore) {
             ViewMode.entries.forEachIndexed { index, item ->
                 SegmentedButton(
                     selected = mode == item,
-                    onClick = { mode = item },
+                    onClick = { onModeChange(item) },
                     shape = SegmentedButtonDefaults.itemShape(index, ViewMode.entries.size),
                 ) { Text(if (item == ViewMode.LIST) "List" else "Map") }
             }

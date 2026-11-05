@@ -175,6 +175,11 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.1 Review fixes: sync state** (review risks 4 and 6).
+  - Loading now lasts until the cache has been read. Before, a refresh that failed first showed "Couldn't load flights" over a valid cache.
+  - The cache and its timestamp come from one transaction (`CachedFlights`), so a first launch can't flash "no flights".
+  - A retry keeps the stale banner up (`RefreshStatus.Running.previousFailure`).
+  - New tests: `aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache`, `aRetryKeepsTheCacheMarkedStaleUntilItSucceeds`, `everyCacheSnapshotPairsTheFlightsWithTheirOwnTimestamp`, and two more `syncStateOf` cases. With the old code, the two store tests fail; I checked by restoring it.
 - **(e) §13.7 Polish, part 1: display names.**
   - The launcher (Android) and home screen (iOS) now say "Flight Explorer". The bundle and package names don't change.
   - New QA item P6. The rest of §13.7 (chips, −/+ points buttons, skeleton rows, haptics) follows in separate PRs.

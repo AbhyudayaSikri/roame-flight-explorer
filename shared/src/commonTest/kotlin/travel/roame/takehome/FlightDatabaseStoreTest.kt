@@ -1,8 +1,10 @@
 package travel.roame.takehome
 
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,8 +18,24 @@ class FlightDatabaseStoreTest {
 
         db.replaceCache(fixtureFlights, atMillis = 42)
 
-        assertEquals(fixtureFlights.sortedBy { it.id }, db.cachedFlights.first().sortedBy { it.id })
-        assertEquals(42, db.lastSuccessAtMillis.first())
+        assertEquals(fixtureFlights.sortedBy { it.id }, db.cache.first().flights.sortedBy { it.id })
+        assertEquals(42, db.cache.first().lastSuccessAtMillis)
+    }
+
+    @Test
+    fun everyCacheSnapshotPairsTheFlightsWithTheirOwnTimestamp() = runTest {
+        val db = database()
+        val seen = mutableListOf<Pair<Int, Long?>>()
+        val collecting = launch { db.cache.collect { seen += it.flights.size to it.lastSuccessAtMillis } }
+        runCurrent()
+
+        db.replaceCache(fixtureFlights.take(3), atMillis = 1)
+        runCurrent()
+        db.replaceCache(fixtureFlights, atMillis = 2)
+        runCurrent()
+        collecting.cancel()
+
+        assertEquals(listOf(0 to null, 3 to 1L, 1000 to 2L), seen.distinct())
     }
 
     @Test
@@ -26,11 +44,11 @@ class FlightDatabaseStoreTest {
         db.replaceCache(fixtureFlights, atMillis = 1)
 
         db.replaceCache(fixtureFlights.take(3), atMillis = 2)
-        assertEquals(fixtureFlights.take(3).map { it.id }.toSet(), db.cachedFlights.first().map { it.id }.toSet())
+        assertEquals(fixtureFlights.take(3).map { it.id }.toSet(), db.cache.first().flights.map { it.id }.toSet())
 
         db.replaceCache(emptyList(), atMillis = 3)
-        assertEquals(emptyList(), db.cachedFlights.first())
-        assertEquals(3, db.lastSuccessAtMillis.first())
+        assertEquals(emptyList(), db.cache.first().flights)
+        assertEquals(3, db.cache.first().lastSuccessAtMillis)
     }
 
     @Test
@@ -76,8 +94,8 @@ class FlightDatabaseStoreTest {
 
         db.clearAll()
 
-        assertEquals(emptyList(), db.cachedFlights.first())
+        assertEquals(emptyList(), db.cache.first().flights)
         assertEquals(emptyList(), db.savedFlights.first())
-        assertEquals(null, db.lastSuccessAtMillis.first())
+        assertEquals(null, db.cache.first().lastSuccessAtMillis)
     }
 }

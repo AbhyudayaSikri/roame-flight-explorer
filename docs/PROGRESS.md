@@ -148,6 +148,7 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
 | (e) §13.5 StrictMode in debug builds (QA T1) | [#15](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/15) | merged 23:25 |
 | (e) §13.6a Compose stability config | this PR | in review |
 | (e) §13.6b iOS sliced observation | next PR | to do |
+| (e) §13.8 Search-rule QA (S6) as an XCUITest | this PR | in review |
 
 - **(a) F1: not a conversion bug.**
   - Frames from the test's screen recording show the picker setting Feb 1 → Feb 1 and the sheet reading "Show 17 flights".
@@ -173,6 +174,9 @@ Order: (a) F1 investigation; (b) Server URL, then release packaging; (c) `qa` is
   - In the compiler report, unstable arguments went from 35 to 17 and unknown-stability ones from 14 to 6. Only the store is left.
   - `-PcomposeReports` regenerates the report.
   - There's no logic to test and no visible change, so there's no new QA item.
+- **(e) §13.8 Search-rule QA (S6).**
+  - The shared `SearchTest` already covered the rule. Now `SearchTests.testAnExactCodeWinsOverCityPrefixes` checks it on iOS too: `dub` gives 29 and `du` 69, then `fra` gives 0 with the no-matches state and `fran` 123.
+  - That makes 30 XCUITests. The new test runs in the full suite, not the PR smoke set, so it ran on the branch by dispatch before merging.
 
 ## Decisions
 

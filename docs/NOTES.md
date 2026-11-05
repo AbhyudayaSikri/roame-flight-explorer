@@ -215,10 +215,10 @@ Every pull request and every push to `main` runs these in CI (`.github/workflows
     - Selection and focus rules; the latest query winning; storage failures becoming messages.
     - The server address: saved, used after a restart, replacing an in-flight refresh.
 - **Local API.** 19 Kotlin tests (`:server:test`): every mode, the control endpoint, argument parsing, and the embedded fixture. Plus 12 Python tests for `fallback.py`. Linux CI also runs the jar from an empty directory and compares `/flights` byte-for-byte with the fixture.
-- **iOS app, 29 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
+- **iOS app, 30 XCUITests** against the real API on an iPhone 17 simulator (iOS 26.4):
   - `LaunchTests`, `SearchTests`, `FilterTests`, `MapSelectionTests`, `SavedTests`, `ErrorStateTests` and `DebugMenuTests`. The server-mode cases switch modes through `POST /control/mode`, and the debug-menu case reaches the API on the runner's LAN IP.
   - Then `DemoWalkthrough` (recorded as `demo.mp4`) and `OfflineRelaunchTests` with the API process stopped.
-  - Pushes to `main` and manual runs run all 29; pull requests run 5 smoke tests.
+  - Pushes to `main` and manual runs run all 30; pull requests run 5 smoke tests.
   - Per-QA-item results are in `docs/QA_IOS.md`.
 - **Android:** compiled in every Linux run. There are no Android UI tests; Android is checked by hand (below).
 

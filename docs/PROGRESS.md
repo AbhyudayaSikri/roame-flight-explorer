@@ -294,10 +294,19 @@ Merge gate as in Decisions (Nov 5). `qa` issues come first; then the release reh
 
 | Item | PR | State |
 |---|---|---|
-| Docs: merge gate, tonight's log in merge order | this PR | in review |
-| Release rehearsal: `v0.9.0-rc.1` as a pre-release | | not started |
+| Docs: merge gate, tonight's log in merge order | [#37](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/37) | merged 01:39 |
+| Release rehearsal: `v0.9.0-rc.1` as a pre-release | [#38](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/38) (the `release.yml` fix), then the tag | rehearsed 07:05–07:12, then deleted; the fix waits on the `workflow` scope |
 | Android emulator smoke job in Linux CI | this PR | in review |
 
+- **Release rehearsal, part 1: `release.yml` would have published `v0.9.0-rc.1` as a full release.** `gh release create` had no `--prerelease`, so the rc would also have become the repo's "Latest" release. A tag with a suffix (anything after a `-`) now publishes as a pre-release; `v1.0.0` still publishes as a normal release.
+- **Release rehearsal, part 2: `v0.9.0-rc.1`, 07:05–07:12.**
+  - The token still lacks the `workflow` scope, so [#38](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/38) can't merge yet. To rehearse now, I tagged its head (`5bf629c`): `main` plus the fix, with the same app code. `v1.0.0` will be tagged on `main`.
+  - The [release run](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42023928470) was green: both builds, then publish. The release was a pre-release, and the repo had no "Latest" release.
+  - All six files downloaded anonymously from their release URLs. `flights.json`, `fallback.py` and `QUICKSTART.md` matched the tagged files byte for byte.
+  - The downloaded jar, run from an empty directory with `--mode=normal`: `/flights` returned 200 `application/json`, byte-identical to the fixture (1,000 flights). The downloaded `fallback.py` did the same.
+  - The downloaded APK installed on the `roame-smoke` emulator, cold-started in 1.8 s and showed the jar's 1,000 flights through `10.0.2.2:8080`, with no stale banner.
+  - The iOS zip holds `RoameStarter.app`: an arm64 Debug build for the iPhone Simulator (SDK 26.4), named "Flight Explorer", with QUICKSTART's bundle id. It wasn't run, because this Mac doesn't run Xcode.
+  - The only problem found was the missing pre-release flag (part 1). Then I deleted the release and the tag (`gh release delete --cleanup-tag`); no releases or tags remain.
 - **Android emulator smoke job (`android-ui.yml`, this PR).**
   - Five Compose UI tests in `androidApp/src/androidTest`, which find controls by the shared `TestIds`. `SmokeTest`: launch loads 1,000; "tokyo" finds 110; a map pill's flight opens its card; a saved flight appears in Saved. Then the API is stopped and `OfflineRelaunchTest` relaunches: the cache is marked stale and the saved flight is still there.
   - The map pills are MapLibre bitmaps, not Compose nodes. The test asks MapLibre for the rendered pill and its projected screen point, then taps there through the input system.

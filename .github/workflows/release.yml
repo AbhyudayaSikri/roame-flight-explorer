@@ -1,6 +1,7 @@
 name: release
 
 # A tag such as v1.0.0 builds every download and publishes them as a GitHub Release.
+# A tag with a pre-release suffix, such as v0.9.0-rc.1, is published as a pre-release instead.
 # Pull requests that change this file, and manual runs, build and upload the files without publishing.
 on:
   push:
@@ -121,4 +122,6 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           ls -la dist
-          gh release create "$TAG" dist/* --verify-tag --title "Flight Explorer $TAG" --notes-file QUICKSTART.md
+          PRERELEASE=()
+          case "$TAG" in *-*) PRERELEASE=(--prerelease) ;; esac
+          gh release create "$TAG" dist/* --verify-tag "${PRERELEASE[@]}" --title "Flight Explorer $TAG" --notes-file QUICKSTART.md

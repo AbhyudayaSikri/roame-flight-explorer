@@ -284,6 +284,12 @@ Not changed, and why:
   - A chip's × removes it and empties its field.
   - An unreachable debug Server URL holds the skeleton rows for the 5 s connect timeout.
 - **Android QA on Windows** (PLAN §9): in progress. Results arrive as GitHub issues labelled `qa`; none filed as of 2026-11-04, 22:45.
+- **Release rehearsal, 2026-11-05:** `v0.9.0-rc.1`, published by `release.yml` as a pre-release, then deleted.
+  - All six files downloaded anonymously. The data, `fallback.py` and `QUICKSTART.md` matched the tagged files byte for byte.
+  - The downloaded jar, run from an empty directory, served the fixture byte for byte, and so did `fallback.py`.
+  - The downloaded APK showed the jar's 1,000 flights on an emulator.
+  - The iOS zip is an arm64 simulator build named "Flight Explorer"; it wasn't run, because the Mac doesn't run Xcode.
+  - It found one problem: tags like `v0.9.0-rc.1` would have been published as full releases. `release.yml` now marks them as pre-releases (#38).
 
 ## 6. How AI was used and verified
 To be completed. So far:

@@ -24,7 +24,7 @@ Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUS
   - CI binary: `./gradlew :server:installDist`, then `server/build/install/server/bin/server`.
 - Python fallback API (Python 3.9+, standard library only): `python3 server/fallback.py` (Windows: `py server\fallback.py`), with the same flags. Tests: `python3 -m unittest discover -s server -p "test_*.py"`.
 - Server as one jar: `./gradlew :server:fatJar` → `server/build/libs/roame-flights-server.jar` (fixture embedded; `java -jar`, same flags).
-- Releases: `.github/workflows/release.yml` on a `v*` tag publishes the debug APK, the zipped simulator `.app`, the jar, `fallback.py`, `flights.json` and `QUICKSTART.md`. Pull requests that change the workflow and manual runs only build.
+- Releases: `.github/workflows/release.yml` on a `v*` tag publishes the debug APK, the zipped simulator `.app`, the jar, `fallback.py`, `flights.json` and `QUICKSTART.md`. A tag with a suffix (`v0.9.0-rc.1`) is published as a pre-release. Pull requests that change the workflow and manual runs only build.
 - Android: `./gradlew :androidApp:assembleDebug`. Override the base URL with `-PapiBaseUrl=http://…`.
 - Compose stability reports: `./gradlew :androidApp:compileDebugKotlin --rerun -PcomposeReports` → `androidApp/build/compose-reports`. New shared types the UI takes as parameters go in `androidApp/compose-stability.conf`.
 - iOS project:

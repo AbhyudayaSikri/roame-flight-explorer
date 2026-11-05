@@ -36,6 +36,7 @@ Started 2026-11-03 during the planning pass. Sections 1, 3, 4, 5 and 6 are fille
 | Android map | MapLibre 13.7.1 with OpenFreeMap tiles | No API key for a reviewer to set up |
 | iOS map | MapKit for SwiftUI | Built in; geodesic polylines |
 | iOS project | XcodeGen 2.46.0 | A reviewable `project.yml`; CI fails if the committed project drifts |
+| Android leak check | LeakCanary 2.14, debug builds only | The latest stable; 3.0 is still alpha |
 
 **Verification.**
 - The rules have shared tests that run on the JVM in every CI run and on the iOS simulator in every iOS run.
@@ -183,13 +184,14 @@ Alternatives considered:
   - Diagnosis from frames of that run's screen recording: the picker worked, and after February 1 was tapped the sheet read "Show 17 flights".
   - The calendar then closed by itself, so the test's "close the calendar" step tapped the centre of the screen, which was the Economy cabin row. February 1 in Economy is the 10 flights the test saw. Without that step the test would pass.
   - The picker → `CalendarDate` conversion is now shared code, tested in ten time zones including +14, −11, +5:45 and three daylight-saving changes (`PickerDateTest`).
-- **Memory leaks aren't checked** on either platform. LeakCanary is a COULD.
+- **Memory leaks are only checked on Android, and only lightly.**
+  - Debug builds run LeakCanary (QA T2). On the emulator with no API, four rotations and some tab switches left nothing retained. The map wasn't opened, because it needs data.
+  - iOS has no leak check beyond the code review.
 - **Clustering uses one pill size**, so a merged pill, which is wider than a single airport's, can still touch a neighbour.
 - **In portrait, the world map can't show every destination at once.** iOS frames the markers it can fit; Android starts at a fixed world view.
 - **Android re-frames the camera only for a selected route.** iOS also re-frames the markers after a filter change.
 - **English only:** shared formatting gives "16,500 pts" and "Mon, Feb 1, 2027" whatever the device language.
-- **Not built (PLAN §13 SHOULD/COULD, cut under §0):**
-  - LeakCanary. Android at the largest font size and with TalkBack is only checked by QA P4 and P5.
+- **Everything in PLAN §13 is built.** Android at the largest font size and with TalkBack is only checked by QA P4 and P5, and haptics only by P7 on a phone.
 
 ## 5. Checks actually performed
 Dates are local (UTC-5).

@@ -45,4 +45,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.maplibre.android)
+    // Debug builds only: watches for leaked activities, fragments, views and view models (QA T2).
+    debugImplementation(libs.leakcanary.android)
 }

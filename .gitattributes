@@ -1,4 +1,5 @@
 * text=auto
 gradlew text eol=lf
+fixtures/*.json text eol=lf
 *.bat text eol=crlf
 *.jar binary

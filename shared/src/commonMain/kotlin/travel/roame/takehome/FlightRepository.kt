@@ -9,10 +9,12 @@ internal sealed interface RefreshResult {
     data class Failure(val error: RefreshError) : RefreshResult
 }
 
+/** The cached flights and when they were fetched, read together so neither is newer than the other. */
+internal data class CachedFlights(val flights: List<Flight>, val lastSuccessAtMillis: Long?)
+
 internal interface FlightRepository {
-    val cachedFlights: Flow<List<Flight>>
+    val cache: Flow<CachedFlights>
     val savedFlights: Flow<List<SavedFlight>>
-    val lastSuccessAtMillis: Flow<Long?>
 
     suspend fun refresh(baseUrl: String): RefreshResult
     suspend fun save(flight: Flight): Result<Unit>
@@ -31,9 +33,8 @@ internal class DefaultFlightRepository(
     private val database: FlightDatabaseStore,
     private val now: () -> Long,
 ) : FlightRepository {
-    override val cachedFlights get() = database.cachedFlights
+    override val cache get() = database.cache
     override val savedFlights get() = database.savedFlights
-    override val lastSuccessAtMillis get() = database.lastSuccessAtMillis
 
     override suspend fun refresh(baseUrl: String): RefreshResult {
         val flights = try {

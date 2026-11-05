@@ -74,6 +74,45 @@ class FlightExplorerStoreTest {
     }
 
     @Test
+    fun aRetryKeepsTheCacheMarkedStaleUntilItSucceeds() = runTest {
+        val (harness, store) = loadedStore()
+        val loadedAt = harness.clock
+        harness.source.fail(RefreshError.Offline)
+        store.refresh()
+        advanceUntilIdle()
+
+        val gate = CompletableDeferred<Unit>().also { harness.source.gate = it }
+        store.refresh()
+        runCurrent()
+        assertTrue(store.state.value.isRefreshing)
+        assertEquals(SyncState.Stale(loadedAt, RefreshError.Offline), store.state.value.sync)
+
+        harness.clock += 60_000
+        harness.source.serve(fixtureFlights)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(SyncState.Fresh(harness.clock), store.state.value.sync)
+    }
+
+    @Test
+    fun aRefreshThatFailsBeforeTheCacheIsReadDoesNotClaimThereIsNoCache() = runTest {
+        val harness = StoreHarness(this)
+        harness.database.replaceCache(fixtureFlights, atMillis = 5)
+        harness.source.fail(RefreshError.Offline)
+        val cacheRead = CompletableDeferred<Unit>()
+        val store = harness.newStore(repository = SlowCacheRepository(harness.defaultRepository(), cacheRead))
+        advanceUntilIdle()
+
+        // The refresh has failed and the cache hasn't been read: that's still loading.
+        assertEquals(SyncState.Loading, store.state.value.sync)
+
+        cacheRead.complete(Unit)
+        advanceUntilIdle()
+        assertEquals(SyncState.Stale(5, RefreshError.Offline), store.state.value.sync)
+        assertEquals(1000, store.state.value.totalCount)
+    }
+
+    @Test
     fun anEmptySuccessIsNotAFailureAndReplacesTheCache() = runTest {
         val (harness, store) = loadedStore()
 

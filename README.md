@@ -66,6 +66,13 @@ The same API also runs on its own:
    - On a physical iPhone, choose a signing team, use `-apiBaseUrl http://<your-mac>.local:8080` with both devices on the same network, and allow Local Network access when asked.
 3. XcodeGen 2.46.0 is needed only after adding, removing or renaming files under `iosApp/`: run `xcodegen generate --spec iosApp/project.yml`, and commit the result.
 
+## Use another server address
+Debug builds of both apps can switch the flights server at runtime, for example to run on a phone on the same Wi-Fi as the computer running the API.
+- **Android:** the debug menu (⋮ in the top bar) → Server URL….
+- **iOS:** the ladybug button, top left.
+
+Enter the computer's address, such as `http://192.168.1.20:8080`. The apps check it as you type, fetch from it on Save, and keep it across launches. "Use default" goes back to the build's address. On a device, allow Local Network access when asked.
+
 ## Tests
 
 | What | Command |
@@ -78,7 +85,10 @@ The same API also runs on its own:
 
 CI runs all of it on pull requests and pushes to `main` that change code (docs-only changes skip it):
 - `.github/workflows/ci.yml` (Linux): server tests, shared tests, Android build.
-- `.github/workflows/ios.yml` (macOS): shared tests on the simulator, then the XCUITests against the running API, then the offline relaunch with the API stopped. Its `ios-ui-tests` artifact has the result bundles, screenshots and a demo video.
+- `.github/workflows/ios.yml` (macOS): the build and the shared tests on the simulator, then XCUITests against the running API.
+  - Pull requests run 5 smoke tests: launch, search, map selection, save, error state.
+  - Pushes to `main` and manual runs (workflow_dispatch) run the full suite, then the offline relaunch with the API stopped.
+  - Its `ios-ui-tests` artifact has the result bundles and screenshots, and on full runs a demo video.
 
 ## Troubleshooting
 - **Android says "Couldn't load flights".** Either the API isn't running, or the app can't reach it. From the emulator, use `10.0.2.2`, not `localhost`. Plain HTTP is allowed only to `10.0.2.2`, `localhost` and `127.0.0.1` (`androidApp/src/main/res/xml/network_security_config.xml`).

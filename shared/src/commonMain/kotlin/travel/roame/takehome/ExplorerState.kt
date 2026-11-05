@@ -46,9 +46,13 @@ data class ExplorerState(
     /** Selection in the Saved tab, independent of discovery filters. */
     val selectedSaved: SavedFlight?,
     val message: UserMessage?,
+    /** Where flights come from: the build's address unless a debug menu chose another. */
+    val serverUrl: String,
+    val defaultServerUrl: String,
+    val isDefaultServerUrl: Boolean,
 ) {
     internal companion object {
-        val Initial = ExplorerState(
+        fun initial(defaultServerUrl: String) = ExplorerState(
             sync = SyncState.Loading,
             isRefreshing = false,
             filters = FiltersUi(
@@ -77,6 +81,9 @@ data class ExplorerState(
             savedIds = emptySet(),
             selectedSaved = null,
             message = null,
+            serverUrl = defaultServerUrl,
+            defaultServerUrl = defaultServerUrl,
+            isDefaultServerUrl = true,
         )
     }
 }
@@ -119,6 +126,12 @@ object TestIds {
     val noMatches = "state.noMatches"
     val loading = "state.loading"
     val message = "message"
+    val debugOpen = "debug.open"
+    val debugServerUrl = "debug.serverUrl"
+    val debugServerUrlProblem = "debug.serverUrl.problem"
+    val debugServerUrlSave = "debug.serverUrl.save"
+    val debugServerUrlDefault = "debug.serverUrl.default"
+    val debugDone = "debug.done"
 
     fun filterChip(kind: FilterKind) = "filters.chip.${kind.name.lowercase()}"
     fun cabinOption(cabin: String?) = "filters.cabin.${cabin ?: "any"}"

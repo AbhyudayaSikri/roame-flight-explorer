@@ -18,7 +18,7 @@ Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/Abhyuday
 | L2 | same test (no chips, "Show 1,000 flights"); screenshot "L2 default filters" shows Feb 1, 2027 – Apr 1, 2027 | pass |
 | L3 | needs eyes (scrolling in `demo.mp4`) | not judged |
 | S1–S5 | test `SearchTests` (113, 113, 110 with both Tokyo markers, 7, no-matches state with Reset) | pass |
-| F1, F2 | shared `FilterTest` only. An XCUITest through the date picker was tried and dropped at its timebox (NOTES §4) | covered by shared tests |
+| F1, F2 | Shared `FilterTest`, `PickerDateTest` (the picker's date conversion) and the store's single-day test. A dropped XCUITest's recording shows the picker giving "Show 17 flights" for Feb 1 before the test's own tap changed the cabin (NOTES §4). | covered by shared tests |
 | F3 | test `FilterTests.testLowestPointsLimitLeavesTheSingleCheapestFlight` (slider at the minimum leaves LAX → MEX, 9,000 pts). The UI can't go below 9,000. | pass |
 | F4 | test `FilterTests.testCabinCountsUpdateLiveAndShowAChip` (344, 467) | pass |
 | F5, F10 | test `FilterTests.testProgramsCombineWithOrAndDeselectingRestoresAll` (386, back to 1,000; "Mileage Plan" and "MileagePlus" are both options) | pass |

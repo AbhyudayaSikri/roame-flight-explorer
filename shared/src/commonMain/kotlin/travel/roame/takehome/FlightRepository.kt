@@ -14,10 +14,16 @@ internal interface FlightRepository {
     val savedFlights: Flow<List<SavedFlight>>
     val lastSuccessAtMillis: Flow<Long?>
 
-    suspend fun refresh(): RefreshResult
+    suspend fun refresh(baseUrl: String): RefreshResult
     suspend fun save(flight: Flight): Result<Unit>
     suspend fun remove(flightId: String): Result<Unit>
     suspend fun clearAll(): Result<Unit>
+
+    /** The server address chosen in a debug menu, or null for the build default (or when it can't be read). */
+    suspend fun savedServerUrl(): String?
+
+    /** Remembers [url]; null forgets it, so the build default applies again. */
+    suspend fun saveServerUrl(url: String?): Result<Unit>
 }
 
 internal class DefaultFlightRepository(
@@ -29,9 +35,9 @@ internal class DefaultFlightRepository(
     override val savedFlights get() = database.savedFlights
     override val lastSuccessAtMillis get() = database.lastSuccessAtMillis
 
-    override suspend fun refresh(): RefreshResult {
+    override suspend fun refresh(baseUrl: String): RefreshResult {
         val flights = try {
-            source.fetchFlights()
+            source.fetchFlights(baseUrl)
         } catch (e: RefreshFailure) {
             return RefreshResult.Failure(e.error)
         }
@@ -46,6 +52,16 @@ internal class DefaultFlightRepository(
     override suspend fun remove(flightId: String) = attempt { database.remove(flightId) }
 
     override suspend fun clearAll() = attempt { database.clearAll() }
+
+    override suspend fun savedServerUrl(): String? = try {
+        database.serverUrl()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        null
+    }
+
+    override suspend fun saveServerUrl(url: String?) = attempt { database.setServerUrl(url) }
 }
 
 /** Like runCatching, but never swallows cancellation. */

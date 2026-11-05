@@ -33,8 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import travel.roame.takehome.ExplorerState
+import travel.roame.takehome.TestIds
 import travel.roame.takehome.android.BuildConfig
 import travel.roame.takehome.android.ExplorerViewModel
 
@@ -61,7 +64,7 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
                 title = { Text(if (tab == Tab.EXPLORE) "Explore flights" else "Saved flights") },
                 actions = {
                     IconButton(onClick = store::refresh) { Icon(Icons.Default.Refresh, contentDescription = "Refresh") }
-                    if (BuildConfig.DEBUG) DebugMenu(viewModel)
+                    if (BuildConfig.DEBUG) DebugMenu(viewModel, state)
                 },
             )
         },
@@ -97,10 +100,20 @@ fun FlightExplorerApp(viewModel: ExplorerViewModel = viewModel()) {
 }
 
 @Composable
-private fun DebugMenu(viewModel: ExplorerViewModel) {
+private fun DebugMenu(viewModel: ExplorerViewModel, state: ExplorerState) {
     var open by remember { mutableStateOf(false) }
+    var editingServerUrl by remember { mutableStateOf(false) }
     IconButton(onClick = { open = true }) { Icon(Icons.Default.MoreVert, contentDescription = "Debug options") }
+    if (editingServerUrl) ServerUrlDialog(state, viewModel.store, onDismiss = { editingServerUrl = false })
     DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+        DropdownMenuItem(
+            text = { Text("Server URL…") },
+            onClick = {
+                open = false
+                editingServerUrl = true
+            },
+            modifier = Modifier.testTag(TestIds.debugOpen),
+        )
         DropdownMenuItem(
             text = { Text("Fail saves") },
             onClick = { viewModel.setFaults(!viewModel.failSaves, viewModel.failRemoves) },

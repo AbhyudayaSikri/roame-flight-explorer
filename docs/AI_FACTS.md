@@ -135,6 +135,12 @@ Source material for NOTES §6. Facts only, each with its PR, run or commit. Time
   - [run 42024450163] and [run 42026005109]: SurfaceFlinger aborted seconds after boot (`Assertion failed: !rcEnc->featureInfo()->hasReadColorBufferDma`).
   - The second run carried the agent's `-feature -ReadColorBufferDma`, which the emulator rejected: "Bad feature name: 'ReadColorBufferDma'".
   - Switched to API 36, the nearest image, as your rule allowed. Green since.
+- **A failed refresh on the CI emulator, in the final check** (Nov 5, 22:28). In attempt 1 of [run 42156104326], `SavedTests.savingAgainAfterAPriceChangeUpdatesWithoutDuplicates` (V2) timed out waiting for "Update saved".
+  - Its failure screenshot shows "Offline · showing results from 3:27 AM": the relaunched app's first refresh failed.
+  - The API's log has no request from it, between the switch to `updated` and the test's reset.
+  - The app doesn't retry on its own (Retry and pull to refresh do), so the test waited out its 60 s.
+  - Not a race between the closing and the new store's HTTP clients: in Ktor 3.6.1 each OkHttp client gets its own `Dispatcher`, and closing one evicts no shared pool (checked with `javap`).
+  - It was this test's first failure in 14 runs of the job. Re-running the failed job on the same commit passed: 29 online tests, the walkthrough and the offline run.
 - **GitHub runner outage** (Nov 4, about 10:00–17:20). "The job was not acquired by Runner of type hosted even after multiple attempts" in [run 41850754688], [run 41853828307], [run 41853912750], [run 41869605322] and [run 41875688814]. githubstatus.com posted no incident.
 - **Merge refused for lack of the `workflow` scope.** GitHub refused to merge [#10] through the API: the token has no `workflow` scope, and #10 changed a workflow file that `main` had also changed. At your call, [#10] and [#11] were merged by git. [#38] and [#40] later merged through the API without the scope.
 
@@ -380,3 +386,4 @@ The first local test run also caught the store test harness running inside `back
 [run 42024450163]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42024450163
 [run 42026005109]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42026005109
 [run 42078549498]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42078549498
+[run 42156104326]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42156104326

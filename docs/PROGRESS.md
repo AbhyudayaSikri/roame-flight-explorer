@@ -412,8 +412,9 @@ After these two items, only `qa` and `review` fixes.
 | The two videos | — | outside the repo, for the release |
 | `QA_ANDROID.md`, the recording section of `QA_IOS.md`, the video chapters in README and QUICKSTART, NOTES §5 | [#49](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/49) | merged 22:15 |
 | NOTES §6 | [#49](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/49) | you marked it done at 22:13 |
-| Final: AI_FACTS counts, privacy pass, README links and quick start | this PR | in review |
-| CI on `main`, a clean-clone check, then `v1.0.0` and its extra files | — | after this PR |
+| Final: AI_FACTS counts, privacy pass, README links and quick start | [#50](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/50) | merged 22:21 |
+| CI on `main` and a clean-clone check | — | done, below |
+| `v1.0.0` and its extra files | — | tagged on this PR's merge |
 
 - **No `review` or `qa` issues exist**, so the second review wasn't run.
 - **Video 1, `1-android-walkthrough.mp4`:** your recording, copied byte for byte (same SHA-256).
@@ -434,6 +435,14 @@ After these two items, only `qa` and `review` fixes.
   - `main` gets a dispatched Linux CI run, emulator job and full iOS run on this PR's merge.
   - A fresh clone is built and tested.
   - `v1.0.0` is tagged on that commit.
+- **CI on `main`** (`7bfe5ab`, dispatched at 22:22):
+  - Linux CI [42156101094](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42156101094) passed.
+  - The full iOS run [42156107444](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42156107444) passed in 33 min.
+  - The emulator job [42156104326](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42156104326) failed once, then passed on a re-run. V2's relaunched app had its first refresh fail on the emulator; the details are in AI_FACTS.
+- **Clean clone (22:23):** a fresh HTTPS clone of `7bfe5ab`.
+  - `:server:test :shared:testAndroidHostTest :androidApp:assembleDebug` passed in 31 s: 19 server tests and 138 shared tests ran, and none failed.
+  - The jar built from it, run from an empty directory, served `/flights`: 200 `application/json`, 432,741 bytes, identical to the fixture.
+- **`v1.0.0`** goes on this PR's merge commit, which changes only docs since `7bfe5ab`.
 - **Chapter lists** come from frames every 5 s (video 1, cropped to the emulator's screen) and 2–3 s (video 2), with 1 s or finer around each scene change.
 
 ## Decisions

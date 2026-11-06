@@ -5,7 +5,7 @@ Plan: `docs/PLAN.md`. QA checklist: `docs/QA_CHECKLIST.md`. Assumptions/notes: `
 Priority tiers: every step and QA item is MUST, SHOULD or COULD. Build every MUST on both apps, and pass every MUST QA item on both, before starting any SHOULD/COULD work (PLAN §0, §13).
 
 ## Machines
-- **Work Mac** — writes all code, owns the repo, pushes. Must NOT open Xcode, run `xcodebuild`, or run iOS Gradle tasks (list under Commands). Xcode.app is installed; leave it alone.
+- **Mac** — writes all code, owns the repo, pushes. Must NOT open Xcode, run `xcodebuild`, or run iOS Gradle tasks (list under Commands). Xcode.app is installed; leave it alone.
 - **Windows laptop** — Android Studio + emulator. QA only: pulls, runs, files GitHub issues (labels `qa` + tier). Use `gradlew.bat` and PowerShell syntax there.
 - **GitHub Actions** — the only iOS build/test machine: `macos-26`, Xcode 26.4.1, simulator "iPhone 17" on iOS 26.4. Also Linux CI for the server, shared module and Android build.
 

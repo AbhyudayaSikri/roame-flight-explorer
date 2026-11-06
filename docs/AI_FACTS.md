@@ -1,11 +1,11 @@
 # AI facts
 
-Source material for NOTES §6, which you write. Facts only, each with its PR, run or commit. Times are EST (UTC−5). "The agent" is Cursor's agent on the work Mac. Counts are as of [#46]'s merge on Nov 5.
+Source material for NOTES §6. Facts only, each with its PR, run or commit. Times are EST (UTC−5). "The agent" is Cursor's agent on the Mac. Counts are as of [#49]'s merge on Nov 5 (22:15), before `v1.0.0`.
 
 ## Machines, models and tools
 
 - **Planning, before Nov 3:** a separate Claude chat you ran (the planning agent) wrote `PLAN.md`. Model: _fill in_. It was imported with the starter, `BRIEF.md`, `CLAUDE.md` and `QA_CHECKLIST.md` on Nov 3, 21:23 ([ed2d6a7]).
-- **Work Mac, all code, commits and PRs:**
+- **Mac, all code, commits and PRs:**
   - Cursor's agent, Claude Opus 5.5, in one chat from Nov 3 to now. `PLAN.md` (line 3) names Claude Code (Opus 5.5) for this machine.
   - The chat's context was summarized several times. On Nov 5 at 01:15, the agent started a turn without the earlier context and rebuilt it from its own transcript and the repo.
   - One subagent, the independent review (PLAN P3): Nov 4, 22:51–23:15, on a read-only checkout of `857090e`. Its only context was `BRIEF.md`, `CLAUDE.md` and the diff since the starter (106 files, about 7,700 added lines). Model: not recorded in its transcript.
@@ -20,15 +20,19 @@ Source material for NOTES §6, which you write. Facts only, each with its PR, ru
   - Never run on the Mac (CLAUDE.md): Xcode, `xcodebuild`, iOS Gradle tasks. iOS was built and tested only in GitHub Actions.
   - Recorded blocks by Cursor's command auto-review:
     - Starting the API overnight on Nov 4 (step 7). No Android check with data ran on the Mac that night.
-    - A local emulator run on Nov 5, which then ran after your approval.
-- **Windows laptop:** Android Studio and its emulator for hand QA (PLAN §9), with Claude Pro (Sonnet) for QA triage (PLAN P6). No results filed yet: no `qa` issues, and no `docs/QA_ANDROID.md`.
+    - Two local emulator runs on Nov 5, which then ran after your approval.
+    - A docs-only follow-up merge on Nov 5, which the agent dropped. Its change went into [#49].
+- **Windows laptop:** Android Studio and its emulator ("Medium Phone API 37.0") for hand QA (PLAN §9). PLAN P6 planned Claude Pro (Sonnet) for QA triage; its use isn't recorded here.
+  - Your recorded walkthrough, `1-android-walkthrough.mp4` (5:31), is the hand QA. [`QA_ANDROID.md`](QA_ANDROID.md) records what it shows. No `qa` issues were filed.
+  - The emulator didn't reach the API at `10.0.2.2` (Nov 5, 15:55). `/health` worked from the laptop's Chrome, but the app's Retry added no `GET /flights` line to the API's log.
+  - `adb reverse` with `http://localhost:8080` worked, and [#48] made it automatic. The cause wasn't found.
 - **GitHub Actions:**
   - `ci.yml` (`ubuntu-24.04`): server tests, shared JVM tests, the Android build.
   - `ios.yml` (`macos-26`, Xcode 26.4.1, iPhone 17 simulator on iOS 26.4): shared tests on the simulator, then XCUITests.
   - `android-ui.yml` (`ubuntu-24.04`, from [#40]): Compose UI tests against the real API. API 36 `google_apis` x86_64 emulator, Pixel 7 profile, android-emulator-runner v2.38.0.
   - `release.yml` (both runners, from [#11]): publishes a release when a `v*` tag is pushed.
-- **Second independent review:** run by you, in another chat with a different model, over `857090e..main`. Findings arrive as `review` issues. None filed yet.
-- **Relay:** on Nov 5 the agent wrote status updates for the planning agent at 01:15, 10:52 and 12:14. Your "Answers" messages followed at 01:33, 10:55 and 12:22.
+- **Second independent review:** planned for you to run in another chat with a different model, over `857090e..main`, with findings as `review` issues. It wasn't run, and no `review` issues exist (NOTES §5).
+- **Relay:** on Nov 5 the agent wrote status updates for the planning agent at 01:15, 10:52, 12:14 and 13:26. Your "Answers" messages followed at 01:33, 10:55 and 12:22, and the final-stretch list came at 21:46.
 
 ## Workflow, in order
 
@@ -46,7 +50,11 @@ Source material for NOTES §6, which you write. Facts only, each with its PR, ru
 - **Nov 4, 21:36 to Nov 5, 01:26:** your evening list, [#7]–[#36]. The review subagent ran 22:51–23:15. Its findings were fixed in [#22]–[#27] and [#32].
 - **Nov 5, 01:33–09:46:** your night list, [#37]–[#41].
 - **Nov 5, 10:55–12:07:** your fourth list, [#42]–[#45].
-- **Nov 5, from 12:22:** your fifth list, [#46] and this file.
+- **Nov 5, 12:22–12:54:** your fifth list, [#46] and this file ([#47]).
+- **Nov 5, 15:36–16:42:** the Windows QA setup: the API command, then the emulator's route to the API ([#48]).
+- **Nov 5, from 21:46:** the final stretch.
+  - The videos, [`QA_ANDROID.md`](QA_ANDROID.md), the iOS recording in `QA_IOS.md`, the video chapters and a draft of NOTES §6 ([#49]).
+  - Then this refresh, a privacy pass and `v1.0.0`.
 - **Each item:**
   1. Its own branch, some stacked on the previous item's.
   2. The pre-push check: `:server:test :shared:testAndroidHostTest :androidApp:assembleDebug`, plus `:androidApp:assembleDebugAndroidTest` from [#40].
@@ -64,11 +72,11 @@ Source material for NOTES §6, which you write. Facts only, each with its PR, ru
 
 ## Counts
 
-- **PRs:** [#1]–[#46], all merged. 44 went through the GitHub API, and 2 were merged by git and pushed to `main` ([#10], [#11]).
-- **Commits on `main`:** 174.
+- **PRs:** [#1]–[#49], all merged. 47 went through the GitHub API, and 2 were merged by git and pushed to `main` ([#10], [#11]).
+- **Commits on `main`:** 180.
   - The first is [ed2d6a7] (Nov 3, 21:23).
-  - 130 are local commits under the git identity `Abhyudaya.Sikri <abhyudaya.sikri@textnow.com>`.
-  - 44 are GitHub merge commits.
+  - 133 are local commits, under the owner's git identity.
+  - 47 are GitHub merge commits.
 - **Tests:**
   - Shared (`shared/src/commonTest`): 137. They run on the JVM in Linux CI and on the iOS simulator in `ios.yml`. One more, `FileDatabaseRestartTest`, runs on the JVM only.
   - Server: 19 Kotlin tests (`server/src/test`), and 12 Python tests for the fallback server (`server/test_fallback.py`).
@@ -79,12 +87,14 @@ Source material for NOTES §6, which you write. Facts only, each with its PR, ru
     - XCUITest: 23 overnight, 30 at [#19], 32 at [#32].
     - Android UI: 5 at [#40], 16 at [#42], 28 at [#43].
 - **QA checklist** (61 items): 30 are automated on both apps, 6 on iOS only, 4 on Android only and 1 in Linux CI (A1). 20 are automated on neither.
-- **CI runs, all time, at #46's merge (12:50):**
-  - `ci.yml`: 120 (101 passed, 18 cancelled, none failed, 1 running on `main`).
-  - `ios.yml`: 116 (56 passed, 16 failed, 43 cancelled, 1 running on `main`). 5 of the 16 failures were GitHub not assigning a runner.
-  - `android-ui.yml`: 14 (10 passed, 3 failed, 1 running on `main`).
+  - Your recorded walkthrough verifies 15 items and partly shows 6.
+  - Of the rest, 22 are covered by Android UI tests and 18 aren't manually verified ([`QA_ANDROID.md`](QA_ANDROID.md)).
+- **CI runs, all time, at #49's merge (22:15):**
+  - `ci.yml`: 122 (104 passed, 18 cancelled, none failed).
+  - `ios.yml`: 116 (57 passed, 16 failed, 43 cancelled). 5 of the 16 failures were GitHub not assigning a runner.
+  - `android-ui.yml`: 16 (13 passed, 3 failed).
   - `release.yml`: 6, all passed.
-- **Run times** (last 30 green runs, queued to finished): `ci.yml` 1–3 min, `ios.yml` 13–53 min, `android-ui.yml` 4–7 min, `release.yml` 2–13 min.
+- **Run times** (last 30 green runs, queued to finished): `ci.yml` 1–3 min, `ios.yml` 13–53 min, `android-ui.yml` 4–9 min, `release.yml` 2–13 min.
 
 ## Bugs and failures caught, and how each was confirmed
 
@@ -191,6 +201,16 @@ The first local test run also caught the store test harness running inside `back
 - [#44], before merge: the demo's HND pill was never drawn, because Android's fixed world view left Japan off-screen. The demo used Paris instead; [#46] then added the framing.
 - In [#46], with the zoom cap set to 6, both new marker tests fail (checked). In the local walkthrough video, the frame at 28 s shows the HND and NRT pills over Tokyo.
 
+### By the agent's review of the walkthrough videos (Nov 5)
+
+- **Video 1's relaunch isn't with the API stopped.**
+  - At 3:56–4:08 it turns off the emulator's Wi-Fi and mobile data, then force-quits and reopens the app.
+  - Through `adb reverse` the app still reached the API: a refresh succeeded, and no offline banner appears (frames at 4:21 and 4:26). The status bar shows no network from 4:26.
+  - Video 2 shows the API-stopped relaunch on iOS, and `OfflineRelaunchTest` asserts it on Android ([`QA_ANDROID.md`](QA_ANDROID.md), O2).
+- **CI's iOS `demo.mp4` needed fixing before it could be the supplementary video.**
+  - It had irregular frame timestamps ("non monotonically increasing dts" when decoded), and 31 s and 40 s of home screen.
+  - It was re-encoded and trimmed ([#49], NOTES §5).
+
 ## Agent errors, your overrides, agent choices
 
 ### Agent errors
@@ -210,6 +230,13 @@ The first local test run also caught the store test harness running inside `back
 - The emulator flag `-feature -ReadColorBufferDma` doesn't exist ([run 42026005109]).
 - [#42]'s date test and [#44]'s demo, both fixed before merge (above).
 - The first haptics design fired on changes to the saved ids, so it buzzed at launch. It now fires on the taps ([#31]).
+- The Windows guide (Nov 5) had two slips:
+  - It put the API command at the end of a sentence. The copied period made the server reject `--allow-control.`.
+  - It said each request line ends in `-> 200 OK`; it ends in `-> 200`.
+- The first two encodes of the iOS video came out at 59.4 s and 64.4 s instead of 71.5 s.
+  - A split filter graph dropped the last segment.
+  - Joining segments with variable frame timing then lost their static tails.
+  - Caught by checking each output's duration against the cut list.
 - Docs:
   - `PROGRESS.md` merge times were corrected in [#17] ("docs(progress): actual merge times").
   - [#1]'s opening time and the merge times of [#2], [#3], [#4] and [#6] were still 5–29 minutes off GitHub's. Corrected with this file.
@@ -237,6 +264,11 @@ The first local test run also caught the store test harness running inside `back
 - **Nov 5, 12:22:**
   - Android map framing fixed for parity ([#46]). The agent had listed it as a known limitation in NOTES §4 since [a997530] (Nov 4, in [#5]).
   - This file, instead of the agent writing §6.
+- **Nov 5, 16:23:** make the `adb reverse` route always work ([#48]).
+- **Nov 5, 21:46:** the final stretch.
+  - Two separate videos, with no title cards, and your recording copied as-is.
+  - QA docs based only on what the videos show.
+  - A draft of NOTES §6 from this file ([#49]). You marked §6 done at 22:13.
 - **Standing rules:** no Xcode, `xcodebuild` or iOS Gradle tasks on the Mac; no force-push; no repo settings changes; no loosened, deleted or skipped tests; §6 is yours.
 
 ### Agent choices made without an instruction (recorded in PROGRESS or NOTES)
@@ -247,11 +279,16 @@ The first local test run also caught the store test harness running inside `back
 - Android tests for V5, O3 and O7, beyond your list ([#43]).
 - The iOS demo video is recorded on every full CI run, not by a manual `demo.yml`.
 - Overnight: added `overnight` to the CI push triggers instead of opening the PR early. Reverted before merging.
+- In [#48], kept `10.0.2.2` as the default and made `localhost` an opt-in Gradle property, instead of changing the default.
+- In [#49], besides cutting the home screen, scaled the iOS video to 884 × 1920 (H.264 level 4.0) and shortened two static pauses.
+- After you marked §6 done, removed its "DRAFT, owner to edit" heading.
 
 ## Checked only by automation or by the agent
 
-- **iOS:** never run by a person. It ran only on the CI simulator, never on a device (NOTES §4). `docs/QA_IOS.md` was last reviewed against [run 41796168173] (Nov 4, `f3fe6ff`), before [#2]–[#46].
-- **Android:** no hand QA results yet. Everything so far comes from the emulator tests (API 35 locally, API 36 in CI) and the agent's own emulator checks.
+- **iOS:** never run by a person. It ran only on the CI simulator, never on a device (NOTES §4). `docs/QA_IOS.md`'s item table was last reviewed against [run 41796168173] (Nov 4, `f3fe6ff`), before [#2]–[#49]. Its walkthrough-recording section is from [run 42078549498] (Nov 5, `b31cdae`).
+- **Android:** your recorded walkthrough is the only hand QA: it verifies 15 items and partly shows 6 ([`QA_ANDROID.md`](QA_ANDROID.md)).
+  - Everything else comes from the emulator tests (API 35 locally, API 36 in CI) and the agent's own emulator checks.
+  - The relaunch with the API stopped is only automated (`OfflineRelaunchTest`).
 - **QA items automated on both apps (30):** L1, L2, S1–S6, F3, F4, F5, F7, F8, F10, F11, F12, M3, M5, M6, V1, V2, V4, V5, V6, O1–O5, O7.
 - **Automated on iOS only (6):** M1, M4, M7, V3, O6, T3. On Android, no test asserts them, and no hand QA has been filed.
 - **Automated on Android only (4):** F1, F2, F6, M11 (the Tokyo part). iOS has no XCUITest for them; F1 and F2 are covered there by the shared `PickerDateTest`.
@@ -264,10 +301,10 @@ The first local test run also caught the store test harness running inside `back
     - A2 on Windows.
     - O8, P4 and P5 on Android.
     - Smoothness (L3, M2, F9) on both apps.
-- **Release:** checked only by the agent's rc rehearsal. `v1.0.0` isn't tagged, and the iOS zip has never been run.
+- **Release:** the agent's rc rehearsal ran the jar and the APK. For `v1.0.0`, the agent checks that every file downloads. The iOS zip has never been run.
 - **Tests checked to fail on the old code**, by the agent: [#22], [#23], [#24], [#29], [#32], [#39], [#46].
 - **The fixture on Windows:** LF line endings were verified on a Mac clone with `core.autocrlf=true` ([#20]), not on Windows.
-- **Pending:** the second review and the Windows QA pass.
+- **Not done:** the second independent review.
 
 [#1]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/1
 [#2]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/2
@@ -305,6 +342,9 @@ The first local test run also caught the store test harness running inside `back
 [#44]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/44
 [#45]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/45
 [#46]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/46
+[#47]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/47
+[#48]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/48
+[#49]: https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/49
 [ed2d6a7]: https://github.com/AbhyudayaSikri/roame-flight-explorer/commit/ed2d6a7
 [382e711]: https://github.com/AbhyudayaSikri/roame-flight-explorer/commit/382e711
 [a008759]: https://github.com/AbhyudayaSikri/roame-flight-explorer/commit/a008759
@@ -339,3 +379,4 @@ The first local test run also caught the store test harness running inside `back
 [run 42023928470]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42023928470
 [run 42024450163]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42024450163
 [run 42026005109]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42026005109
+[run 42078549498]: https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42078549498

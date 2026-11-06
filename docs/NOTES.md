@@ -315,8 +315,6 @@ Not changed, and why:
 
 ## 6. How AI was used and verified
 
-### DRAFT, owner to edit
-
 **Tools and machines.**
 - I wrote the plan with a separate Claude chat.
 - An AI agent in Cursor (Claude Opus 5.5) on my Mac checked the plan, wrote all the code and docs, and opened every pull request.

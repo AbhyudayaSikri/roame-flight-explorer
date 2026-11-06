@@ -1,6 +1,6 @@
 # Flight Explorer — implementation plan
 
-Owner tags: **[MAC]** = work Mac (Claude Code, Opus 5.5, writes all code) · **[WIN]** = Windows laptop (Android Studio, Claude Pro, QA) · **[CI]** = GitHub Actions.
+Owner tags: **[MAC]** = Mac (Claude Code, Opus 5.5, writes all code) · **[WIN]** = Windows laptop (Android Studio, Claude Pro, QA) · **[CI]** = GitHub Actions.
 
 Rule of the project: the Mac never opens Xcode, runs `xcodebuild` or runs iOS Gradle tasks. iOS is built, tested and recorded only in CI.
 
@@ -66,7 +66,7 @@ Never cut any MUST behaviour, the shared tests, README/NOTES, the final reviewer
 4. `gh auth login`.
 5. `gh repo clone AbhyudayaSikri/roame-flight-explorer`, open it in Android Studio and run `androidApp` on the emulator. It should show "Hello world!". This is the brief's "both apps build before implementation" check for Android; record the result in `docs/NOTES.md`.
 
-### 1b. [MAC] Work Mac (~20 min) — status as of 2026-11-03
+### 1b. [MAC] Mac (~20 min) — status as of 2026-11-03
 - Ready:
   - `git`.
   - `gh`: authenticated, pushes over SSH.

@@ -410,9 +410,10 @@ After these two items, only `qa` and `review` fixes.
 |---|---|---|
 | Second independent review | — | not run; there are no `review` issues. Noted in NOTES §5 |
 | The two videos | — | outside the repo, for the release |
-| `QA_ANDROID.md`, the recording section of `QA_IOS.md`, the video chapters in README and QUICKSTART, NOTES §5 | this PR | in review |
-| NOTES §6 draft | this PR | waiting for your edit ("§6 done") |
-| Final: counts, privacy pass, README, clean clone, `v1.0.0`, SUBMISSION.md | | after "§6 done" |
+| `QA_ANDROID.md`, the recording section of `QA_IOS.md`, the video chapters in README and QUICKSTART, NOTES §5 | [#49](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/49) | merged 22:15 |
+| NOTES §6 | [#49](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/49) | you marked it done at 22:13 |
+| Final: AI_FACTS counts, privacy pass, README links and quick start | this PR | in review |
+| CI on `main`, a clean-clone check, then `v1.0.0` and its extra files | — | after this PR |
 
 - **No `review` or `qa` issues exist**, so the second review wasn't run.
 - **Video 1, `1-android-walkthrough.mp4`:** your recording, copied byte for byte (same SHA-256).
@@ -427,6 +428,12 @@ After these two items, only `qa` and `review` fixes.
   - At 3:56–4:08 the recording turns off the emulator's Wi-Fi and mobile data, force-quits the app and reopens it.
   - With `adb reverse`, the app still reached the API, so a refresh succeeded and no offline banner appears. The status bar shows no network from 4:26.
   - Video 2 shows the relaunch with the API stopped, and `OfflineRelaunchTest` asserts it on Android.
+- **§6 done (22:13).** The file matched the draft, so #49 merged as you reviewed it. This PR removes its "DRAFT, owner to edit" heading.
+- **Privacy pass:** reworded machine descriptions in CLAUDE.md, PLAN.md and AI_FACTS.md, and AI_FACTS no longer names a git email. No hostnames or IT references were found.
+- **Then:**
+  - `main` gets a dispatched Linux CI run, emulator job and full iOS run on this PR's merge.
+  - A fresh clone is built and tested.
+  - `v1.0.0` is tagged on that commit.
 - **Chapter lists** come from frames every 5 s (video 1, cropped to the emulator's screen) and 2–3 s (video 2), with 1 s or finer around each scene change.
 
 ## Decisions

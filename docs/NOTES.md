@@ -287,6 +287,8 @@ Not changed, and why:
   - iOS draws and frames the route with MapKit, not the shared helpers (§3).
   - Each app builds its own "No limit" / "Up to …" label. That's one line of UI text over shared formatting, with no rule in it.
 
+**Second independent review (planned 2026-11-05): not run.** It was to cover `857090e..main` in a separate chat with a different model, with findings filed as `review` issues. It wasn't run, and no `review` issues exist.
+
 ### Manual and visual checks
 - **iOS screenshots** from the full runs were reviewed against the brief and the QA list (PLAN 8.4). Fixes that came out of that review: map camera framing, marker overlap, the "Premium Economy" truncation, and the cabin row colour.
 - **iOS failures read from XCTest's screen recordings** (frames pulled with ffmpeg):
@@ -300,7 +302,10 @@ Not changed, and why:
   - After process death, the search fields come back agreeing with the new store.
   - A chip's × removes it and empties its field.
   - An unreachable debug Server URL holds the skeleton rows for the 5 s connect timeout.
-- **Android QA on Windows** (PLAN §9): in progress. Results arrive as GitHub issues labelled `qa`; none filed as of 2026-11-04, 22:45.
+- **Android, by hand on Windows (2026-11-05):** the owner's recorded walkthrough, `1-android-walkthrough.mp4`. [`QA_ANDROID.md`](QA_ANDROID.md) records, item by item, what its frames show; the rest are marked as covered by an Android UI test, or not manually verified. No `qa` issues were filed.
+  - Its relaunch runs with the emulator's Wi-Fi and mobile data off, not with the API stopped. Through `adb reverse` the app still reached the API, so no offline banner appears (QA_ANDROID.md, O2).
+  - The relaunch with the API stopped is in the iOS recording, and `OfflineRelaunchTest` asserts it on Android.
+- **iOS walkthrough recording:** `2-ios-walkthrough-ci.mp4`, recorded by a slow-paced XCUITest walkthrough on the CI simulator. What it shows is in [`QA_IOS.md`](QA_IOS.md), "Shown in the CI walkthrough recording".
 - **Release rehearsal, 2026-11-05:** `v0.9.0-rc.1`, published by `release.yml` as a pre-release, then deleted.
   - All six files downloaded anonymously. The data, `fallback.py` and `QUICKSTART.md` matched the tagged files byte for byte.
   - The downloaded jar, run from an empty directory, served the fixture byte for byte, and so did `fallback.py`.
@@ -309,16 +314,44 @@ Not changed, and why:
   - It found one problem: tags like `v0.9.0-rc.1` would have been published as full releases. `release.yml` now marks them as pre-releases (#38).
 
 ## 6. How AI was used and verified
-To be completed. So far:
-- **Plan verification (2026-11-03):** an AI agent in Cursor (Claude Opus 5.5) did the following:
-  - Checked every library version against Maven Central and Google Maven metadata, release notes, AAR metadata and the GitHub runner images (Appendix B).
-  - Ran `./gradlew :shared:tasks --all`.
-  - Analysed the fixture with scripts (Appendix A).
-  - Proposed plan changes.
-- **Decisions taken after reviewing that output:** MUST/SHOULD/COULD tiers with a MUST gate; XcodeGen; a public repo during development; the search rule in 2.1.
-- **CI setup (2026-11-03):** the same agent wrote the two workflows, the XcodeGen spec, the SKIE spike and the persistence probe.
-  - Each was accepted only after a green CI run.
-  - The UI-test screenshots were reviewed before moving on (section 5).
+
+### DRAFT, owner to edit
+
+**Tools and machines.**
+- I wrote the plan with a separate Claude chat.
+- An AI agent in Cursor (Claude Opus 5.5) on my Mac checked the plan, wrote all the code and docs, and opened every pull request.
+- For the independent review, a fresh subagent saw only the brief, the project rules and the diff.
+- I did the hand QA in Android Studio on a Windows laptop.
+- The Mac never ran Xcode: iOS was built and tested only in CI.
+
+**Workflow.** The agent first checked the plan's library versions, Gradle task names and fixture counts. It built the core features overnight, with CI on each step. Then it worked through my lists of follow-ups, one pull request per item, each merged after CI passed.
+
+**How I checked its output.**
+- Each requirement maps to a QA checklist item, and most items to tests: 137 shared tests, 31 server tests, 34 XCUITests and 29 Android UI tests.
+- CI runs on Linux, on an Android emulator against the real API, and on an iOS simulator.
+- For fixes, the agent showed each new test failing on the old code.
+- The independent review found two real bugs, both fixed with tests:
+  - The flights response was decoded on the main thread.
+  - Android's search fields could disagree with the store after the system recreated the app.
+- Frames from the iOS test recordings showed two causes:
+  - A map that framed itself while the keyboard shortened it, a real bug.
+  - A test that failed because of its own tap.
+- I recorded the Android walkthrough myself.
+
+**What the AI got wrong, and what I overrode.**
+- A test it wrote raced on Kotlin/Native and left `main` red for six hours.
+- Its release workflow would have published a release candidate as a full release. A rehearsal caught that.
+- It needed four attempts to fix the flaky map test.
+- It listed Android's map framing as a limitation until I asked for parity with iOS.
+- I relaxed the merge gate to move faster, and I skipped the second independent review.
+
+**Verified only by automation.**
+- iOS has only run on the CI simulator, never on a device.
+- On Android, UI tests cover most checklist items. My recording covers search, filters, map selection, saving and the failure messages, but its relaunch didn't stop the API.
+- Haptics, TalkBack and large text on Android weren't checked by anyone.
+- The release files were checked only by the agent's rehearsal.
+
+Facts and links: [`AI_FACTS.md`](AI_FACTS.md).
 
 ## Appendix A. Fixture facts (`fixtures/flights.json`, analysed 2026-11-03)
 - **Shape:**

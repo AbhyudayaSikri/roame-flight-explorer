@@ -8,7 +8,7 @@ How each item was checked:
 - **shared:** the shared Kotlin tests cover it on the simulator. The iOS UI doesn't drive it.
 - **needs eyes:** only a person watching `demo.mp4` or using the app can judge it.
 
-Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168173) (commit `f3fe6ff`).
+Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/41796168173) (commit `f3fe6ff`). The walkthrough recording from a later run is reviewed at the end: "Shown in the CI walkthrough recording".
 
 ## Launch, search, filters
 
@@ -58,3 +58,27 @@ Last reviewed: 2026-11-04, against [run 41796168173](https://github.com/Abhyuday
 ## Polish notes
 - Fixed 2026-11-04: "Premium Economy" no longer truncates, because the cabin filter is a list of rows instead of a segmented control.
 - Fixed 2026-11-04: pills no longer overlap at world zoom; nearby airports merge into one pill until you zoom in. Test: `MapSelectionTests.testTappingAMergedPillZoomsInUntilItsAirportsSeparate`, with screenshots "Map, merged pills at world zoom" and "Map, zoomed into a merged pill".
+
+## Shown in the CI walkthrough recording
+
+`2-ios-walkthrough-ci.mp4` (1:11) is `demo.mp4` from the full iOS run on `main` [42078549498](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42078549498) (commit `b31cdae`), recorded on the CI simulator while `DemoWalkthrough` and then `OfflineRelaunchTests` ran.
+- CI stops the API between the two tests.
+- The home screen at the start and between the tests is cut, and two static pauses are shortened.
+- It was re-encoded as H.264. Timestamps refer to this file.
+
+What its frames show:
+
+| QA | Shown in the CI walkthrough recording |
+|---|---|
+| L1, O6 | Placeholder rows during the slow first load (0:00–0:05), then 1,000 flights (0:06) |
+| L2 | The filter sheet's dates, Feb 1, 2027 to Apr 1, 2027 (0:18) |
+| S2 | From "new york" gives 113 (0:12) |
+| S4 | From "new york" plus To "tokyo" gives 7 (0:28) |
+| F7 | The sheet's "Show N flights" counts live: 7, then 2 with Business (0:24), then 7 again (0:26) |
+| M1 | With the search's 3 flights, the HND pill reads "3 · 26.5k" (0:36–0:38). The default-filter values aren't shown. |
+| M3 | The HND pill's sheet, "Tokyo (HND) · 3 flights" (0:40), then the JFK → HND route and card (0:44) |
+| M4 | The card shows JFK → HND, "New York to Tokyo", Wed, Feb 10, 2027, Business, 70,500 pts, MileagePlus and Save (0:44) |
+| M8, M9 | JFK → HND draws one continuous arc, framed above the card (0:44–0:52) |
+| V1 | Save gives "Saved · Remove" and a Saved badge (0:50), and the Saved tab lists the flight (0:53) |
+| O2 | Relaunched with the API stopped: the cached 1,000 flights under "Offline · showing results from 6:19 PM", with the Saved badge (0:54–0:56) |
+| O3 | Offline, "jfk" gives 113 (1:06), and the Saved tab still lists the flight (1:08). Remove is tapped as the recording ends (1:10), so the removal itself isn't shown. |

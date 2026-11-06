@@ -388,20 +388,46 @@ After these two items, only `qa` and `review` fixes.
 
 | Item | PR | State |
 |---|---|---|
-| Android reaches the API through `adb reverse` with a `localhost` `apiBaseUrl` (your 16:23 request) | this PR | in review |
+| Android reaches the API through `adb reverse` with a `localhost` `apiBaseUrl` (your 16:23 request) | [#48](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/48) | merged 16:42 |
 
 - **15:36–16:23: the Windows emulator couldn't reach the API.**
   - The first start failed: `--args="--allow-control".` passed `--allow-control.`, with the trailing period, which the server rejected. My guide had put that command at the end of a sentence.
   - With the API running, Chrome on the laptop got `GET /health -> 200`. But the app's Retry added no `GET /flights` line, so its requests to `10.0.2.2:8080` never arrived.
   - `adb reverse tcp:8080 tcp:8080` with the debug Server URL `http://localhost:8080` worked.
   - On the Mac, the same steps loaded 1,000 flights through `10.0.2.2`. With the API stopped, the app showed "Couldn't load flights" and "Can't reach the flights server", as on Windows.
-- **The fix (this PR).** With `apiBaseUrl=http://localhost:8080`, in `~/.gradle/gradle.properties` or as `-P`, debug builds default to it, and every `assembleDebug` or `installDebug` runs `adb reverse` on each connected device (`adbReverse`). Without the property, nothing changes.
+- **The fix ([#48](https://github.com/AbhyudayaSikri/roame-flight-explorer/pull/48)).** With `apiBaseUrl=http://localhost:8080`, in `~/.gradle/gradle.properties` or as `-P`, debug builds default to it, and every `assembleDebug` or `installDebug` runs `adb reverse` on each connected device (`adbReverse`). Without the property, nothing changes.
   - Checked on `roame-smoke`, against `:server:run --args="--allow-control"`:
     - The default build has no `adbReverse` in its task graph, and the APK has `http://10.0.2.2:8080`.
     - Localhost with no device: the build succeeds and says no device is connected.
     - Localhost, fresh install: `adb reverse --list` went from empty to `tcp:8080 tcp:8080`, and the app loaded 1,000 flights (`GET /flights mode=normal -> 200`).
     - With the forward removed, as after an emulator restart, the app said "Can't reach the flights server". Building `assembleDebug` again restored the forward, and Retry loaded 1,000 flights.
+  - CI: Linux and the emulator job passed. `ios.yml` doesn't run for `androidApp/build.gradle.kts`.
 - **Seen, not changed:** Android shows "0 flights" above the error screen, while iOS hides the count until there's data. It waits for a `qa` issue.
+
+## Night: the final stretch (from 21:46)
+
+| Item | PR | State |
+|---|---|---|
+| Second independent review | — | not run; there are no `review` issues. Noted in NOTES §5 |
+| The two videos | — | outside the repo, for the release |
+| `QA_ANDROID.md`, the recording section of `QA_IOS.md`, the video chapters in README and QUICKSTART, NOTES §5 | this PR | in review |
+| NOTES §6 draft | this PR | waiting for your edit ("§6 done") |
+| Final: counts, privacy pass, README, clean clone, `v1.0.0`, SUBMISSION.md | | after "§6 done" |
+
+- **No `review` or `qa` issues exist**, so the second review wasn't run.
+- **Video 1, `1-android-walkthrough.mp4`:** your recording, copied byte for byte (same SHA-256).
+  - 5:31, 18.2 MB: H.264 and AAC stereo, 2560 × 1600 at 25 fps.
+  - It decodes without errors, and QuickLook renders it through AVFoundation.
+- **Video 2, `2-ios-walkthrough-ci.mp4`:** `demo.mp4` from the latest green full iOS run on `main`, [42078549498](https://github.com/AbhyudayaSikri/roame-flight-explorer/actions/runs/42078549498).
+  - The original is 2:31, with irregular frame timestamps ("non monotonically increasing dts" on decode). It also has two long static stretches: the home screen for the first 31 s, and again for 40 s between the two test runs.
+  - Re-encoded with ffmpeg: H.264 at `-preset veryfast -crf 22`, a constant 30 fps, no audio, scaled to 884 × 1920 (H.264 level 4.0 instead of 5.1, which more devices decode).
+  - Cut: the two home-screen stretches. Shortened: a static filter sheet (from about 7.5 s to 3.7 s) and the static offline banner (from about 9.5 s to 3.5 s).
+  - Result: 1:11.5, 2.2 MB. It decodes without errors, and QuickLook renders it.
+- **Video 1's relaunch isn't with the API stopped.**
+  - At 3:56–4:08 the recording turns off the emulator's Wi-Fi and mobile data, force-quits the app and reopens it.
+  - With `adb reverse`, the app still reached the API, so a refresh succeeded and no offline banner appears. The status bar shows no network from 4:26.
+  - Video 2 shows the relaunch with the API stopped, and `OfflineRelaunchTest` asserts it on Android.
+- **Chapter lists** come from frames every 5 s (video 1, cropped to the emulator's screen) and 2–3 s (video 2), with 1 s or finer around each scene change.
 
 ## Decisions
 
